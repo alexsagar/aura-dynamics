@@ -8,9 +8,20 @@ import { CloudflareContext, getCloudflareContext } from '@opennextjs/cloudflare'
 import { GetPlatformProxyOptions } from 'wrangler'
 import { r2Storage } from '@payloadcms/storage-r2'
 
+import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
+
 import { Users } from './collections/Users'
+import { Customers } from './collections/Customers'
 import { Media } from './collections/Media'
-import migrations from './db/migrations'
+import { migrations } from './migrations'
+import {
+  adminOnlyFieldAccess,
+  adminOrPublishedStatus,
+  isAdmin,
+  isAuthenticated,
+  isCustomer,
+  isDocumentOwner,
+} from './access/ecommerce'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
@@ -64,7 +75,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Media],
+  collections: [Users, Customers, Media],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -75,6 +86,40 @@ export default buildConfig({
   }),
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [
+    ecommercePlugin({
+      access: {
+        adminOnlyFieldAccess,
+        adminOrPublishedStatus,
+        isAdmin,
+        isAuthenticated,
+        isCustomer,
+        isDocumentOwner,
+      },
+      customers: {
+        slug: Customers.slug,
+      },
+      products: {
+        variants: true,
+      },
+      inventory: true,
+      carts: {
+        allowGuestCarts: true,
+      },
+      currencies: {
+        supportedCurrencies: [
+          {
+            code: 'NPR',
+            decimals: 2,
+            label: 'Nepalese Rupee',
+            symbol: 'Rs.',
+          },
+        ],
+        defaultCurrency: 'NPR',
+      },
+      payments: {
+        paymentMethods: [],
+      },
+    }),
     r2Storage({
       bucket: cloudflare.env.R2,
       collections: { media: true },
