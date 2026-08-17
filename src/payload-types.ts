@@ -76,6 +76,8 @@ export interface Config {
     users: User;
     customers: Customer;
     media: Media;
+    categories: Category;
+    materials: Material;
     addresses: Address;
     variants: Variant;
     variantTypes: VariantType;
@@ -101,6 +103,8 @@ export interface Config {
     users: UsersSelect<false> | UsersSelect<true>;
     customers: CustomersSelect<false> | CustomersSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
+    categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    materials: MaterialsSelect<false> | MaterialsSelect<true>;
     addresses: AddressesSelect<false> | AddressesSelect<true>;
     variants: VariantsSelect<false> | VariantsSelect<true>;
     variantTypes: VariantTypesSelect<false> | VariantTypesSelect<true>;
@@ -253,6 +257,38 @@ export interface Media {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories".
+ */
+export interface Category {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string | null;
+  parent?: (number | null) | Category;
+  active?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "materials".
+ */
+export interface Material {
+  id: number;
+  name: string;
+  slug: string;
+  baseFamily: 'pla' | 'petg' | 'tpu' | 'abs' | 'asa' | 'pa-nylon' | 'pc' | 'hips' | 'pva-support' | 'other';
+  subtype?: string | null;
+  modifiers?: ('carbon-fiber' | 'glass-fiber' | 'wood-filled' | 'metal-filled' | 'glow' | 'other')[] | null;
+  description?: string | null;
+  active?: boolean | null;
+  sortOrder?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "addresses".
  */
 export interface Address {
@@ -325,8 +361,16 @@ export interface Variant {
   product: number | Product;
   options: (number | VariantOption)[];
   inventory?: number | null;
-  priceInNPREnabled?: boolean | null;
-  priceInNPR?: number | null;
+  priceInUSDEnabled?: boolean | null;
+  priceInUSD?: number | null;
+  /**
+   * Threshold below which low-stock warnings trigger
+   */
+  lowStockThreshold?: number | null;
+  /**
+   * Disabled variants will not be purchasable on storefront
+   */
+  active?: boolean | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -346,8 +390,58 @@ export interface Product {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
-  priceInNPREnabled?: boolean | null;
-  priceInNPR?: number | null;
+  priceInUSDEnabled?: boolean | null;
+  priceInUSD?: number | null;
+  productType: 'filament' | '3d-print';
+  category?: (number | null) | Category;
+  filamentDetails?: {
+    brand?: 'Numakers' | null;
+    material?: (number | null) | Material;
+    finish?:
+      | (
+          | 'basic'
+          | 'matte'
+          | 'silk'
+          | 'glossy'
+          | 'metallic'
+          | 'transparent'
+          | 'translucent'
+          | 'sparkle'
+          | 'marble'
+          | 'gradient'
+          | 'dual-color'
+          | 'tri-color'
+          | 'glow'
+          | 'wood'
+          | 'other'
+        )
+      | null;
+    /**
+     * Aura sells only 1.75 mm filament
+     */
+    diameter?: number | null;
+    /**
+     * Aura sells only 1 kg filament spools
+     */
+    netWeightKg?: number | null;
+    technicalSpecifications?: {
+      nozzleTempMin?: number | null;
+      nozzleTempMax?: number | null;
+      bedTempMin?: number | null;
+      bedTempMax?: number | null;
+      printSpeedMin?: number | null;
+      printSpeedMax?: number | null;
+      density?: number | null;
+      drying?: {
+        recommended?: boolean | null;
+        temperature?: number | null;
+        durationHours?: number | null;
+      };
+      enclosure?: ('not-required' | 'recommended' | 'required') | null;
+      hardenedNozzle?: ('not-required' | 'recommended' | 'required') | null;
+      amsCompatibility?: ('compatible' | 'not-compatible' | 'conditional' | 'unknown') | null;
+    };
+  };
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -383,6 +477,38 @@ export interface VariantOption {
    * should be defaulted or dynamic based on label
    */
   value: string;
+  /**
+   * Link canonical material if this Option belongs to Material Variant Type
+   */
+  material?: (number | null) | Material;
+  /**
+   * Select color family if this Option belongs to Color Variant Type
+   */
+  colorFamily?:
+    | (
+        | 'black'
+        | 'white'
+        | 'gray'
+        | 'red'
+        | 'orange'
+        | 'yellow'
+        | 'green'
+        | 'blue'
+        | 'purple'
+        | 'pink'
+        | 'brown'
+        | 'beige'
+        | 'gold'
+        | 'silver'
+        | 'transparent'
+        | 'multicolor'
+        | 'other'
+      )
+    | null;
+  /**
+   * Optional hex code in format #RRGGBB (e.g. #15A246)
+   */
+  hexColor?: string | null;
   updatedAt: string;
   createdAt: string;
   deletedAt?: string | null;
@@ -406,7 +532,7 @@ export interface Cart {
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
-  currency?: 'NPR' | null;
+  currency?: 'USD' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -442,7 +568,7 @@ export interface Order {
   transactions?: (number | Transaction)[] | null;
   status?: OrderStatus;
   amount?: number | null;
-  currency?: 'NPR' | null;
+  currency?: 'USD' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -479,7 +605,7 @@ export interface Transaction {
   order?: (number | null) | Order;
   cart?: (number | null) | Cart;
   amount?: number | null;
-  currency?: 'NPR' | null;
+  currency?: 'USD' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -518,6 +644,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'media';
         value: number | Media;
+      } | null)
+    | ({
+        relationTo: 'categories';
+        value: number | Category;
+      } | null)
+    | ({
+        relationTo: 'materials';
+        value: number | Material;
       } | null)
     | ({
         relationTo: 'addresses';
@@ -667,6 +801,36 @@ export interface MediaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "categories_select".
+ */
+export interface CategoriesSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  parent?: T;
+  active?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "materials_select".
+ */
+export interface MaterialsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  baseFamily?: T;
+  subtype?: T;
+  modifiers?: T;
+  description?: T;
+  active?: T;
+  sortOrder?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "addresses_select".
  */
 export interface AddressesSelect<T extends boolean = true> {
@@ -694,8 +858,10 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
-  priceInNPREnabled?: T;
-  priceInNPR?: T;
+  priceInUSDEnabled?: T;
+  priceInUSD?: T;
+  lowStockThreshold?: T;
+  active?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -722,6 +888,9 @@ export interface VariantOptionsSelect<T extends boolean = true> {
   variantType?: T;
   label?: T;
   value?: T;
+  material?: T;
+  colorFamily?: T;
+  hexColor?: T;
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;
@@ -735,8 +904,40 @@ export interface ProductsSelect<T extends boolean = true> {
   enableVariants?: T;
   variantTypes?: T;
   variants?: T;
-  priceInNPREnabled?: T;
-  priceInNPR?: T;
+  priceInUSDEnabled?: T;
+  priceInUSD?: T;
+  productType?: T;
+  category?: T;
+  filamentDetails?:
+    | T
+    | {
+        brand?: T;
+        material?: T;
+        finish?: T;
+        diameter?: T;
+        netWeightKg?: T;
+        technicalSpecifications?:
+          | T
+          | {
+              nozzleTempMin?: T;
+              nozzleTempMax?: T;
+              bedTempMin?: T;
+              bedTempMax?: T;
+              printSpeedMin?: T;
+              printSpeedMax?: T;
+              density?: T;
+              drying?:
+                | T
+                | {
+                    recommended?: T;
+                    temperature?: T;
+                    durationHours?: T;
+                  };
+              enclosure?: T;
+              hardenedNozzle?: T;
+              amsCompatibility?: T;
+            };
+      };
   updatedAt?: T;
   createdAt?: T;
   deletedAt?: T;

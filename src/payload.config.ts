@@ -13,6 +13,8 @@ import { ecommercePlugin } from '@payloadcms/plugin-ecommerce'
 import { Users } from './collections/Users'
 import { Customers } from './collections/Customers'
 import { Media } from './collections/Media'
+import { Categories } from './collections/Categories'
+import { Materials } from './collections/Materials'
 import { migrations } from './migrations'
 import {
   adminOnlyFieldAccess,
@@ -75,7 +77,7 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
   },
-  collections: [Users, Customers, Media],
+  collections: [Users, Customers, Media, Categories, Materials],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -99,25 +101,279 @@ export default buildConfig({
         slug: Customers.slug,
       },
       products: {
-        variants: true,
-      },
-      inventory: true,
-      carts: {
-        allowGuestCarts: true,
-      },
-      currencies: {
-        supportedCurrencies: [
-          {
-            code: 'NPR',
-            decimals: 2,
-            label: 'Nepalese Rupee',
-            symbol: 'Rs.',
-          },
-        ],
-        defaultCurrency: 'NPR',
-      },
-      payments: {
-        paymentMethods: [],
+        variants: {
+          variantOptionsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+            ...defaultCollection,
+            fields: [
+              ...defaultCollection.fields,
+              {
+                name: 'material',
+                type: 'relationship',
+                relationTo: 'materials',
+                admin: {
+                  description: 'Link canonical material if this Option belongs to Material Variant Type',
+                },
+              },
+              {
+                name: 'colorFamily',
+                type: 'select',
+                admin: {
+                  description: 'Select color family if this Option belongs to Color Variant Type',
+                },
+                options: [
+                  { label: 'Black', value: 'black' },
+                  { label: 'White', value: 'white' },
+                  { label: 'Gray', value: 'gray' },
+                  { label: 'Red', value: 'red' },
+                  { label: 'Orange', value: 'orange' },
+                  { label: 'Yellow', value: 'yellow' },
+                  { label: 'Green', value: 'green' },
+                  { label: 'Blue', value: 'blue' },
+                  { label: 'Purple', value: 'purple' },
+                  { label: 'Pink', value: 'pink' },
+                  { label: 'Brown', value: 'brown' },
+                  { label: 'Beige', value: 'beige' },
+                  { label: 'Gold', value: 'gold' },
+                  { label: 'Silver', value: 'silver' },
+                  { label: 'Transparent', value: 'transparent' },
+                  { label: 'Multicolor', value: 'multicolor' },
+                  { label: 'Other', value: 'other' },
+                ],
+              },
+              {
+                name: 'hexColor',
+                type: 'text',
+                admin: {
+                  description: 'Optional hex code in format #RRGGBB (e.g. #15A246)',
+                },
+                validate: (val?: string | null) => {
+                  if (!val) return true
+                  return /^#[0-9A-Fa-f]{6}$/.test(val) || 'Hex color must be in format #RRGGBB'
+                },
+              },
+            ],
+          }),
+          variantsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+            ...defaultCollection,
+            fields: [
+              ...defaultCollection.fields,
+              {
+                name: 'lowStockThreshold',
+                type: 'number',
+                defaultValue: 3,
+                min: 0,
+                admin: {
+                  description: 'Threshold below which low-stock warnings trigger',
+                },
+              },
+              {
+                name: 'active',
+                type: 'checkbox',
+                defaultValue: true,
+                admin: {
+                  description: 'Disabled variants will not be purchasable on storefront',
+                },
+              },
+            ],
+          }),
+        },
+        productsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+          ...defaultCollection,
+          fields: [
+            ...defaultCollection.fields,
+            {
+              name: 'productType',
+              type: 'select',
+              required: true,
+              options: [
+                { label: 'Filament', value: 'filament' },
+                { label: '3D Print', value: '3d-print' },
+              ],
+            },
+            {
+              name: 'category',
+              type: 'relationship',
+              relationTo: 'categories',
+              admin: {
+                condition: (data: Record<string, any>) => data?.productType === '3d-print',
+              },
+            },
+            {
+              type: 'group',
+              name: 'filamentDetails',
+              label: 'Filament Details',
+              dbName: 'fil_det',
+              admin: {
+                condition: (data: Record<string, any>) => data?.productType === 'filament',
+              },
+              fields: [
+                {
+                  name: 'brand',
+                  type: 'select',
+                  defaultValue: 'Numakers',
+                  options: [{ label: 'Numakers', value: 'Numakers' }],
+                },
+                {
+                  name: 'material',
+                  type: 'relationship',
+                  relationTo: 'materials',
+                },
+                {
+                  name: 'finish',
+                  type: 'select',
+                  dbName: 'fin_opt',
+                  options: [
+                    { label: 'Basic', value: 'basic' },
+                    { label: 'Matte', value: 'matte' },
+                    { label: 'Silk', value: 'silk' },
+                    { label: 'Glossy', value: 'glossy' },
+                    { label: 'Metallic', value: 'metallic' },
+                    { label: 'Transparent', value: 'transparent' },
+                    { label: 'Translucent', value: 'translucent' },
+                    { label: 'Sparkle', value: 'sparkle' },
+                    { label: 'Marble', value: 'marble' },
+                    { label: 'Gradient', value: 'gradient' },
+                    { label: 'Dual Color', value: 'dual-color' },
+                    { label: 'Tri Color', value: 'tri-color' },
+                    { label: 'Glow', value: 'glow' },
+                    { label: 'Wood', value: 'wood' },
+                    { label: 'Other', value: 'other' },
+                  ],
+                },
+                {
+                  name: 'diameter',
+                  type: 'number',
+                  defaultValue: 1.75,
+                  admin: {
+                    readOnly: true,
+                    description: 'Aura sells only 1.75 mm filament',
+                  },
+                },
+                {
+                  name: 'netWeightKg',
+                  type: 'number',
+                  defaultValue: 1,
+                  admin: {
+                    readOnly: true,
+                    description: 'Aura sells only 1 kg filament spools',
+                  },
+                },
+                {
+                  type: 'group',
+                  name: 'technicalSpecifications',
+                  label: 'Technical Specifications',
+                  dbName: 'tech_specs',
+                  fields: [
+                    {
+                      type: 'row',
+                      fields: [
+                        {
+                          name: 'nozzleTempMin',
+                          type: 'number',
+                          label: 'Nozzle Temp Min (°C)',
+                        },
+                        {
+                          name: 'nozzleTempMax',
+                          type: 'number',
+                          label: 'Nozzle Temp Max (°C)',
+                        },
+                      ],
+                    },
+                    {
+                      type: 'row',
+                      fields: [
+                        {
+                          name: 'bedTempMin',
+                          type: 'number',
+                          label: 'Bed Temp Min (°C)',
+                        },
+                        {
+                          name: 'bedTempMax',
+                          type: 'number',
+                          label: 'Bed Temp Max (°C)',
+                        },
+                      ],
+                    },
+                    {
+                      type: 'row',
+                      fields: [
+                        {
+                          name: 'printSpeedMin',
+                          type: 'number',
+                          label: 'Print Speed Min (mm/s)',
+                        },
+                        {
+                          name: 'printSpeedMax',
+                          type: 'number',
+                          label: 'Print Speed Max (mm/s)',
+                        },
+                      ],
+                    },
+                    {
+                      name: 'density',
+                      type: 'number',
+                      label: 'Density (g/cm³)',
+                    },
+                    {
+                      type: 'group',
+                      name: 'drying',
+                      label: 'Drying Recommendations',
+                      dbName: 'drying_specs',
+                      fields: [
+                        {
+                          name: 'recommended',
+                          type: 'checkbox',
+                          label: 'Drying Recommended',
+                        },
+                        {
+                          name: 'temperature',
+                          type: 'number',
+                          label: 'Drying Temp (°C)',
+                        },
+                        {
+                          name: 'durationHours',
+                          type: 'number',
+                          label: 'Drying Duration (hours)',
+                        },
+                      ],
+                    },
+                    {
+                      name: 'enclosure',
+                      type: 'select',
+                      dbName: 'enc_opt',
+                      options: [
+                        { label: 'Not Required', value: 'not-required' },
+                        { label: 'Recommended', value: 'recommended' },
+                        { label: 'Required', value: 'required' },
+                      ],
+                    },
+                    {
+                      name: 'hardenedNozzle',
+                      type: 'select',
+                      dbName: 'hn_opt',
+                      options: [
+                        { label: 'Not Required', value: 'not-required' },
+                        { label: 'Recommended', value: 'recommended' },
+                        { label: 'Required', value: 'required' },
+                      ],
+                    },
+                    {
+                      name: 'amsCompatibility',
+                      type: 'select',
+                      dbName: 'ams_opt',
+                      options: [
+                        { label: 'Compatible', value: 'compatible' },
+                        { label: 'Not Compatible', value: 'not-compatible' },
+                        { label: 'Conditional', value: 'conditional' },
+                        { label: 'Unknown', value: 'unknown' },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+          ],
+        }),
       },
     }),
     r2Storage({
