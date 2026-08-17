@@ -100,6 +100,24 @@ export default buildConfig({
       customers: {
         slug: Customers.slug,
       },
+      currencies: {
+        defaultCurrency: 'NPR',
+        supportedCurrencies: [
+          {
+            code: 'NPR',
+            decimals: 2,
+            label: 'Nepalese Rupee',
+            symbol: 'Rs.',
+          },
+        ],
+      },
+      inventory: true,
+      carts: {
+        allowGuestCarts: true,
+      },
+      payments: {
+        paymentMethods: [],
+      },
       products: {
         variants: {
           variantOptionsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
@@ -158,6 +176,11 @@ export default buildConfig({
             fields: [
               ...defaultCollection.fields,
               {
+                name: 'sku',
+                type: 'text',
+                index: true,
+              },
+              {
                 name: 'lowStockThreshold',
                 type: 'number',
                 defaultValue: 3,
@@ -179,8 +202,61 @@ export default buildConfig({
         },
         productsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
           ...defaultCollection,
+          admin: {
+            ...defaultCollection.admin,
+            useAsTitle: 'title',
+            defaultColumns: ['title', 'productType', 'prices', 'variants', 'updatedAt'],
+          },
           fields: [
             ...defaultCollection.fields,
+            {
+              name: 'title',
+              type: 'text',
+              required: true,
+            },
+            {
+              name: 'slug',
+              type: 'text',
+              required: true,
+              unique: true,
+              index: true,
+              admin: {
+                description: 'URL identifier. Auto-generated from title when left empty.',
+              },
+              hooks: {
+                // ponytail: plain slugify, no plugin dependency
+                beforeValidate: [
+                  ({ value, data }: { value?: string | null; data?: Record<string, any> }) =>
+                    (value || data?.title || '')
+                      .toLowerCase()
+                      .trim()
+                      .replace(/[^a-z0-9]+/g, '-')
+                      .replace(/^-+|-+$/g, ''),
+                ],
+              },
+            },
+            {
+              name: 'shortDescription',
+              type: 'textarea',
+              admin: {
+                description: 'Used for product cards, listings and search previews',
+              },
+            },
+            {
+              name: 'description',
+              type: 'richText',
+            },
+            {
+              name: 'images',
+              type: 'upload',
+              relationTo: 'media',
+              hasMany: true,
+            },
+            {
+              name: 'featured',
+              type: 'checkbox',
+              defaultValue: false,
+            },
             {
               name: 'productType',
               type: 'select',

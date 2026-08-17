@@ -361,8 +361,9 @@ export interface Variant {
   product: number | Product;
   options: (number | VariantOption)[];
   inventory?: number | null;
-  priceInUSDEnabled?: boolean | null;
-  priceInUSD?: number | null;
+  priceInNPREnabled?: boolean | null;
+  priceInNPR?: number | null;
+  sku?: string | null;
   /**
    * Threshold below which low-stock warnings trigger
    */
@@ -390,8 +391,34 @@ export interface Product {
     hasNextPage?: boolean;
     totalDocs?: number;
   };
-  priceInUSDEnabled?: boolean | null;
-  priceInUSD?: number | null;
+  priceInNPREnabled?: boolean | null;
+  priceInNPR?: number | null;
+  title: string;
+  /**
+   * URL identifier. Auto-generated from title when left empty.
+   */
+  slug: string;
+  /**
+   * Used for product cards, listings and search previews
+   */
+  shortDescription?: string | null;
+  description?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  images?: (number | Media)[] | null;
+  featured?: boolean | null;
   productType: 'filament' | '3d-print';
   category?: (number | null) | Category;
   filamentDetails?: {
@@ -532,7 +559,7 @@ export interface Cart {
   purchasedAt?: string | null;
   status?: ('active' | 'purchased' | 'abandoned') | null;
   subtotal?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'NPR' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -568,7 +595,7 @@ export interface Order {
   transactions?: (number | Transaction)[] | null;
   status?: OrderStatus;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'NPR' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -605,7 +632,7 @@ export interface Transaction {
   order?: (number | null) | Order;
   cart?: (number | null) | Cart;
   amount?: number | null;
-  currency?: 'USD' | null;
+  currency?: 'NPR' | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -858,8 +885,9 @@ export interface VariantsSelect<T extends boolean = true> {
   product?: T;
   options?: T;
   inventory?: T;
-  priceInUSDEnabled?: T;
-  priceInUSD?: T;
+  priceInNPREnabled?: T;
+  priceInNPR?: T;
+  sku?: T;
   lowStockThreshold?: T;
   active?: T;
   updatedAt?: T;
@@ -904,8 +932,14 @@ export interface ProductsSelect<T extends boolean = true> {
   enableVariants?: T;
   variantTypes?: T;
   variants?: T;
-  priceInUSDEnabled?: T;
-  priceInUSD?: T;
+  priceInNPREnabled?: T;
+  priceInNPR?: T;
+  title?: T;
+  slug?: T;
+  shortDescription?: T;
+  description?: T;
+  images?: T;
+  featured?: T;
   productType?: T;
   category?: T;
   filamentDetails?:
