@@ -1231,8 +1231,15 @@ export interface Homepage {
     };
   };
   /**
-   * Section 8 (colour explorer) is code-driven and has no CMS content.
+   * Copy only. The colour swatches, images, and interaction stay code-driven.
    */
+  shadeShowcase?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    description?: string | null;
+    ctaLabel?: string | null;
+    ctaUrl?: string | null;
+  };
   compare?: {
     enabled?: boolean | null;
     heading?: string | null;
@@ -1516,6 +1523,15 @@ export interface HomepageSelect<T extends boolean = true> {
               label?: T;
               url?: T;
             };
+      };
+  shadeShowcase?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        description?: T;
+        ctaLabel?: T;
+        ctaUrl?: T;
       };
   compare?:
     | T

@@ -49,6 +49,14 @@ export const staffPickFallback = {
   heading: 'Matte Black PLA+',
 }
 
+export const shadeShowcaseFallback = {
+  ctaLabel: 'Explore all colors →',
+  ctaUrl: '/filaments',
+  description:
+    'From pure matte black to vibrant neon green, find the perfect high-precision color for your next project.',
+  heading: 'Made in every shade.',
+}
+
 export const compareFallback = {
   columns: [
     { bestFor: 'Detail', label: 'PLA+' },

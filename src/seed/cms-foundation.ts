@@ -51,6 +51,39 @@ const productIds = async (payload: Payload, productType: string, limit: number) 
   return docs.map((d) => d.id)
 }
 
+/**
+ * Assigns existing migrated Media to a product's `images` field by slug, so
+ * homepage merchandising for it stops falling back to demo cards. Skips
+ * products that already have images so a rerun (or a manual admin edit)
+ * isn't clobbered.
+ */
+const assignProductImages = async (payload: Payload, slug: string, mediaIds: number[]) => {
+  const { docs } = await payload.find({
+    collection: 'products',
+    where: { slug: { equals: slug } },
+    limit: 1,
+    pagination: false,
+    depth: 0,
+    overrideAccess: true,
+  })
+  const product = docs[0]
+  if (!product) {
+    console.log(`  ! product "${slug}" not found, skipping image assignment`)
+    return
+  }
+  if (product.images?.length) {
+    console.log(`  = ${slug} already has images, skipping`)
+    return
+  }
+  await payload.update({
+    collection: 'products',
+    id: product.id,
+    data: { images: mediaIds },
+    overrideAccess: true,
+  })
+  console.log(`  + ${slug} <- images [${mediaIds.join(', ')}]`)
+}
+
 export async function seedCmsFoundation() {
   console.log('🧱 CMS foundation seed')
   const payload = await getPayload({ config: configPromise })
@@ -166,6 +199,14 @@ export async function seedCmsFoundation() {
         image: staff,
         cta: { label: 'Shop Matte Black', url: '/filaments' },
       },
+      shadeShowcase: {
+        enabled: true,
+        heading: 'Made in every shade.',
+        description:
+          'From pure matte black to vibrant neon green, find the perfect high-precision color for your next project.',
+        ctaLabel: 'Explore all colors →',
+        ctaUrl: '/filaments',
+      },
       compare: {
         enabled: true,
         heading: 'Compare.',
@@ -272,6 +313,11 @@ export async function seedCmsFoundation() {
       },
     },
   })
+
+  // Gap-fill product photography: existing migrated Media, no downloads.
+  console.log('🖼  Product image assignment')
+  await assignProductImages(payload, 'numakers-pla-plus', [staff, catFilaments])
+  await assignProductImages(payload, 'dragon-figure', [useMini])
 
   console.log('🧱 Done. Globals: homepage, header, footer, site-settings')
 }

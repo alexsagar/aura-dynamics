@@ -9,6 +9,7 @@ import {
   compareFallback,
   heroFallback,
   imageFallback,
+  shadeShowcaseFallback,
   staffPickFallback,
   useCasesFallback,
   whyAuraFallback,
@@ -125,6 +126,14 @@ function normalizeHomepage(cms: Homepage) {
     imageUrl: mediaUrl(cms.staffPick?.image) || (staffPickProduct ? mediaUrl(staffPickProduct.images?.[0]) : undefined) || imageFallback.staffPick,
   }
 
+  const shadeShowcase = {
+    ctaLabel: cms.shadeShowcase?.ctaLabel || shadeShowcaseFallback.ctaLabel,
+    ctaUrl: cms.shadeShowcase?.ctaUrl || shadeShowcaseFallback.ctaUrl,
+    description: cms.shadeShowcase?.description || shadeShowcaseFallback.description,
+    enabled: cms.shadeShowcase?.enabled ?? true,
+    heading: cms.shadeShowcase?.heading || shadeShowcaseFallback.heading,
+  }
+
   const compareColumns = cms.compare?.columns?.length
     ? cms.compare.columns.map((c) => ({ bestFor: c.bestFor || '', label: c.label || '' }))
     : compareFallback.columns
@@ -162,7 +171,7 @@ function normalizeHomepage(cms: Homepage) {
     viewAllUrl: cms.learningHub?.viewAll?.url || '',
   }
 
-  return { categories, compare, freshPrints, hero, learningHub, materialsSection, popular, staffPick, testimonials, useCases, whyAura }
+  return { categories, compare, freshPrints, hero, learningHub, materialsSection, popular, shadeShowcase, staffPick, testimonials, useCases, whyAura }
 }
 
 

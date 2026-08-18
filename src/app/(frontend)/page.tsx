@@ -384,12 +384,19 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* 8. MADE IN EVERY SHADE — self-contained interactive section, no CMS fields yet */}
-      <section className="bg-background py-[clamp(80px,15vw,160px)]">
-        <Container>
-          <InteractiveShades />
-        </Container>
-      </section>
+      {/* 8. MADE IN EVERY SHADE — copy is CMS-sourced; swatches/interaction stay code-driven */}
+      {vm.shadeShowcase.enabled ? (
+        <section className="bg-background py-[clamp(80px,15vw,160px)]">
+          <Container>
+            <InteractiveShades
+              ctaLabel={vm.shadeShowcase.ctaLabel}
+              ctaUrl={vm.shadeShowcase.ctaUrl}
+              description={vm.shadeShowcase.description}
+              heading={vm.shadeShowcase.heading}
+            />
+          </Container>
+        </section>
+      ) : null}
 
       {/* 9. MATERIAL COMPARISON */}
       {vm.compare.enabled ? (

@@ -139,9 +139,23 @@ export const Homepage: GlobalConfig = {
     },
     {
       type: 'group',
+      name: 'shadeShowcase',
+      label: '8. Made in Every Shade',
+      admin: {
+        description: 'Copy only. The colour swatches, images, and interaction stay code-driven.',
+      },
+      fields: [
+        enabledField,
+        { name: 'heading', type: 'text' },
+        { name: 'description', type: 'textarea' },
+        { name: 'ctaLabel', type: 'text' },
+        { name: 'ctaUrl', type: 'text' },
+      ],
+    },
+    {
+      type: 'group',
       name: 'compare',
       label: '9. Material Comparison',
-      admin: { description: 'Section 8 (colour explorer) is code-driven and has no CMS content.' },
       fields: [
         enabledField,
         { name: 'heading', type: 'text' },

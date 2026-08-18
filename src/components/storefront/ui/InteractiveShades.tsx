@@ -16,19 +16,28 @@ const MOCK_SHADES = [
   { hex: '#eab308', id: 'yellow', image: 'https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?q=80&w=1200&auto=format&fit=crop', name: 'Yellow' },
 ]
 
-export function InteractiveShades() {
+type InteractiveShadesProps = {
+  heading?: string
+  description?: string
+  ctaLabel?: string
+  ctaUrl?: string
+}
+
+export function InteractiveShades({
+  heading = 'Made in every shade.',
+  description = 'From pure matte black to vibrant neon green, find the perfect high-precision color for your next project.',
+  ctaLabel = 'Explore all colors →',
+  ctaUrl = '/filaments',
+}: InteractiveShadesProps = {}) {
   const [activeId, setActiveId] = useState(MOCK_SHADES[0].id)
 
   return (
     <div className="grid gap-16 min-[900px]:grid-cols-[40%_1fr] min-[900px]:items-center min-[900px]:gap-20">
       <div className="flex flex-col">
         <h2 className="mb-4 text-[clamp(3rem,5vw,4rem)] leading-[1.1] font-medium tracking-[-0.04em]">
-          Made in every shade.
+          {heading}
         </h2>
-        <p className="mb-8 max-w-[480px] text-xl leading-[1.5] text-muted">
-          From pure matte black to vibrant neon green, find the perfect high-precision color for your
-          next project.
-        </p>
+        <p className="mb-8 max-w-[480px] text-xl leading-[1.5] text-muted">{description}</p>
 
         <div className="mb-10 grid grid-cols-2 gap-2">
           {MOCK_SHADES.map((shade) => (
@@ -64,9 +73,9 @@ export function InteractiveShades() {
           </span>
           <Link
             className="inline-flex items-center gap-2 text-lg font-medium transition-colors hover:text-cta"
-            href="/filaments"
+            href={ctaUrl}
           >
-            Explore all colors &rarr;
+            {ctaLabel}
           </Link>
         </div>
       </div>
