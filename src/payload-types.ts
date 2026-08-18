@@ -122,8 +122,18 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    homepage: Homepage;
+    header: Header;
+    footer: Footer;
+    'site-settings': SiteSetting;
+  };
+  globalsSelect: {
+    homepage: HomepageSelect<false> | HomepageSelect<true>;
+    header: HeaderSelect<false> | HeaderSelect<true>;
+    footer: FooterSelect<false> | FooterSelect<true>;
+    'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -245,6 +255,19 @@ export interface Customer {
 export interface Media {
   id: number;
   alt: string;
+  caption?: string | null;
+  /**
+   * Set by the media seed. Identifies a migrated asset.
+   */
+  migrationKey?: string | null;
+  /**
+   * Original remote URL this asset was imported from.
+   */
+  sourceUrl?: string | null;
+  /**
+   * Placeholder photography. Replace before launch.
+   */
+  temporaryAsset?: boolean | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -816,6 +839,10 @@ export interface CustomersSelect<T extends boolean = true> {
  */
 export interface MediaSelect<T extends boolean = true> {
   alt?: T;
+  caption?: T;
+  migrationKey?: T;
+  sourceUrl?: T;
+  temporaryAsset?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;
@@ -1113,6 +1140,552 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage".
+ */
+export interface Homepage {
+  id: number;
+  hero?: {
+    heading?: string | null;
+    subheading?: string | null;
+    image?: (number | null) | Media;
+    primaryCta?: {
+      label?: string | null;
+      url?: string | null;
+    };
+    secondaryCta?: {
+      label?: string | null;
+      url?: string | null;
+    };
+  };
+  categories?: {
+    enabled?: boolean | null;
+    items?:
+      | {
+          title?: string | null;
+          subtitle?: string | null;
+          url?: string | null;
+          image?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  popular?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    /**
+     * Product records stay the source of truth for title, image, price.
+     */
+    products?: (number | Product)[] | null;
+  };
+  materialsSection?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    items?:
+      | {
+          material?: (number | null) | Material;
+          /**
+           * Optional override. Falls back to the linked material name.
+           */
+          displayName?: string | null;
+          description?: string | null;
+          url?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  useCases?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    items?:
+      | {
+          title?: string | null;
+          subtitle?: string | null;
+          url?: string | null;
+          image?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  freshPrints?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    viewAll?: {
+      label?: string | null;
+      url?: string | null;
+    };
+    products?: (number | Product)[] | null;
+  };
+  staffPick?: {
+    enabled?: boolean | null;
+    eyebrow?: string | null;
+    heading?: string | null;
+    body?: string | null;
+    image?: (number | null) | Media;
+    product?: (number | null) | Product;
+    cta?: {
+      label?: string | null;
+      url?: string | null;
+    };
+  };
+  /**
+   * Section 8 (colour explorer) is code-driven and has no CMS content.
+   */
+  compare?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    /**
+     * One column per material, in display order.
+     */
+    columns?:
+      | {
+          label?: string | null;
+          bestFor?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    rows?:
+      | {
+          label?: string | null;
+          /**
+           * Score 1-5, one per column above, same order.
+           */
+          scores?:
+            | {
+                score?: number | null;
+                id?: string | null;
+              }[]
+            | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Placeholder only. Do not publish attributed customer quotes until they are real and approved.
+   */
+  testimonials?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    items?:
+      | {
+          quote?: string | null;
+          attribution?: string | null;
+          role?: string | null;
+          avatar?: (number | null) | Media;
+          /**
+           * Uncheck only for a real, approved, permissioned testimonial.
+           */
+          isPlaceholder?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  whyAura?: {
+    enabled?: boolean | null;
+    heading?: string | null;
+    subheading?: string | null;
+    items?:
+      | {
+          title?: string | null;
+          body?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  learningHub?: {
+    /**
+     * Off by default: /guides does not exist yet.
+     */
+    enabled?: boolean | null;
+    heading?: string | null;
+    viewAll?: {
+      label?: string | null;
+      url?: string | null;
+    };
+    items?:
+      | {
+          meta?: string | null;
+          title?: string | null;
+          summary?: string | null;
+          url?: string | null;
+          image?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  _status?: ('draft' | 'published') | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header".
+ */
+export interface Header {
+  id: number;
+  navLinks?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Not rendered yet — the current header has no announcement bar.
+   */
+  announcement?: {
+    enabled?: boolean | null;
+    text?: string | null;
+    url?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer".
+ */
+export interface Footer {
+  id: number;
+  brandHeading?: string | null;
+  brandCopy?: string | null;
+  newsletterHeading?: string | null;
+  columns?:
+    | {
+        title: string;
+        links?:
+          | {
+              label: string;
+              url: string;
+              id?: string | null;
+            }[]
+          | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Left empty on purpose. The values currently hardcoded in the footer are unverified placeholders — fill these in with real, confirmed details.
+   */
+  contact?: {
+    companyName?: string | null;
+    address?: string | null;
+    phone?: string | null;
+    email?: string | null;
+  };
+  /**
+   * Only add profiles Aura actually owns.
+   */
+  socialLinks?:
+    | {
+        platform: 'instagram' | 'facebook' | 'twitter' | 'youtube' | 'tiktok';
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  legalLinks?:
+    | {
+        label: string;
+        url: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Year is prepended by the frontend.
+   */
+  copyright?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings".
+ */
+export interface SiteSetting {
+  id: number;
+  siteName?: string | null;
+  defaultSeo?: {
+    title?: string | null;
+    description?: string | null;
+    ogImage?: (number | null) | Media;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "homepage_select".
+ */
+export interface HomepageSelect<T extends boolean = true> {
+  hero?:
+    | T
+    | {
+        heading?: T;
+        subheading?: T;
+        image?: T;
+        primaryCta?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+        secondaryCta?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+      };
+  categories?:
+    | T
+    | {
+        enabled?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              subtitle?: T;
+              url?: T;
+              image?: T;
+              id?: T;
+            };
+      };
+  popular?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        products?: T;
+      };
+  materialsSection?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        items?:
+          | T
+          | {
+              material?: T;
+              displayName?: T;
+              description?: T;
+              url?: T;
+              id?: T;
+            };
+      };
+  useCases?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              subtitle?: T;
+              url?: T;
+              image?: T;
+              id?: T;
+            };
+      };
+  freshPrints?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        viewAll?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+        products?: T;
+      };
+  staffPick?:
+    | T
+    | {
+        enabled?: T;
+        eyebrow?: T;
+        heading?: T;
+        body?: T;
+        image?: T;
+        product?: T;
+        cta?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+      };
+  compare?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        columns?:
+          | T
+          | {
+              label?: T;
+              bestFor?: T;
+              id?: T;
+            };
+        rows?:
+          | T
+          | {
+              label?: T;
+              scores?:
+                | T
+                | {
+                    score?: T;
+                    id?: T;
+                  };
+              id?: T;
+            };
+      };
+  testimonials?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        items?:
+          | T
+          | {
+              quote?: T;
+              attribution?: T;
+              role?: T;
+              avatar?: T;
+              isPlaceholder?: T;
+              id?: T;
+            };
+      };
+  whyAura?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        subheading?: T;
+        items?:
+          | T
+          | {
+              title?: T;
+              body?: T;
+              id?: T;
+            };
+      };
+  learningHub?:
+    | T
+    | {
+        enabled?: T;
+        heading?: T;
+        viewAll?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+        items?:
+          | T
+          | {
+              meta?: T;
+              title?: T;
+              summary?: T;
+              url?: T;
+              image?: T;
+              id?: T;
+            };
+      };
+  _status?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "header_select".
+ */
+export interface HeaderSelect<T extends boolean = true> {
+  navLinks?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  announcement?:
+    | T
+    | {
+        enabled?: T;
+        text?: T;
+        url?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "footer_select".
+ */
+export interface FooterSelect<T extends boolean = true> {
+  brandHeading?: T;
+  brandCopy?: T;
+  newsletterHeading?: T;
+  columns?:
+    | T
+    | {
+        title?: T;
+        links?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  contact?:
+    | T
+    | {
+        companyName?: T;
+        address?: T;
+        phone?: T;
+        email?: T;
+      };
+  socialLinks?:
+    | T
+    | {
+        platform?: T;
+        url?: T;
+        id?: T;
+      };
+  legalLinks?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+        id?: T;
+      };
+  copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-settings_select".
+ */
+export interface SiteSettingsSelect<T extends boolean = true> {
+  siteName?: T;
+  defaultSeo?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        ogImage?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

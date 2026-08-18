@@ -8,6 +8,12 @@ const nextConfig: NextConfig = {
         pathname: '/api/media/file/**',
       },
     ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
   },
   // Packages with Cloudflare Workers (workerd) specific code
   // Read more: https://opennext.js.org/cloudflare/howtos/workerd

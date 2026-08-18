@@ -15,6 +15,10 @@ import { Customers } from './collections/Customers'
 import { Media } from './collections/Media'
 import { Categories } from './collections/Categories'
 import { Materials } from './collections/Materials'
+import { Homepage } from './globals/Homepage'
+import { Header } from './globals/Header'
+import { Footer } from './globals/Footer'
+import { SiteSettings } from './globals/SiteSettings'
 import { migrations } from './migrations'
 import {
   adminOnlyFieldAccess,
@@ -78,6 +82,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Customers, Media, Categories, Materials],
+  globals: [Homepage, Header, Footer, SiteSettings],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
