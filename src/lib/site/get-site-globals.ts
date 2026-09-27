@@ -1,0 +1,92 @@
+import { getPayload } from 'payload'
+
+import configPromise from '@/payload.config'
+import type { Footer, Header } from '@/payload-types'
+
+/** Approved fallback content — used only when a CMS field is empty or Payload is unreachable. */
+const HEADER_NAV_FALLBACK = [
+  { label: 'Filaments', url: '/filaments' },
+  { label: '3D Prints', url: '/3d-prints' },
+  { label: 'Collections', url: '/collections' },
+  { label: 'Materials', url: '/materials' },
+  { label: 'About', url: '/about' },
+]
+
+const FOOTER_COLUMNS_FALLBACK = [
+  {
+    title: 'Shop',
+    links: [
+      { label: 'Filaments', url: '/filaments' },
+      { label: '3D Prints', url: '/3d-prints' },
+      { label: 'Collections', url: '/collections' },
+    ],
+  },
+  {
+    title: 'Company',
+    links: [
+      { label: 'About Us', url: '/about' },
+      { label: 'Contact', url: '/contact' },
+      { label: 'Shipping Info', url: '/shipping' },
+      { label: 'FAQ', url: '/faq' },
+    ],
+  },
+]
+
+const FOOTER_LEGAL_FALLBACK = [
+  { label: 'Privacy Policy', url: '/privacy' },
+  { label: 'Terms of Service', url: '/terms' },
+]
+
+const FOOTER_COPY_FALLBACK = 'Aura Dynamics. All rights reserved.'
+
+export type HeaderViewModel = ReturnType<typeof normalizeHeader>
+export type FooterViewModel = ReturnType<typeof normalizeFooter>
+
+function normalizeHeader(cms: Header) {
+  return {
+    navLinks: cms.navLinks?.length
+      ? cms.navLinks.map((l) => ({ label: l.label, url: l.url }))
+      : HEADER_NAV_FALLBACK,
+    announcement: {
+      enabled: cms.announcement?.enabled ?? false,
+      text: cms.announcement?.text || '',
+      url: cms.announcement?.url || '',
+    },
+  }
+}
+
+function normalizeFooter(cms: Footer) {
+  return {
+    columns: cms.columns?.length
+      ? cms.columns.map((c) => ({
+          title: c.title,
+          links: (c.links ?? []).map((l) => ({ label: l.label, url: l.url })),
+        }))
+      : FOOTER_COLUMNS_FALLBACK,
+    contact: {
+      companyName: cms.contact?.companyName || '',
+      address: cms.contact?.address || '',
+      phone: cms.contact?.phone || '',
+      email: cms.contact?.email || '',
+    },
+    socialLinks: (cms.socialLinks ?? []).map((s) => ({ platform: s.platform, url: s.url })),
+    legalLinks: cms.legalLinks?.length
+      ? cms.legalLinks.map((l) => ({ label: l.label, url: l.url }))
+      : FOOTER_LEGAL_FALLBACK,
+    copyright: cms.copyright || FOOTER_COPY_FALLBACK,
+  }
+}
+
+export async function getSiteGlobals(): Promise<{ header: HeaderViewModel; footer: FooterViewModel }> {
+  try {
+    const payload = await getPayload({ config: configPromise })
+    const [header, footer] = await Promise.all([
+      payload.findGlobal({ slug: 'header' }),
+      payload.findGlobal({ slug: 'footer' }),
+    ])
+    return { header: normalizeHeader(header), footer: normalizeFooter(footer) }
+  } catch (error) {
+    console.error('Failed to load Header/Footer globals from Payload', error)
+    return { header: normalizeHeader({} as Header), footer: normalizeFooter({} as Footer) }
+  }
+}

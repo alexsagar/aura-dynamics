@@ -3,17 +3,12 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCart } from '../../../providers/CartProvider'
+import type { HeaderViewModel } from '@/lib/site/get-site-globals'
 import { Container } from '../layout/Container'
 import { CartIcon, MenuIcon, SearchIcon, UserIcon } from '../ui/icons'
 import { Logo } from '../ui/Logo'
 
-export const NAV_LINKS = [
-  { href: '/filaments', label: 'Filaments' },
-  { href: '/3d-prints', label: '3D Prints' },
-  { href: '/collections', label: 'Collections' },
-  { href: '/materials', label: 'Materials' },
-  { href: '/about', label: 'About' },
-]
+type NavLink = { href: string; label: string }
 
 /* The bar collapses at 900px — between Tailwind's md and lg stops. */
 const ICON_BTN =
@@ -58,7 +53,7 @@ export const CartIndicator = ({ count = 0, onClick }: { count?: number; onClick:
  * Mobile menu uses a native <details> disclosure: keyboard accessible, no client JS.
  * ponytail: convert to a client component only if it needs close-on-navigate or a focus trap.
  */
-const MobileNav = () => (
+const MobileNav = ({ navLinks }: { navLinks: NavLink[] }) => (
   <details className="min-[900px]:hidden">
     <summary className="inline-flex size-10 cursor-pointer list-none items-center justify-center rounded-control [&::-webkit-details-marker]:hidden">
       <MenuIcon />
@@ -68,7 +63,7 @@ const MobileNav = () => (
       aria-label="Mobile"
       className="absolute inset-x-0 top-[calc(100%+12px)] rounded-3xl border border-white/40 bg-white/90 px-6 py-4 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.1)] backdrop-blur-[24px]"
     >
-      {NAV_LINKS.map((l) => (
+      {navLinks.map((l) => (
         <Link
           className="block border-b border-black/5 py-3 text-lg font-medium text-[#111] last:border-b-0"
           href={l.href}
@@ -84,10 +79,11 @@ const MobileNav = () => (
   </details>
 )
 
-export function Header() {
+export function Header({ data }: { data: HeaderViewModel }) {
   const pathname = usePathname()
   const { cartItems, openCart } = useCart()
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
+  const navLinks: NavLink[] = data.navLinks.map((l) => ({ href: l.url, label: l.label }))
 
   if (pathname.startsWith('/checkout')) {
     return null
@@ -97,14 +93,14 @@ export function Header() {
     <header className="fixed top-6 left-1/2 z-40 w-[calc(100%-48px)] max-w-[1000px] -translate-x-1/2 rounded-full border border-white/40 bg-white/70 px-2 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.5)] backdrop-blur-[24px] backdrop-saturate-180 transition duration-400 ease-editorial">
       <Container>
         <div className="flex min-h-14 items-center justify-between gap-3 min-[900px]:gap-6">
-          <MobileNav />
+          <MobileNav navLinks={navLinks} />
           <Wordmark />
 
           <nav
             aria-label="Primary"
             className="absolute left-1/2 hidden -translate-x-1/2 items-center justify-center gap-8 min-[900px]:flex"
           >
-            {NAV_LINKS.map((l) => (
+            {navLinks.map((l) => (
               <Link
                 className="group relative py-2 text-sm font-semibold text-muted transition-colors hover:text-foreground"
                 href={l.href}
