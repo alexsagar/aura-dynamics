@@ -1,123 +1,268 @@
-# Payload Cloudflare Template
+# Aura Dynamics — Precision 3D Printing & Filament Store
 
-[![Deploy to Cloudflare](https://deploy.workers.cloudflare.com/button)](https://deploy.workers.cloudflare.com/?url=https://github.com/payloadcms/payload/tree/3.x/templates/with-cloudflare-d1)
+[![Next.js](https://img.shields.io/badge/Next.js-16.3.0-black?logo=next.js)](https://nextjs.org/)
+[![Payload CMS](https://img.shields.io/badge/Payload_CMS-3.88.0-black?logo=payloadcms)](https://payloadcms.com/)
+[![Cloudflare Workers](https://img.shields.io/badge/Cloudflare-OpenNext_D1_R2-orange?logo=cloudflare)](https://developers.cloudflare.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue?logo=typescript)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-v4-38B2AC?logo=tailwind-css)](https://tailwindcss.com/)
 
-**This can only be deployed on Paid Workers right now due to size limits.** This template comes configured with the bare minimum to get started on anything you need.
+Aura Dynamics is a modern e-commerce storefront and store-management backend engineered for precision 3D printing and 3D printer filament distribution across Nepal. Built with Next.js 15+ (App Router) and Payload CMS 3.88.0, the platform is optimized for serverless edge deployment on Cloudflare (OpenNext, D1 SQLite, and R2 Object Storage).
 
-## Quick start
+---
 
-This template can be deployed directly to Cloudflare Workers by clicking the button to take you to the setup screen.
+## Table of Contents
 
-From there you can connect your code to a git provider such Github or Gitlab, name your Workers, D1 Database and R2 Bucket as well as attach any additional environment variables or services you need.
+- [Overview & Architecture](#overview--architecture)
+- [Key Features](#key-features)
+  - [1. Storefront Experience](#1-storefront-experience)
+  - [2. Professional Admin & Store Management](#2-professional-admin--store-management)
+  - [3. Product & Variant Catalog Model](#3-product--variant-catalog-model)
+- [Project Directory Structure](#project-directory-structure)
+- [Local Development Setup](#local-development-setup)
+  - [Prerequisites](#prerequisites)
+  - [Environment Variables](#environment-variables)
+  - [Running Locally](#running-locally)
+- [Code Generation & Import Maps](#code-generation--import-maps)
+- [Testing & Quality Verification](#testing--quality-verification)
+- [Operational Policies & Guidelines](#operational-policies--guidelines)
+- [Deployment on Cloudflare](#deployment-on-cloudflare)
 
-## Quick Start - local setup
+---
 
-To spin up this template locally, follow these steps:
+## Overview & Architecture
 
-### Clone
+Aura Dynamics brings enterprise CMS capabilities to a lightweight, edge-native infrastructure stack:
 
-After you click the `Deploy` button above, you'll want to have standalone copy of this repo on your machine. Cloudflare will connect your app to a git provider such as Github and you can access your code from there.
-
-### Local Development
-
-## How it works
-
-Out of the box, using [`Wrangler`](https://developers.cloudflare.com/workers/wrangler/) will automatically create local bindings for you to connect to the remote services and it can even create a local mock of the services you're using with Cloudflare.
-
-We've pre-configured Payload for you with the following:
-
-### Collections
-
-See the [Collections](https://payloadcms.com/docs/configuration/collections) docs for details on how to extend this functionality.
-
-- #### Users (Authentication)
-
-  Users are auth-enabled collections that have access to the admin panel.
-
-  For additional help, see the official [Auth Example](https://github.com/payloadcms/payload/tree/3.x/examples/auth) or the [Authentication](https://payloadcms.com/docs/authentication/overview#authentication-overview) docs.
-
-- #### Media
-
-  This is the uploads enabled collection.
-
-### Image Storage (R2)
-
-Images will be served from an R2 bucket which you can then further configure to use a CDN to serve for your frontend directly.
-
-### D1 Database
-
-The Worker will have direct access to a D1 SQLite database which Wrangler can connect locally to, just note that you won't have a connection string as you would typically with other providers.
-
-You can enable read replicas by adding `readReplicas: 'first-primary'` in the DB adapter and then enabling it on your D1 Cloudflare dashboard. Read more about this feature on [our docs](https://payloadcms.com/docs/database/sqlite#d1-read-replicas).
-
-## Working with Cloudflare
-
-Firstly, after installing dependencies locally you need to authenticate with Wrangler by running:
-
-```bash
-pnpm wrangler login
+```
+┌────────────────────────────────────────────────────────┐
+│               Aura Storefront (Next.js)                │
+│  - Homepage, Filaments Catalog, 3D Prints, Checkout    │
+│  - Real-time client filters & URL search param sync   │
+│  - Server Component rendering with client hydration    │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│                Payload CMS 3.88.0 Backend              │
+│  - Reorganized Admin UI: Catalog, Store, Content, System│
+│  - E-commerce plugin with variant pricing & inventory  │
+│  - Collapsible section editors & custom admin styles   │
+└───────────────────────────┬────────────────────────────┘
+                            │
+┌───────────────────────────▼────────────────────────────┐
+│         Cloudflare Serverless Infrastructure           │
+│  - Runtime: Cloudflare Workers via OpenNext             │
+│  - Database: Cloudflare D1 (SQLite engine)              │
+│  - Storage: Cloudflare R2 (media uploads & assets)     │
+│  - Local Dev: Miniflare proxy for D1/R2 emulation       │
+└────────────────────────────────────────────────────────┘
 ```
 
-This will take you to Cloudflare to login and then you can use the Wrangler CLI locally for anything, use `pnpm wrangler help` to see all available options.
+---
 
-Wrangler is pretty smart so it will automatically bind your services for local development just by running `pnpm dev`.
+## Key Features
 
-## Deployments
+### 1. Storefront Experience
 
-When you're ready to deploy, first make sure you have created your migrations:
+- **Header & Footer CMS Integration:** Navigation links, branding, contact details, social links, and legal policies are driven directly by Payload CMS Globals (`Header` and `Footer`), with resilient static fallbacks.
+- **Filaments Catalog (`/filaments`):**
+  - Granular filtering by Material (PLA, PETG, ABS, ASA), Color Family, Spool vs. Refill packaging, Diameter (1.75 mm), and Brand (Numakers).
+  - Price range filtering strictly in Nepalese Rupees (NPR).
+  - Sorting by Price (asc/desc), Alphabetical, and Newest.
+  - Fully responsive desktop sidebar and mobile filter drawer with instant count badges.
+- **3D Prints Catalog (`/3d-prints`):**
+  - Filterable by Category taxonomy, Print Material, Complexity, and Finish.
+  - Pagination and responsive grid views.
+- **Shared Catalog Architecture:** Centralized filter shells, pagination controls, and toolbars (`src/components/storefront/catalog/`) minimize code duplication.
+- **Accessible & Performance-Minded:** Full keyboard accessibility, semantic markup, and optimized typography using Next.js fonts.
 
-```bash
-pnpm payload migrate:create
+### 2. Professional Admin & Store Management
+
+The Payload CMS Admin Panel (`/admin`) is organized into an intuitive operations interface:
+
+- **Four Logical Workspace Groups:**
+  - **Catalog:** Centralized management for Products, Product Variants, Variant Types, Variant Options, Categories, and Materials.
+  - **Store:** Real-time customer records, orders, shopping carts, addresses, and transactions.
+  - **Content:** Storefront editorial control over Media Library, Homepage, Header, and Footer globals.
+  - **Settings:** Admin user accounts and global site SEO settings.
+- **Single-Source Dashboard Navigation:** Leverages native Payload collection cards with direct `+` quick-create buttons, eliminating redundant navigation cards while keeping the sidebar fully functional.
+- **Accurate Environment & Context Indicators:**
+  - Dynamic runtime badges for `Environment: Development`, `Staging`, or `Production`.
+  - Static configuration transparency (`Currency: NPR (Rs.)`).
+  - Storage adapter indicator (`Storage: Local R2 Emulator` in development, `Storage: Cloudflare R2` in production).
+- **Official Aura Branding:** Custom `Logo` and `Icon` admin components using the official Aura SVG assets with dark/light mode switching and pixel-perfect starburst icon alignment.
+- **Collapsible Global Editor:** Homepage sections (Hero, Categories, Popular, Materials, Use Cases, Staff Pick, etc.) are wrapped in native collapsible accordions to allow focused editing without infinite vertical scrolling.
+- **Human-Readable File Sizes:** Custom `FileSizeCell` converts raw byte counts in the Media collection list to readable units (`KB`, `MB`).
+
+### 3. Product & Variant Catalog Model
+
+- **Parent Products:** Define high-level attributes (title, slug, descriptions, images, filament details, brand).
+- **Variant Pricing & Inventory:**
+  - Products with variants (`enableVariants: true`) manage individual SKU, inventory, and NPR pricing at the variant level.
+  - Base product `enablePriceInNPR` is reserved for single-SKU non-variant items.
+- **Multi-Option Matrices:** Products support multi-dimensional variant options (e.g., Color [Black/White] combined with Packaging [Spool/Refill]).
+
+---
+
+## Project Directory Structure
+
+```
+D:\aura\
+├── .agents/                    # Payload CMS specialized skills & developer reference
+├── public/
+│   └── brand/                  # Official Aura brand SVGs (symbol, wordmark, logo)
+├── src/
+│   ├── app/
+│   │   ├── (frontend)/         # Storefront App Router routes
+│   │   │   ├── 3d-prints/      # 3D Prints catalog page & filter controls
+│   │   │   ├── filaments/      # Filaments catalog page & filter controls
+│   │   │   ├── layout.tsx      # Root storefront layout (Header/Footer wiring)
+│   │   │   └── page.tsx        # Homepage route
+│   │   └── (payload)/          # Payload CMS Admin routes
+│   │       ├── admin/          # Admin pages & generated importMap.js
+│   │       └── custom.scss     # Scoped admin dashboard & branding stylesheet
+│   ├── collections/            # Payload Collections
+│   │   ├── Categories.ts       # Product taxonomies
+│   │   ├── Customers.ts        # Customer profiles & auth
+│   │   ├── Materials.ts        # Polymer specifications (PLA, PETG, etc.)
+│   │   ├── Media.ts            # Uploads with custom FileSize cell & alt labels
+│   │   └── Users.ts            # Staff accounts & permissions
+│   ├── components/
+│   │   ├── admin/              # Admin UI components (Logo, Icon, BeforeDashboard, FileSizeCell)
+│   │   └── storefront/         # Storefront layout, navigation, and catalog filters
+│   ├── globals/                # Payload CMS Globals
+│   │   ├── Footer.ts           # Footer links, social profiles, copyright
+│   │   ├── Header.ts           # Primary storefront navigation links
+│   │   ├── Homepage.ts         # Section-by-section collapsible homepage content
+│   │   └── SiteSettings.ts     # Global SEO & store metadata
+│   ├── lib/                    # Shared query logic, filtering, and data models
+│   │   ├── catalog/            # Shared catalog types & URL helpers
+│   │   ├── filaments/          # Filament catalog queries & sort options
+│   │   ├── prints/             # 3D Print catalog queries
+│   │   └── site/               # Site globals fetching with fallbacks
+│   └── payload.config.ts       # Core Payload configuration & ecommerce plugin overrides
+├── tests/
+│   ├── e2e/                    # Playwright end-to-end admin tests
+│   └── int/                    # Vitest integration tests for catalog filters
+├── wrangler.jsonc              # Cloudflare Workers, D1 & R2 configuration
+└── package.json                # Project dependencies & scripts
 ```
 
-Then run the following command:
+---
 
-```bash
-pnpm run deploy
+## Local Development Setup
+
+### Prerequisites
+
+- **Node.js:** v20.x or v22.x LTS
+- **Package Manager:** `pnpm` (v9 or v10 recommended)
+- **Wrangler CLI:** Bundled via `pnpm wrangler`
+
+### Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+# Payload CMS Secret (min 32 characters)
+PAYLOAD_SECRET=your-random-32-character-payload-secret
+
+# Server Port & Logging
+PORT=3000
+PAYLOAD_LOG_LEVEL=info
+
+# Cloudflare Configuration
+CLOUDFLARE_ENV=development
 ```
 
-This will spin up Wrangler in `production` mode, run any created migrations, build the app and then deploy the bundle up to Cloudflare.
+### Running Locally
 
-That's it! You can if you wish move these steps into your CI pipeline as well.
+1. **Install dependencies:**
+   ```bash
+   pnpm install
+   ```
 
-## Enabling logs
+2. **Start the development server:**
+   ```bash
+   pnpm dev
+   ```
+   This automatically initializes:
+   - Next.js development server at `http://localhost:3000`
+   - Payload Admin Panel at `http://localhost:3000/admin`
+   - Wrangler Miniflare proxy for local D1 SQLite and local R2 emulator (stored under `.wrangler/state/v3/`)
 
-By default logs are not enabled for your API, we've made this decision because it does run against your quota so we've left it opt-in. But you can easily enable logs in one click in the Cloudflare panel, [see docs](https://developers.cloudflare.com/workers/observability/logs/workers-logs/#enable-workers-logs).
+---
 
-### Logger Configuration
+## Code Generation & Import Maps
 
-This template includes a custom console-based logger compatible with Cloudflare Workers. Payload's default logger uses `pino-pretty`, which relies on Node.js APIs not available in Workers and would cause `fs.write is not implemented` errors.
+When modifying Payload collections, globals, or custom admin components:
 
-The custom logger in `payload.config.ts`:
+- **Generate Payload & Cloudflare Types:**
+  ```bash
+  pnpm run generate:types
+  ```
+- **Update Admin Import Map:**
+  ```bash
+  pnpm run generate:importmap
+  ```
+  *(Required whenever custom components like `Logo`, `Icon`, `BeforeDashboard`, or `FileSizeCell` are registered).*
 
-- Routes logs through `console.*` methods which Workers handles correctly
-- Outputs JSON-formatted logs for Cloudflare observability
-- Only active in production (development uses the default `pino-pretty` for better DX)
+---
 
-You can control the log level via the `PAYLOAD_LOG_LEVEL` environment variable (e.g., `debug`, `info`, `warn`, `error`).
+## Testing & Quality Verification
 
-### Diagnostic Channel Errors
+### 1. TypeScript Compilation
+Run the compiler check across the entire project:
+```bash
+pnpm exec tsc --noEmit
+```
 
-If you see "Failed to publish diagnostic channel message" errors in your observability logs, these typically come from the `undici` HTTP client library. The template includes `skipSafeFetch: true` in the Media collection to use native fetch instead of undici for file uploads, which helps reduce these errors.
+### 2. Catalog Filter Integration Tests
+Run the Vitest filter test suites (14 tests covering filament and 3D print filter logic):
+```bash
+pnpm run test:int
+```
 
-Cloudflare Workers runs in an [isolated environment that cannot access private IP ranges](https://developers.cloudflare.com/workers-vpc/examples/route-across-private-services/) by default, providing built-in SSRF protection. This makes `skipSafeFetch` safe to use.
+### 3. Playwright Admin E2E Tests
+Run the end-to-end admin validation suite (verifies login branding, mobile/desktop dashboards, product variant hydration, media sizes, and collapsible globals):
+```bash
+pnpm exec playwright test tests/e2e/admin-ux.e2e.spec.ts
+```
 
-## Known issues
+> [!NOTE]
+> **Known Lint Config Issue:** Running `pnpm run lint` currently encounters a circular dependency error in `@eslint/eslintrc` + `eslint-config-next` with ESLint 9. This is an upstream compatibility warning and does not affect runtime or build integrity.
 
-### Image resizing
+---
 
-Workers do not support `sharp`, so image resizing features are not available. The Media collection has `crop` and `focalPoint` disabled for this reason, and options like `imageSizes` will not work.
+## Operational Policies & Guidelines
 
-### GraphQL
+1. **Strict NPR Currency Policy:** All product prices, cart totals, and shipping quotes are denominated exclusively in Nepalese Rupees (`NPR` / `Rs.`). Never introduce multi-currency conversions without approval.
+2. **Product Imagery & Placeholders:**
+   - Temporary or AI-generated product images are marked with `temporaryAsset: true` in the `Media` collection.
+   - These are illustrative placeholders until real production batch photography, label verification, and color matching are finalized.
+3. **Color-Specific Variant Images:**
+   - In Payload's ecommerce plugin, media attachments exist at the parent `products` level. Individual `variants` inherit the parent product gallery.
+   - Do not alter the schema without formal data migration planning.
+4. **Database Safety:**
+   - Do not run local or remote D1 migrations (`payload migrate`) or database seeds (`seed:test`) unless explicitly authorized.
 
-We are currently waiting on some issues with GraphQL to be [fixed upstream in Workers](https://github.com/cloudflare/workerd/issues/5175) so full support for GraphQL is not currently guaranteed when deployed.
+---
 
-### Worker size limits
+## Deployment on Cloudflare
 
-We currently recommend deploying this template to the Paid Workers plan due to bundle [size limits](https://developers.cloudflare.com/workers/platform/limits/#worker-size) of 3mb. We're actively trying to reduce our bundle footprint over time to better meet this metric.
+Deployments are executed via OpenNext for Cloudflare:
 
-This also applies to your own code, in the case of importing a lot of libraries you may find yourself limited by the bundle.
+```bash
+# 1. Build and verify
+pnpm run build
 
-## Questions
+# 2. Deploy database migrations (remote D1)
+pnpm run deploy:database
 
-If you have any issues or questions, reach out to us on [Discord](https://discord.com/invite/payload) or start a [GitHub discussion](https://github.com/payloadcms/payload/discussions).
+# 3. Build and deploy worker bundle (remote Workers & R2)
+pnpm run deploy:app
+```
+
+---
+
+## License
+
+This project is proprietary and confidential to **Aura Dynamics Pvt. Ltd.** All rights reserved.
