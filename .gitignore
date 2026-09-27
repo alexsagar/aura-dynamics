@@ -52,3 +52,7 @@ node_modules/
 # OpenNext
 .open-next
 .wrangler
+
+# Temporary test and visual proof artifacts
+/.playwright-mcp/
+/*.png
