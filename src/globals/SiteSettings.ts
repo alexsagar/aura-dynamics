@@ -6,7 +6,7 @@ import { isAdmin } from '../access/ecommerce'
 export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site Settings',
-  admin: { group: 'Content' },
+  admin: { group: 'Settings' },
   access: { read: () => true, update: isAdmin },
   versions: { max: 10 },
   fields: [

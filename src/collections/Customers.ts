@@ -5,6 +5,8 @@ export const Customers: CollectionConfig = {
   auth: true,
   admin: {
     useAsTitle: 'email',
+    group: 'Store',
+    defaultColumns: ['name', 'email', 'phone', 'createdAt'],
   },
   access: {
     // Anyone can create/register a customer

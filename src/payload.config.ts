@@ -80,6 +80,20 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    meta: {
+      titleSuffix: ' · Aura Admin',
+      icons: [{ rel: 'icon', url: '/brand/aura-symbol.svg' }],
+      openGraph: {
+        images: '/brand/aura-logo.svg',
+      },
+    },
+    components: {
+      graphics: {
+        Logo: '@/components/admin/Logo#Logo',
+        Icon: '@/components/admin/Icon#Icon',
+      },
+      beforeDashboard: ['@/components/admin/BeforeDashboard#BeforeDashboard'],
+    },
   },
   collections: [Users, Customers, Media, Categories, Materials],
   globals: [Homepage, Header, Footer, SiteSettings],
@@ -119,14 +133,70 @@ export default buildConfig({
       inventory: true,
       carts: {
         allowGuestCarts: true,
+        cartsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection.admin,
+            group: 'Store',
+            defaultColumns: ['id', 'customer', 'subtotal', 'currency', 'updatedAt'],
+          },
+        }),
+      },
+      orders: {
+        ordersCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection.admin,
+            group: 'Store',
+            defaultColumns: ['id', 'customer', 'total', 'status', 'createdAt'],
+          },
+        }),
+      },
+      addresses: {
+        addressesCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection.admin,
+            group: 'Store',
+          },
+        }),
+      },
+      transactions: {
+        transactionsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+          ...defaultCollection,
+          admin: {
+            ...defaultCollection.admin,
+            group: 'Store',
+          },
+        }),
       },
       payments: {
         paymentMethods: [],
       },
       products: {
         variants: {
+          variantTypesCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
+            ...defaultCollection,
+            admin: {
+              ...defaultCollection.admin,
+              group: 'Catalog',
+              defaultColumns: ['label', 'name', 'updatedAt'],
+            },
+          }),
           variantOptionsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
             ...defaultCollection,
+            admin: {
+              ...defaultCollection.admin,
+              group: 'Catalog',
+              defaultColumns: [
+                'label',
+                'value',
+                'variantType',
+                'colorFamily',
+                'hexColor',
+                'material',
+              ],
+            },
             fields: [
               ...defaultCollection.fields,
               {
@@ -178,6 +248,11 @@ export default buildConfig({
           }),
           variantsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
             ...defaultCollection,
+            admin: {
+              ...defaultCollection.admin,
+              group: 'Catalog',
+              defaultColumns: ['title', 'sku', 'priceInNPR', 'inventory', 'active', 'updatedAt'],
+            },
             fields: [
               ...defaultCollection.fields,
               {
@@ -209,6 +284,7 @@ export default buildConfig({
           ...defaultCollection,
           admin: {
             ...defaultCollection.admin,
+            group: 'Catalog',
             useAsTitle: 'title',
             defaultColumns: ['title', 'productType', 'prices', 'variants', 'updatedAt'],
           },

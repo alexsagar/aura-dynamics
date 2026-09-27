@@ -2,18 +2,41 @@ import type { CollectionConfig } from 'payload'
 
 export const Media: CollectionConfig = {
   slug: 'media',
+  admin: {
+    useAsTitle: 'alt',
+    group: 'Content',
+    defaultColumns: ['filename', 'alt', 'filesize', 'updatedAt'],
+  },
   access: {
     read: () => true,
   },
   fields: [
     {
+      name: 'filesize',
+      type: 'number',
+      admin: {
+        readOnly: true,
+        components: {
+          Cell: '@/components/admin/FileSizeCell#FileSizeCell',
+        },
+      },
+    },
+    {
       name: 'alt',
       type: 'text',
+      label: 'Alternative Text (Alt)',
       required: true,
+      admin: {
+        description: 'Descriptive text for accessibility, SEO, and screen readers.',
+      },
     },
     {
       name: 'caption',
       type: 'text',
+      label: 'Caption',
+      admin: {
+        description: 'Optional image caption for editorial displays.',
+      },
     },
     {
       // Stable dedupe key for the storefront media migration. Filenames are not

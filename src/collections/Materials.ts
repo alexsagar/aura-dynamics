@@ -5,6 +5,7 @@ export const Materials: CollectionConfig = {
   admin: {
     useAsTitle: 'name',
     group: 'Catalog',
+    defaultColumns: ['name', 'slug', 'baseFamily', 'sortOrder', 'active', 'updatedAt'],
   },
   access: {
     read: () => true,

@@ -254,7 +254,13 @@ export interface Customer {
  */
 export interface Media {
   id: number;
+  /**
+   * Descriptive text for accessibility, SEO, and screen readers.
+   */
   alt: string;
+  /**
+   * Optional image caption for editorial displays.
+   */
   caption?: string | null;
   /**
    * Set by the media seed. Identifies a migrated asset.
