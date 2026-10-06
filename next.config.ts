@@ -15,6 +15,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Permanent redirects for retired slugs so old links / search-engine results
+  // don't 404. Numakers PLA+ was consolidated into Numakers PLA.
+  async redirects() {
+    return [
+      {
+        source: '/product/numakers-pla-plus',
+        destination: '/product/numakers-pla',
+        permanent: true,
+      },
+    ]
+  },
+
   // Packages with Cloudflare Workers (workerd) specific code
   // Read more: https://opennext.js.org/cloudflare/howtos/workerd
   serverExternalPackages: ['jose', 'pg-cloudflare'],
