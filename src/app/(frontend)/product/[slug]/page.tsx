@@ -29,7 +29,9 @@ const getProductBySlug = cache(async (slug: string): Promise<Product | null> => 
       },
       depth: 2,
       limit: 1,
-      joins: { variants: { limit: 100 } },
+      // Oldest-first so the first-seeded variant (the primary colour) is the
+      // default selection and default gallery image, deterministically.
+      joins: { variants: { limit: 100, sort: 'createdAt' } },
       overrideAccess: false,
     })
     return (docs[0] as Product) ?? null

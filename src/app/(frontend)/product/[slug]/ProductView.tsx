@@ -43,7 +43,7 @@ export function ProductView({ product }: { product: any }) {
       : null
 
   return (
-    <div className="mb-24 grid gap-16 lg:grid-cols-2 lg:gap-24">
+    <div className="mb-24 grid grid-cols-1 gap-16 lg:grid-cols-2 lg:gap-24">
       {/* Left Column: Interactive Image Gallery */}
       <div className="lg:sticky lg:top-32 lg:self-start">
         <ProductGallery

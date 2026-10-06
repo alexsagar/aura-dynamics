@@ -207,6 +207,18 @@ test.describe('Aura Ecommerce Guest Shopping Flow', () => {
   }) => {
     const idempotencyKey = `e2e-idem-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
+    // Resolve the real product/variant ids by SKU so the test is robust on a
+    // fresh clone (ids are not stable across seeds).
+    const variantRes = await request.get(
+      'http://localhost:3000/api/variants?where[sku][equals]=AURA-NUM-PLA-WHT&depth=0&limit=1',
+    )
+    expect(variantRes.ok()).toBe(true)
+    const variantJson = await variantRes.json()
+    const variant = variantJson.docs?.[0]
+    expect(variant, 'Numakers PLA Pure White variant must exist (run the seed)').toBeTruthy()
+    const variantId = variant.id
+    const productId = typeof variant.product === 'object' ? variant.product.id : variant.product
+
     const checkoutPayload = {
       idempotencyKey,
       customer: {
@@ -219,8 +231,8 @@ test.describe('Aura Ecommerce Guest Shopping Flow', () => {
       paymentMethod: 'cod',
       items: [
         {
-          productId: 3,
-          variantId: 21,
+          productId,
+          variantId,
           quantity: 1,
         },
       ],
