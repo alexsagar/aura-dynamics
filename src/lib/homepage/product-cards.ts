@@ -1,5 +1,6 @@
 import type { FilamentColor, FilamentCardProduct, PackagingKind, PrintCardProduct, StockState } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
+import { productHref } from '@/lib/catalog/shared'
 import { mediaUrl } from '@/lib/payload-media'
 
 /** Real product records only — populated relationships (depth >= 2), not IDs. */
@@ -112,7 +113,7 @@ export function toFilamentCard(product: Product): FilamentCardProduct | null {
   return {
     colors: deriveColors(variants),
     fromPrice: priceInfo.fromPrice,
-    href: `/product/${product.slug}`,
+    href: productHref(product.slug),
     imageUrl,
     material,
     packaging: derivePackaging(variants),
@@ -137,7 +138,7 @@ export function toPrintCard(product: Product): PrintCardProduct | null {
   return {
     category: isPopulated(product.category) ? product.category.name : '',
     fromPrice: priceInfo.fromPrice,
-    href: `/product/${product.slug}`,
+    href: productHref(product.slug),
     imageUrl,
     materials: deriveMaterialNames(variants),
     price: priceInfo.price,

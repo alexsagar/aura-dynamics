@@ -1,9 +1,7 @@
 import Link from 'next/link'
 import React from 'react'
 
-import { demoFilament, demoPrint } from '@/data/storefront-demo'
 import { getHomepageViewModel } from '@/lib/homepage/get-homepage'
-import { imageFallback } from '@/lib/homepage/fallback'
 import { Container, Section } from '@/components/storefront/layout/Container'
 import { FilamentCard } from '@/components/storefront/product/FilamentCard'
 import { PrintCard } from '@/components/storefront/product/PrintCard'
@@ -78,56 +76,6 @@ const CompareLabel = ({ children, last }: { children: React.ReactNode; last?: bo
   </div>
 )
 
-/**
- * Original demo carousel, unchanged, used only when the CMS-selected Popular
- * products don't have photography yet (the current dev catalog has none).
- * Once real Product images exist this branch stops firing on its own.
- */
-const PopularFallback = () => (
-  <ScrollableCarousel>
-    <div className={carouselItem}>
-      <FilamentCard product={{ ...demoFilament, imageUrl: imageFallback.categoryFilaments }} ratio="portrait" />
-    </div>
-    <div className={carouselItem}>
-      <PrintCard
-        product={{ ...demoPrint, imageUrl: imageFallback.categoryPrints, title: 'Desk Organizer' }}
-        ratio="portrait"
-      />
-    </div>
-    <div className={carouselItem}>
-      <FilamentCard
-        product={{ ...demoFilament, imageUrl: imageFallback.categoryFilaments, price: 2500, title: 'Numakers PETG' }}
-        ratio="portrait"
-      />
-    </div>
-    <div className={carouselItem}>
-      <PrintCard
-        product={{
-          ...demoPrint,
-          imageUrl: imageFallback.categoryPrints,
-          materials: ['PLA', 'PETG'],
-          title: 'Articulated Dragon',
-        }}
-        ratio="portrait"
-      />
-    </div>
-    <div className={carouselItem}>
-      <FilamentCard
-        product={{ ...demoFilament, imageUrl: imageFallback.categoryFilaments, price: 2500, title: 'Pitch Black PLA' }}
-        ratio="portrait"
-      />
-    </div>
-  </ScrollableCarousel>
-)
-
-/** Original "Fresh Prints" demo row, same fallback rule as PopularFallback. */
-const FRESH_FALLBACK = [
-  { href: '/3d-prints', img: imageFallback.useCaseFunctional, price: 'NPR 3,500', title: 'Geometric Planter' },
-  { href: '/3d-prints', img: imageFallback.categoryPrints, price: 'NPR 2,400', title: 'Desk Organizer' },
-  { href: '/3d-prints', img: imageFallback.useCaseCosplay, price: 'NPR 8,500', title: 'Mech Keyboard Case' },
-  { href: '/3d-prints', img: imageFallback.useCaseMiniatures, price: 'NPR 4,500', title: 'Articulated Dragon' },
-]
-
 export default async function HomePage() {
   const vm = await getHomepageViewModel()
 
@@ -189,26 +137,49 @@ export default async function HomePage() {
       {vm.categories.enabled ? (
         <Section>
           <div className="grid gap-8 md:grid-cols-3">
-            {vm.categories.items.map((c) => (
-              <a className="group flex flex-col items-center gap-3 text-center" href={c.url || '#'} key={c.title}>
-                <div className="mb-2 aspect-3/2 w-full overflow-hidden rounded-3xl bg-[#f4f4f4] md:aspect-4/5 md:rounded-[32px]">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
-                  <img
-                    alt={c.title}
-                    className="size-full object-cover transition-transform duration-1200 ease-editorial group-hover:scale-105"
-                    src={c.imageUrl}
-                  />
+            {vm.categories.items.map((c) => {
+              const inner = (
+                <>
+                  <div className="relative mb-2 aspect-3/2 w-full overflow-hidden rounded-3xl bg-[#f4f4f4] md:aspect-4/5 md:rounded-[32px]">
+                    {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
+                    <img
+                      alt={c.title}
+                      className="size-full object-cover transition-transform duration-1200 ease-editorial group-hover:scale-105"
+                      src={c.imageUrl}
+                    />
+                    {!c.url ? (
+                      <span className="absolute top-3 right-3 rounded-full bg-black/70 px-3 py-1 text-xs font-semibold tracking-[0.08em] text-white uppercase backdrop-blur-sm">
+                        Coming soon
+                      </span>
+                    ) : null}
+                  </div>
+                  <h3 className="text-2xl font-medium tracking-[-0.02em]">{c.title}</h3>
+                  <p className="text-muted">{c.subtitle}</p>
+                </>
+              )
+              // A category without a destination (e.g. Accessories, no catalog
+              // yet) is shown as a non-interactive "coming soon" card rather
+              // than a dead link.
+              return c.url ? (
+                <a className="group flex flex-col items-center gap-3 text-center" href={c.url} key={c.title}>
+                  {inner}
+                </a>
+              ) : (
+                <div
+                  aria-disabled="true"
+                  className="group flex cursor-default flex-col items-center gap-3 text-center"
+                  key={c.title}
+                >
+                  {inner}
                 </div>
-                <h3 className="text-2xl font-medium tracking-[-0.02em]">{c.title}</h3>
-                <p className="text-muted">{c.subtitle}</p>
-              </a>
-            ))}
+              )
+            })}
           </div>
         </Section>
       ) : null}
 
-      {/* 3. POPULAR PRODUCTS */}
-      {vm.popular.enabled ? (
+      {/* 3. POPULAR PRODUCTS — only real, photographed products; hidden when none */}
+      {vm.popular.enabled && vm.popular.cards.length ? (
         <section className="py-[clamp(64px,10vw,120px)]">
           <Container>
             <div className={RULE_HEADER}>
@@ -225,23 +196,19 @@ export default async function HomePage() {
             </div>
           </Container>
 
-          {vm.popular.cards.length ? (
-            <ScrollableCarousel>
-              {vm.popular.cards.map(({ card, type }, i) =>
-                type === 'filament' ? (
-                  <div className={carouselItem} key={i}>
-                    <FilamentCard product={card} ratio="portrait" />
-                  </div>
-                ) : (
-                  <div className={carouselItem} key={i}>
-                    <PrintCard product={card} ratio="portrait" />
-                  </div>
-                ),
-              )}
-            </ScrollableCarousel>
-          ) : (
-            <PopularFallback />
-          )}
+          <ScrollableCarousel>
+            {vm.popular.cards.map(({ card, type }, i) =>
+              type === 'filament' ? (
+                <div className={carouselItem} key={i}>
+                  <FilamentCard product={card} ratio="portrait" />
+                </div>
+              ) : (
+                <div className={carouselItem} key={i}>
+                  <PrintCard product={card} ratio="portrait" />
+                </div>
+              ),
+            )}
+          </ScrollableCarousel>
         </section>
       ) : null}
 
@@ -254,7 +221,7 @@ export default async function HomePage() {
               {vm.materialsSection.items.map((m) => (
                 <Link
                   className="group flex flex-col items-start overflow-hidden border-b border-white/10 py-8 transition-[padding-left] duration-400 ease-editorial md:flex-row md:items-center md:justify-between md:py-10 md:hover:pl-10"
-                  href={m.url || '#'}
+                  href={m.url}
                   key={m.name}
                 >
                   <div className="text-stroke leading-[0.9] font-extrabold tracking-[-0.04em] text-white transition-colors group-hover:text-lime md:text-transparent md:[-webkit-text-stroke:1px_rgba(255,255,255,0.3)] md:group-hover:[-webkit-text-stroke:1px_#c5f955]">
@@ -281,7 +248,7 @@ export default async function HomePage() {
             {vm.useCases.items.map((u) => (
               <Link
                 className="group relative aspect-4/5 cursor-crosshair overflow-hidden rounded-3xl"
-                href={u.url || '#'}
+                href={u.url}
                 key={u.title}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
@@ -301,8 +268,8 @@ export default async function HomePage() {
         </Section>
       ) : null}
 
-      {/* 6. FRESH FROM THE PRINTER */}
-      {vm.freshPrints.enabled ? (
+      {/* 6. FRESH FROM THE PRINTER — real print products only; hidden when none */}
+      {vm.freshPrints.enabled && vm.freshPrints.printCards.length ? (
         <section className="py-[clamp(64px,10vw,120px)]">
           <Container>
             <div className={RULE_HEADER}>
@@ -314,39 +281,22 @@ export default async function HomePage() {
           </Container>
 
           <ScrollableCarousel>
-            {vm.freshPrints.printCards.length
-              ? vm.freshPrints.printCards.map((f) => (
-                  <a className={cn('group flex flex-col gap-4', carouselItem)} href={f.href} key={f.href}>
-                    <div className="aspect-square w-full overflow-hidden rounded-xl bg-[#f4f4f4]">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
-                      <img
-                        alt={f.title}
-                        className="size-full object-cover transition-transform duration-600 ease-editorial group-hover:scale-105"
-                        src={f.imageUrl}
-                      />
-                    </div>
-                    <div className="flex items-baseline justify-between border-b border-black/10 pb-3 text-lg font-medium transition-colors group-hover:border-black/50">
-                      <span>{f.title}</span>
-                      <span>{formatNPR(f.price)}</span>
-                    </div>
-                  </a>
-                ))
-              : FRESH_FALLBACK.map((f) => (
-                  <a className={cn('group flex flex-col gap-4', carouselItem)} href={f.href} key={f.title}>
-                    <div className="aspect-square w-full overflow-hidden rounded-xl bg-[#f4f4f4]">
-                      {/* eslint-disable-next-line @next/next/no-img-element -- remote placeholder photography */}
-                      <img
-                        alt={f.title}
-                        className="size-full object-cover transition-transform duration-600 ease-editorial group-hover:scale-105"
-                        src={f.img}
-                      />
-                    </div>
-                    <div className="flex items-baseline justify-between border-b border-black/10 pb-3 text-lg font-medium transition-colors group-hover:border-black/50">
-                      <span>{f.title}</span>
-                      <span>{f.price}</span>
-                    </div>
-                  </a>
-                ))}
+            {vm.freshPrints.printCards.map((f) => (
+              <a className={cn('group flex flex-col gap-4', carouselItem)} href={f.href} key={f.href}>
+                <div className="aspect-square w-full overflow-hidden rounded-xl bg-[#f4f4f4]">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
+                  <img
+                    alt={f.title}
+                    className="size-full object-cover transition-transform duration-600 ease-editorial group-hover:scale-105"
+                    src={f.imageUrl}
+                  />
+                </div>
+                <div className="flex items-baseline justify-between border-b border-black/10 pb-3 text-lg font-medium transition-colors group-hover:border-black/50">
+                  <span>{f.title}</span>
+                  <span>{formatNPR(f.price)}</span>
+                </div>
+              </a>
+            ))}
           </ScrollableCarousel>
         </section>
       ) : null}

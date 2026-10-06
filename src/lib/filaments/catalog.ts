@@ -1,6 +1,6 @@
 import type { FilamentCardProduct, FilamentColor } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
-import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, SORT_KEYS } from '@/lib/catalog/shared'
+import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
 import { mediaUrl } from '@/lib/payload-media'
 
 import type { SortKey } from './sort-options'
@@ -220,7 +220,7 @@ export function buildCard(
   return {
     colors: np.allColors,
     fromPrice: matching.length > 1,
-    href: `/product/${np.slug}`,
+    href: productHref(np.slug),
     imageUrl: cardImage,
     material: np.materialName || np.finishLabel || '',
     price,

@@ -29,6 +29,7 @@ export async function seedStorefrontMedia() {
 
   let created = 0
   let skipped = 0
+  let failed = 0
 
   for (const entry of storefrontMediaManifest) {
     const existing = await findMediaByKey(payload, entry.key)
@@ -38,13 +39,24 @@ export async function seedStorefrontMedia() {
       continue
     }
 
-    const res = await fetch(entry.sourceUrl)
-    if (!res.ok) {
-      // Fail loudly: a half-migrated media set is worse than none.
-      throw new Error(`Download failed for ${entry.key}: ${res.status} ${res.statusText}`)
+    let buffer: Buffer
+    let contentType = 'image/jpeg'
+    try {
+      const res = await fetch(entry.sourceUrl)
+      if (!res.ok) throw new Error(`${res.status} ${res.statusText}`)
+      buffer = Buffer.from(await res.arrayBuffer())
+      if (!buffer.length) throw new Error('empty response')
+      contentType = res.headers.get('content-type') || contentType
+    } catch (err) {
+      // These are temporary Unsplash placeholders. A fresh clone with no
+      // outbound network (e.g. a sandboxed CI/cloud session) must still seed a
+      // working CMS, so a failed placeholder download is a warning, not a fatal
+      // error — the storefront falls back to real product photography and the
+      // approved static copy. Final Aura photography is uploaded via Admin.
+      failed++
+      console.warn(`  ! ${entry.key} skipped (download failed: ${String((err as Error).message)})`)
+      continue
     }
-    const buffer = Buffer.from(await res.arrayBuffer())
-    if (!buffer.length) throw new Error(`Empty response for ${entry.key}`)
 
     const doc = await payload.create({
       collection: 'media',
@@ -58,7 +70,7 @@ export async function seedStorefrontMedia() {
       file: {
         name: entry.filename,
         data: buffer,
-        mimetype: res.headers.get('content-type') || 'image/jpeg',
+        mimetype: contentType,
         size: buffer.length,
       },
     })
@@ -66,6 +78,8 @@ export async function seedStorefrontMedia() {
     console.log(`  + ${entry.key} -> media ${doc.id} (${buffer.length} bytes)`)
   }
 
-  console.log(`🖼  Done. created=${created} reused=${skipped} total=${storefrontMediaManifest.length}`)
-  return { created, skipped }
+  console.log(
+    `🖼  Done. created=${created} reused=${skipped} skipped=${failed} total=${storefrontMediaManifest.length}`,
+  )
+  return { created, skipped, failed }
 }

@@ -1,6 +1,6 @@
 import type { PrintCardProduct } from '@/components/storefront/types'
 import type { Category, Material, Product, Variant, VariantOption } from '@/payload-types'
-import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, SORT_KEYS } from '@/lib/catalog/shared'
+import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
 import { mediaUrl } from '@/lib/payload-media'
 
 import type { SortKey } from '@/lib/filaments/sort-options'
@@ -164,7 +164,7 @@ function buildCard(np: NPrintProduct, matching: NPrintVariant[]): PrintCardProdu
   return {
     category: np.categoryName || '',
     fromPrice: matching.length > 1,
-    href: `/product/${np.slug}`,
+    href: productHref(np.slug),
     imageUrl: np.imageUrl,
     materials: np.allMaterials,
     price,

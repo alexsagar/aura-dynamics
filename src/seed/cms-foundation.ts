@@ -18,10 +18,18 @@ import { findMediaByKey } from './storefront-media'
  *  - CTA urls pointing at routes that do not exist are left blank
  */
 
-const mediaId = async (payload: Payload, key: string) => {
+/**
+ * Resolves a placeholder Media id by key, or null when it's absent. The
+ * storefront-media seed downloads temporary Unsplash placeholders, which can be
+ * unavailable on a sandboxed/offline clone. A missing placeholder must not
+ * abort the foundation seed: image fields simply stay empty and the storefront
+ * falls back to real product photography and the approved static copy.
+ */
+const mediaId = async (payload: Payload, key: string): Promise<number | null> => {
   const doc = await findMediaByKey(payload, key)
   if (!doc) {
-    throw new Error(`Media "${key}" not found. Run the storefront media seed first.`)
+    console.warn(`  ! media "${key}" not found — leaving its image slot empty`)
+    return null
   }
   return doc.id
 }
@@ -57,7 +65,12 @@ const productIds = async (payload: Payload, productType: string, limit: number) 
  * products that already have images so a rerun (or a manual admin edit)
  * isn't clobbered.
  */
-const assignProductImages = async (payload: Payload, slug: string, mediaIds: number[]) => {
+const assignProductImages = async (payload: Payload, slug: string, rawIds: (number | null)[]) => {
+  const mediaIds = rawIds.filter((id): id is number => id != null)
+  if (!mediaIds.length) {
+    console.log(`  = ${slug} has no placeholder media available, skipping image assignment`)
+    return
+  }
   const { docs } = await payload.find({
     collection: 'products',
     where: { slug: { equals: slug } },

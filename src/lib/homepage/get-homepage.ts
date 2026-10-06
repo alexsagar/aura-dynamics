@@ -76,14 +76,18 @@ function normalizeHomepage(cms: Homepage) {
     heading: cms.popular?.heading || 'Popular.',
   }
 
-  const materialItems = (cms.materialsSection?.items ?? []).map((item) => ({
-    description: item.description || '',
-    name:
-      item.displayName ||
-      (item.material && typeof item.material === 'object' ? item.material.name : '') ||
-      '',
-    url: item.url || '',
-  }))
+  const materialItems = (cms.materialsSection?.items ?? []).map((item) => {
+    const material = item.material && typeof item.material === 'object' ? item.material : null
+    // Prefer the editor-set URL; otherwise deep-link into the filament catalog
+    // filtered by this material (a real, working destination), falling back to
+    // the educational materials page. Never an inert '#'.
+    const url = item.url || (material?.slug ? `/filaments?material=${material.slug}` : '/materials')
+    return {
+      description: item.description || '',
+      name: item.displayName || material?.name || '',
+      url,
+    }
+  })
   const materialsSection = {
     enabled: cms.materialsSection?.enabled ?? true,
     heading: cms.materialsSection?.heading || 'Explore by Material',
@@ -98,11 +102,14 @@ function normalizeHomepage(cms: Homepage) {
           imageFallback.hero,
         subtitle: item.subtitle || useCasesFallback[i]?.subtitle || '',
         title: item.title || useCasesFallback[i]?.title || '',
-        url: item.url || useCasesFallback[i]?.url || '',
+        // Editorial "what you can print" cards: route to the ready-stock prints
+        // catalog when no explicit URL is set, never an inert '#'.
+        url: item.url || useCasesFallback[i]?.url || '/3d-prints',
       }))
     : useCasesFallback.map((u, i) => ({
         imageUrl: [imageFallback.useCaseFunctional, imageFallback.useCaseMiniatures, imageFallback.useCaseCosplay][i],
         ...u,
+        url: u.url || '/3d-prints',
       }))
   const useCases = { enabled: cms.useCases?.enabled ?? true, heading: cms.useCases?.heading || 'What are you printing?', items: useCaseItems }
 

@@ -2,8 +2,8 @@
  * Homepage-only fallback content — the copy/urls that were hardcoded in
  * page.tsx before CMS wiring. Used only when a field is missing from the
  * Homepage Global, so an incomplete CMS edit can't collapse a section.
- * Product-card fallbacks live in `@/data/storefront-demo` instead, since
- * other routes already depend on that file.
+ * There are intentionally no product-card fallbacks: product rows render real,
+ * photographed Payload products or nothing at all — never demo/mock cards.
  */
 
 /**

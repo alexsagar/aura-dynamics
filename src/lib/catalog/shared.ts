@@ -10,6 +10,16 @@ import type { SortKey } from '@/lib/filaments/sort-options'
 export const isPopulated = <T,>(value: number | T | null | undefined): value is T =>
   Boolean(value) && typeof value === 'object'
 
+/**
+ * The single source of truth for a product's storefront URL. Every component
+ * that links to a product — cards, recommendations, carousels, the cart — must
+ * resolve its href through here so there is never a second, drifting routing
+ * convention (e.g. `/products/`, `/shop/`, or a per-type `/3d-prints/<slug>`).
+ * Both filaments and 3D prints live under the one `/product/<slug>` route.
+ */
+export const productHref = (slug: string | null | undefined): string =>
+  slug ? `/product/${slug}` : '/'
+
 /** One product's stock state from its (matching) inventory total. */
 export function deriveStock(inventory: number, lowStockThreshold: number): { left?: number; state: StockState } {
   if (inventory <= 0) return { state: 'out' }
