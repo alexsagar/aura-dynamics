@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
+import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
 
 /**
@@ -303,26 +304,45 @@ export async function POST(req: Request) {
     const paymentStatus = paymentMethod === 'esewa_qr' ? 'awaiting_verification' : 'unpaid'
     const storedRef = paymentMethod === 'esewa_qr' ? paymentReference?.trim() : null
 
-    // 11. Atomic Inventory Reservation + Order Creation with Rollback Compensation
-    // Tracks every decrement performed so if order creation fails, stock is strictly restored
-    const decrementsPerformed: { variantId: number; previousStock: number; qty: number }[] = []
+    // 11. Atomic Inventory Reservation + Order Creation with delta-based rollback.
+    // Each decrement is a single conditional UPDATE guarded by `inventory >= qty`,
+    // so concurrent checkouts cannot oversell (no read-modify-write race): two
+    // buyers of the last unit will see exactly one UPDATE affect a row.
+    const db = (payload.db as any).drizzle
+    const decrementsPerformed: { variantId: number; qty: number }[] = []
+
+    // Restore ONLY each checkout's own quantity (a delta add-back), never an
+    // absolute snapshot — otherwise a concurrent order's decrement would be lost.
+    const rollbackInventory = async () => {
+      for (const dec of decrementsPerformed) {
+        try {
+          await db.run(
+            sql`UPDATE \`variants\` SET \`inventory\` = \`inventory\` + ${dec.qty} WHERE \`id\` = ${dec.variantId}`,
+          )
+        } catch (rollbackError) {
+          console.error(`CRITICAL: Failed to roll back variant ${dec.variantId} stock:`, rollbackError)
+        }
+      }
+    }
 
     try {
-      // Step A: Decrement inventory for each ordered variant
+      // Step A: Atomically reserve inventory for each ordered variant.
       for (const item of verifiedItems) {
-        const newInventory = Math.max(0, item.availableStock - item.quantity)
-        await payload.db.updateOne({
-          collection: 'variants',
-          id: item.variant,
-          data: {
-            inventory: newInventory,
-          },
-        })
-        decrementsPerformed.push({
-          variantId: item.variant,
-          previousStock: item.availableStock,
-          qty: item.quantity,
-        })
+        const res: any = await db.run(
+          sql`UPDATE \`variants\` SET \`inventory\` = \`inventory\` - ${item.quantity} WHERE \`id\` = ${item.variant} AND \`inventory\` >= ${item.quantity}`,
+        )
+        const changed = res?.meta?.changes ?? res?.changes ?? 0
+        if (changed !== 1) {
+          // Lost the race for remaining stock between validation and reservation.
+          await rollbackInventory()
+          return NextResponse.json(
+            {
+              error: `"${item.variantTitle}" just sold out or doesn't have enough stock left. Please adjust your cart and try again.`,
+            },
+            { status: 409 },
+          )
+        }
+        decrementsPerformed.push({ variantId: item.variant, qty: item.quantity })
       }
 
       // Step B: Create Order record in Payload
@@ -386,20 +406,8 @@ export async function POST(req: Request) {
     } catch (orderError: any) {
       console.error('Order creation failed. Rolling back inventory decrements:', orderError)
 
-      // Step C: Rollback compensation - restore all decremented variant stocks
-      for (const dec of decrementsPerformed) {
-        try {
-          await payload.db.updateOne({
-            collection: 'variants',
-            id: dec.variantId,
-            data: {
-              inventory: dec.previousStock,
-            },
-          })
-        } catch (rollbackError) {
-          console.error(`CRITICAL: Failed to rollback variant ${dec.variantId} stock:`, rollbackError)
-        }
-      }
+      // Step C: Rollback compensation - add back only this checkout's quantities.
+      await rollbackInventory()
 
       // Check if failure was caused by a concurrent unique constraint on idempotencyKey
       if (
