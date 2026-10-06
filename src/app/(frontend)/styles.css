@@ -76,6 +76,11 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
+    /* Clip horizontal overflow at the root so off-canvas fixed elements (the
+       cart drawer sits translate-x-full off-screen when closed) can't create a
+       horizontal scrollbar. `clip` avoids making <html> a scroll container, so
+       sticky positioning and smooth scroll keep working. */
+    overflow-x: clip;
   }
 
   body {
@@ -83,7 +88,7 @@
     color: var(--color-foreground);
     line-height: 1.6;
     /* the hero image straddles the viewport edge on small screens */
-    overflow-x: hidden;
+    overflow-x: clip;
   }
 
   :focus-visible {
