@@ -3,16 +3,23 @@ import { seedCatalogTest } from './catalog-test'
 import { seedStorefrontMedia } from './storefront-media'
 import { seedCmsFoundation } from './cms-foundation'
 
+import { seedNumakersMedia } from './numakers-media'
+
 async function run() {
   const target = process.argv[2]
-  if (target === 'media') return seedStorefrontMedia()
+  if (target === 'media') {
+    await seedStorefrontMedia()
+    return seedNumakersMedia()
+  }
   if (target === 'cms') return seedCmsFoundation()
   if (target === 'all') {
     await seedCatalogTest()
     await seedStorefrontMedia()
+    await seedNumakersMedia()
     return seedCmsFoundation()
   }
-  return seedCatalogTest()
+  await seedCatalogTest()
+  return seedNumakersMedia()
 }
 
 run()

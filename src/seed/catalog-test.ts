@@ -8,7 +8,12 @@ export async function seedCatalogTest() {
   // Upsert a product by slug, falling back to title so pre-slug records are migrated
   // in place instead of duplicated.
   const upsertProduct = async (data: any) => {
-    for (const where of [{ slug: { equals: data.slug } }, { title: { equals: data.title } }]) {
+    for (const where of [
+      { slug: { equals: data.slug } },
+      { title: { equals: data.title } },
+      { slug: { equals: 'numakers-pla-plus' } },
+      { title: { equals: 'Numakers PLA+' } },
+    ]) {
       const existing = await payload.find({
         collection: 'products',
         where,
@@ -162,10 +167,13 @@ export async function seedCatalogTest() {
 
   // Color Options
   const colorOptionsToSeed = [
-    { label: 'Black', value: 'black', colorFamily: 'black' as const, hexColor: '#000000' },
-    { label: 'White', value: 'white', colorFamily: 'white' as const, hexColor: '#FFFFFF' },
-    { label: 'Green', value: 'green', colorFamily: 'green' as const, hexColor: '#15A246' },
-    { label: 'Red', value: 'red', colorFamily: 'red' as const, hexColor: '#FF0000' },
+    { label: 'Pure White', value: 'pure-white', colorFamily: 'white' as const, hexColor: '#FFFFFF' },
+    { label: 'Pitch Black', value: 'pitch-black', colorFamily: 'black' as const, hexColor: '#111111' },
+    { label: 'Forest Green', value: 'forest-green', colorFamily: 'green' as const, hexColor: '#2D6A4F' },
+    { label: 'Nuclear Red', value: 'nuclear-red', colorFamily: 'red' as const, hexColor: '#E63946' },
+    { label: 'Royal Blue', value: 'royal-blue', colorFamily: 'blue' as const, hexColor: '#2563EB' },
+    { label: 'Lemon Yellow', value: 'lemon-yellow', colorFamily: 'yellow' as const, hexColor: '#FACC15' },
+    { label: 'Transparent', value: 'transparent', colorFamily: 'transparent' as const, hexColor: '#E9EEF0' },
   ]
 
   for (const opt of colorOptionsToSeed) {
@@ -303,15 +311,15 @@ export async function seedCatalogTest() {
   console.log('✓ Variant Options seeded/updated:', Object.keys(optionDocs))
 
   // ----------------------------------------------------
-  // 5. Test Filament Product: Numakers PLA+
+  // 5. Real Filament Product: Numakers PLA
   // ----------------------------------------------------
   const filamentProductData = {
-    title: 'Numakers PLA+',
-    slug: 'numakers-pla-plus',
-    shortDescription: '1 kg Numakers PLA+ filament for reliable everyday 3D printing.',
+    title: 'Numakers PLA',
+    slug: 'numakers-pla',
+    shortDescription: '1 kg Numakers PLA filament (1.75 mm) for reliable everyday 3D printing.',
     productType: 'filament' as const,
     enableVariants: true,
-    variantTypes: [variantTypeDocs['Color'].id, variantTypeDocs['Packaging'].id],
+    variantTypes: [variantTypeDocs['Color'].id],
     filamentDetails: {
       brand: 'Numakers' as const,
       material: materialDocs['pla'].id,
@@ -325,45 +333,75 @@ export async function seedCatalogTest() {
   const filamentProductDoc: any = await upsertProduct(filamentProductData)
   console.log('✓ Filament Product seeded/updated:', filamentProductDoc.title)
 
-  // Seed Filament Variants
+  // Seed Filament Variants (7 confirmed colors, 500 kg total stock)
   const filamentVariants = [
     {
-      title: 'Black + Full Spool',
-      sku: 'AURA-TEST-PLA-BLK-SP',
-      options: [optionDocs['Color_black'].id, optionDocs['Packaging_full-spool'].id],
+      title: 'Numakers PLA — Pure White',
+      sku: 'AURA-NUM-PLA-WHT',
+      options: [optionDocs['Color_pure-white'].id],
       priceInNPREnabled: true,
       priceInNPR: 2500,
-      inventory: 8,
+      inventory: 120,
       lowStockThreshold: 3,
       active: true,
     },
     {
-      title: 'Black + Refill',
-      sku: 'AURA-TEST-PLA-BLK-RF',
-      options: [optionDocs['Color_black'].id, optionDocs['Packaging_refill'].id],
-      priceInNPREnabled: true,
-      priceInNPR: 2300,
-      inventory: 4,
-      lowStockThreshold: 3,
-      active: true,
-    },
-    {
-      title: 'White + Full Spool',
-      sku: 'AURA-TEST-PLA-WHT-SP',
-      options: [optionDocs['Color_white'].id, optionDocs['Packaging_full-spool'].id],
+      title: 'Numakers PLA — Pitch Black',
+      sku: 'AURA-NUM-PLA-BLK',
+      options: [optionDocs['Color_pitch-black'].id],
       priceInNPREnabled: true,
       priceInNPR: 2500,
-      inventory: 3,
+      inventory: 160,
       lowStockThreshold: 3,
       active: true,
     },
     {
-      title: 'White + Refill',
-      sku: 'AURA-TEST-PLA-WHT-RF',
-      options: [optionDocs['Color_white'].id, optionDocs['Packaging_refill'].id],
+      title: 'Numakers PLA — Forest Green',
+      sku: 'AURA-NUM-PLA-GRN',
+      options: [optionDocs['Color_forest-green'].id],
       priceInNPREnabled: true,
-      priceInNPR: 2300,
-      inventory: 0,
+      priceInNPR: 2500,
+      inventory: 50,
+      lowStockThreshold: 3,
+      active: true,
+    },
+    {
+      title: 'Numakers PLA — Nuclear Red',
+      sku: 'AURA-NUM-PLA-RED',
+      options: [optionDocs['Color_nuclear-red'].id],
+      priceInNPREnabled: true,
+      priceInNPR: 2500,
+      inventory: 60,
+      lowStockThreshold: 3,
+      active: true,
+    },
+    {
+      title: 'Numakers PLA — Royal Blue',
+      sku: 'AURA-NUM-PLA-BLU',
+      options: [optionDocs['Color_royal-blue'].id],
+      priceInNPREnabled: true,
+      priceInNPR: 2500,
+      inventory: 60,
+      lowStockThreshold: 3,
+      active: true,
+    },
+    {
+      title: 'Numakers PLA — Lemon Yellow',
+      sku: 'AURA-NUM-PLA-YLW',
+      options: [optionDocs['Color_lemon-yellow'].id],
+      priceInNPREnabled: true,
+      priceInNPR: 2500,
+      inventory: 40,
+      lowStockThreshold: 3,
+      active: true,
+    },
+    {
+      title: 'Numakers PLA — Transparent',
+      sku: 'AURA-NUM-PLA-CLR',
+      options: [optionDocs['Color_transparent'].id],
+      priceInNPREnabled: true,
+      priceInNPR: 2500,
+      inventory: 10,
       lowStockThreshold: 3,
       active: true,
     },

@@ -104,6 +104,7 @@ export default buildConfig({
   },
   db: sqliteD1Adapter({
     binding: cloudflare.env.D1,
+    push: false,
   }),
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [
@@ -148,8 +149,92 @@ export default buildConfig({
           admin: {
             ...defaultCollection.admin,
             group: 'Store',
-            defaultColumns: ['id', 'customer', 'total', 'status', 'createdAt'],
+            defaultColumns: ['orderNumber', 'paymentMethod', 'paymentStatus', 'amount', 'status', 'createdAt'],
           },
+          fields: [
+            ...defaultCollection.fields,
+            {
+              name: 'orderNumber',
+              type: 'text',
+              index: true,
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+              },
+            },
+            {
+              name: 'idempotencyKey',
+              type: 'text',
+              index: true,
+              unique: true,
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+                description: 'Unique client idempotency key to prevent duplicate orders',
+              },
+            },
+            {
+              name: 'paymentMethod',
+              type: 'select',
+              defaultValue: 'esewa_qr',
+              options: [
+                { label: 'eSewa QR', value: 'esewa_qr' },
+                { label: 'Cash on Delivery (COD)', value: 'cod' },
+              ],
+              admin: {
+                position: 'sidebar',
+              },
+            },
+            {
+              name: 'paymentStatus',
+              type: 'select',
+              defaultValue: 'awaiting_verification',
+              options: [
+                { label: 'Unpaid', value: 'unpaid' },
+                { label: 'Awaiting Verification', value: 'awaiting_verification' },
+                { label: 'Paid', value: 'paid' },
+                { label: 'Refunded', value: 'refunded' },
+              ],
+              admin: {
+                position: 'sidebar',
+              },
+            },
+            {
+              name: 'paymentReference',
+              type: 'text',
+              admin: {
+                position: 'sidebar',
+                description: 'Customer-supplied transaction or reference ID',
+              },
+            },
+            {
+              name: 'subtotal',
+              type: 'number',
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+              },
+            },
+            {
+              name: 'shipping',
+              type: 'number',
+              admin: {
+                position: 'sidebar',
+                readOnly: true,
+              },
+            },
+            {
+              name: 'orderNotes',
+              type: 'textarea',
+            },
+            {
+              name: 'itemsSnapshot',
+              type: 'json',
+              admin: {
+                description: 'Immutable snapshot of purchased items at checkout time',
+              },
+            },
+          ],
         }),
       },
       addresses: {
@@ -255,6 +340,15 @@ export default buildConfig({
             },
             fields: [
               ...defaultCollection.fields,
+              {
+                name: 'images',
+                type: 'upload',
+                relationTo: 'media',
+                hasMany: true,
+                admin: {
+                  description: 'Variant photography for customer-facing display',
+                },
+              },
               {
                 name: 'sku',
                 type: 'text',

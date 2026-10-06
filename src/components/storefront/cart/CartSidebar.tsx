@@ -53,14 +53,15 @@ export function CartSidebar() {
         <div className="flex items-center justify-between border-b border-black/10 px-6 py-5">
           <h2 className="text-xl font-medium tracking-[-0.02em]">Your Cart</h2>
           <div className="flex items-center gap-4">
-            <Link 
-              href="/cart" 
+            <Link
+              href="/cart"
               className="text-sm font-semibold tracking-[0.1em] text-muted uppercase transition-colors hover:text-black"
               onClick={closeCart}
             >
               View Cart
             </Link>
-            <button 
+            <button
+              type="button"
               onClick={closeCart}
               className="flex size-10 items-center justify-center rounded-full hover:bg-black/5"
               aria-label="Close cart"
@@ -88,45 +89,92 @@ export function CartSidebar() {
             </div>
           ) : (
             <div className="flex flex-col gap-6">
-              {cartItems.map((item, idx) => {
-                const product = typeof item.product === 'object' ? item.product : null
-                const productId = product ? product.id : item.product
-                const title = product?.title || `Product ${productId}`
-                const price = product?.prices?.[0]?.amount || 0
-                const image = product?.images?.[0]?.url || 'https://images.unsplash.com/photo-1612825173281-9a193378527e?q=80&w=400&auto=format&fit=crop'
+              {cartItems.map((item) => {
+                const lineTotal = item.unitPrice * item.quantity
+                const productHref = item.slug ? `/product/${item.slug}` : `/product/${item.productId}`
 
                 return (
-                  <div key={`${productId}-${idx}`} className="flex gap-4">
-                    <Link href={`/product/${product?.slug || productId}`} className="aspect-square w-24 shrink-0 overflow-hidden rounded-xl bg-black/5" onClick={closeCart}>
-                      <img src={image} alt={title} className="size-full object-cover mix-blend-multiply" />
-                    </Link>
-                    
-                    <div className="flex flex-1 flex-col justify-between">
-                      <div className="flex flex-col">
-                        <div className="flex justify-between gap-4">
-                          <Link href={`/product/${product?.slug || productId}`} className="font-medium tracking-[-0.02em] hover:underline" onClick={closeCart}>
-                            {title}
-                          </Link>
-                          <span className="font-medium">Rs. {(price * item.quantity).toFixed(2)}</span>
+                  <div key={item.id} className="flex gap-4 border-b border-black/5 pb-6">
+                    <Link
+                      href={productHref}
+                      className="aspect-square w-20 shrink-0 overflow-hidden rounded-xl bg-black/5"
+                      onClick={closeCart}
+                    >
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.title}
+                          className="size-full object-cover mix-blend-multiply"
+                        />
+                      ) : (
+                        <div className="size-full flex items-center justify-center text-muted text-xs">
+                          No Image
                         </div>
+                      )}
+                    </Link>
+
+                    <div className="flex flex-1 flex-col justify-between">
+                      <div className="flex flex-col gap-1">
+                        <div className="flex justify-between items-start gap-2">
+                          <Link
+                            href={productHref}
+                            className="font-medium tracking-[-0.02em] hover:underline leading-snug"
+                            onClick={closeCart}
+                          >
+                            {item.title}
+                          </Link>
+                          <span className="font-semibold text-sm whitespace-nowrap">
+                            Rs. {lineTotal.toFixed(2)}
+                          </span>
+                        </div>
+                        {item.color && (
+                          <div className="flex items-center gap-2">
+                            {item.hexColor && (
+                              <span
+                                className="size-3 rounded-full border border-black/10 inline-block"
+                                style={{ backgroundColor: item.hexColor }}
+                              />
+                            )}
+                            <span className="text-xs text-muted">{item.color}</span>
+                          </div>
+                        )}
+                        <span className="text-xs text-muted">
+                          Rs. {item.unitPrice.toFixed(2)} each
+                        </span>
                       </div>
 
-                      <div className="flex items-end justify-between">
+                      <div className="mt-3 flex items-center justify-between">
                         <div className="flex items-center gap-3 rounded-full border border-black/10 bg-[#f4f4f4] px-3 py-1">
-                          <button 
-                            onClick={() => updateQuantity(productId, item.quantity - 1)}
-                            className="text-lg font-medium text-muted transition-colors hover:text-black"
-                          >-</button>
-                          <span className="min-w-[16px] text-center text-sm font-medium">{item.quantity}</span>
-                          <button 
-                            onClick={() => updateQuantity(productId, item.quantity + 1)}
-                            className="text-lg font-medium text-muted transition-colors hover:text-black"
-                          >+</button>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
+                            className="text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                            aria-label={`Decrease quantity of ${item.title}`}
+                          >
+                            -
+                          </button>
+                          <span className="min-w-[16px] text-center text-sm font-medium">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                            disabled={item.quantity >= item.maxStock}
+                            className="text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                            aria-label={`Increase quantity of ${item.title}`}
+                          >
+                            +
+                          </button>
                         </div>
-                        <button 
-                          onClick={() => removeItem(productId)}
-                          className="text-sm font-semibold text-red-500 hover:text-red-700 underline"
-                        >Remove</button>
+                        <button
+                          type="button"
+                          onClick={() => removeItem(item.id)}
+                          className="text-xs font-semibold text-red-500 hover:text-red-700 underline"
+                          aria-label={`Remove ${item.title} from cart`}
+                        >
+                          Remove
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -138,12 +186,19 @@ export function CartSidebar() {
 
         {cartItems.length > 0 && (
           <div className="border-t border-black/10 bg-[#f4f4f4] p-6">
-            <div className="mb-6 flex justify-between text-xl font-medium tracking-[-0.02em]">
+            <div className="mb-4 flex justify-between text-xl font-medium tracking-[-0.02em]">
               <span>Subtotal</span>
-              <span>Rs. {cartTotal.toFixed(2)}</span>
+              <span className="font-semibold">Rs. {cartTotal.toFixed(2)}</span>
             </div>
-            <p className="mb-4 text-xs text-muted">Shipping and taxes calculated at checkout.</p>
-            <Button as="a" href="/checkout" variant="primary" size="lg" className="w-full h-14" onClick={closeCart}>
+            <p className="mb-4 text-xs text-muted">Shipping and delivery calculated at checkout.</p>
+            <Button
+              as="a"
+              href="/checkout"
+              variant="primary"
+              size="lg"
+              className="w-full h-14"
+              onClick={closeCart}
+            >
               Proceed to Checkout
             </Button>
           </div>

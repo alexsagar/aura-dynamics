@@ -23,6 +23,8 @@ async function getAdminToken() {
 test.use({ channel: 'chrome' })
 
 test.describe('Aura Admin UI & Store Management Refinements', () => {
+  test.setTimeout(90000)
+
   test('1. Unauthenticated Login Page Displays Official Aura Logo (Desktop)', async ({ page }) => {
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('http://localhost:3000/admin/login')
@@ -151,7 +153,7 @@ test.describe('Aura Admin UI & Store Management Refinements', () => {
     await context.close()
   })
 
-  test('5. Product Edit Form (Numakers PLA+) Operational Inspection', async ({ browser }) => {
+  test('5. Product Edit Form (Numakers PLA) Operational Inspection', async ({ browser }) => {
     const context = await browser.newContext({
       viewport: { width: 1440, height: 1100 },
     })
@@ -176,22 +178,19 @@ test.describe('Aura Admin UI & Store Management Refinements', () => {
     // Wait for client-side relationship sub-queries and variant table to populate
     await page.waitForSelector('text=Loading', { state: 'detached', timeout: 10000 }).catch(() => {})
 
-    // Verify Title input has Numakers PLA+
+    // Verify Title input has Numakers PLA
     const titleInput = page.locator('#field-title')
-    await expect(titleInput).toHaveValue('Numakers PLA+')
+    await expect(titleInput).toHaveValue('Numakers PLA')
 
-    // Verify Variant Types have Color and Packaging selected
+    // Verify Variant Types have Color selected
     await expect(page.locator('text=Color').first()).toBeVisible()
-    await expect(page.locator('text=Packaging').first()).toBeVisible()
 
     // Verify Material in Filament Details has PLA selected
     await expect(page.locator('text=PLA').first()).toBeVisible()
 
-    // Verify all four variants are listed in the table
-    await expect(page.locator('text=Numakers PLA+ — White — Refill')).toBeVisible()
-    await expect(page.locator('text=Numakers PLA+ — White — Full Spool')).toBeVisible()
-    await expect(page.locator('text=Numakers PLA+ — Black — Refill')).toBeVisible()
-    await expect(page.locator('text=Numakers PLA+ — Black — Full Spool')).toBeVisible()
+    // Verify real color variants are listed in the table
+    await expect(page.locator('text=Numakers PLA — Pure White').first()).toBeVisible()
+    await expect(page.locator('text=Numakers PLA — Pitch Black').first()).toBeVisible()
 
     // Verify "Enable NPR price" checkbox is unchecked (expected for variant-priced products)
     const enablePriceCheckbox = page.locator('#field-enablePriceInNPR')

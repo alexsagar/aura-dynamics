@@ -73,6 +73,7 @@ export type NVariant = {
   colorHex?: string
   colorLabel?: string
   colorValue?: string
+  imageUrl?: string
   inventory: number
   lowStock: number
   packaging?: string
@@ -96,6 +97,7 @@ export type NProduct = {
 
 function normalizeVariant(variant: Variant): NVariant {
   const nv: NVariant = {
+    imageUrl: mediaUrl(variant.images?.[0]),
     inventory: variant.inventory ?? 0,
     lowStock: variant.lowStockThreshold ?? 3,
     price: variant.priceInNPREnabled && typeof variant.priceInNPR === 'number' ? variant.priceInNPR : null,
@@ -183,17 +185,43 @@ function matchesProductLevel(np: NProduct, f: FilamentFilters): boolean {
   return true
 }
 
-function buildCard(np: NProduct, matching: NVariant[]): FilamentCardProduct {
+export function buildCard(
+  np: NProduct,
+  matching: NVariant[],
+  isColorFiltered = false,
+): FilamentCardProduct {
   const prices = matching.map((v) => v.price as number)
   const price = Math.min(...prices)
   const totalInventory = matching.reduce((sum, v) => sum + v.inventory, 0)
   const lowest = Math.min(...matching.map((v) => v.lowStock))
   const stock = deriveStock(totalInventory, lowest)
+
+  // Variant-level image matching:
+  // If a color filter is active, display that matching variant's image.
+  // Fallbacks:
+  // 1. Product's primary/default image (np.imageUrl)
+  // 2. Sensible first in-stock variant image
+  // 3. First available variant image
+  let cardImage: string | undefined
+  if (isColorFiltered) {
+    const matchingWithImage = matching.find((v) => v.imageUrl)
+    if (matchingWithImage) {
+      cardImage = matchingWithImage.imageUrl
+    }
+  }
+
+  if (!cardImage) {
+    cardImage =
+      np.imageUrl ||
+      np.variants.find((v) => v.inventory > 0 && v.imageUrl)?.imageUrl ||
+      np.variants.find((v) => v.imageUrl)?.imageUrl
+  }
+
   return {
     colors: np.allColors,
     fromPrice: matching.length > 1,
     href: `/product/${np.slug}`,
-    imageUrl: np.imageUrl,
+    imageUrl: cardImage,
     material: np.materialName || np.finishLabel || '',
     price,
     stock: stock.state,
@@ -298,11 +326,16 @@ export async function getFilamentCatalog(f: FilamentFilters): Promise<CatalogRes
 
   const facets = buildFacets(products)
 
+  const isColorFiltered = f.colors.length > 0
   const built = products
     .filter((np) => matchesProductLevel(np, f))
     .map((np) => ({ np, matching: matchingVariants(np, f) }))
     .filter((x) => x.matching.length > 0)
-    .map((x) => ({ card: buildCard(x.np, x.matching), np: x.np, sortPrice: Math.min(...x.matching.map((v) => v.price as number)) }))
+    .map((x) => ({
+      card: buildCard(x.np, x.matching, isColorFiltered),
+      np: x.np,
+      sortPrice: Math.min(...x.matching.map((v) => v.price as number)),
+    }))
 
   built.sort((a, b) =>
     compareCatalog(f.sort, { ...a.np, sortPrice: a.sortPrice }, { ...b.np, sortPrice: b.sortPrice }),

@@ -392,6 +392,10 @@ export interface Variant {
   inventory?: number | null;
   priceInNPREnabled?: boolean | null;
   priceInNPR?: number | null;
+  /**
+   * Variant photography for customer-facing display
+   */
+  images?: (number | Media)[] | null;
   sku?: string | null;
   /**
    * Threshold below which low-stock warnings trigger
@@ -625,6 +629,32 @@ export interface Order {
   status?: OrderStatus;
   amount?: number | null;
   currency?: 'NPR' | null;
+  orderNumber?: string | null;
+  /**
+   * Unique client idempotency key to prevent duplicate orders
+   */
+  idempotencyKey?: string | null;
+  paymentMethod?: ('esewa_qr' | 'cod') | null;
+  paymentStatus?: ('unpaid' | 'awaiting_verification' | 'paid' | 'refunded') | null;
+  /**
+   * Customer-supplied transaction or reference ID
+   */
+  paymentReference?: string | null;
+  subtotal?: number | null;
+  shipping?: number | null;
+  orderNotes?: string | null;
+  /**
+   * Immutable snapshot of purchased items at checkout time
+   */
+  itemsSnapshot?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -920,6 +950,7 @@ export interface VariantsSelect<T extends boolean = true> {
   inventory?: T;
   priceInNPREnabled?: T;
   priceInNPR?: T;
+  images?: T;
   sku?: T;
   lowStockThreshold?: T;
   active?: T;
@@ -1066,6 +1097,15 @@ export interface OrdersSelect<T extends boolean = true> {
   status?: T;
   amount?: T;
   currency?: T;
+  orderNumber?: T;
+  idempotencyKey?: T;
+  paymentMethod?: T;
+  paymentStatus?: T;
+  paymentReference?: T;
+  subtotal?: T;
+  shipping?: T;
+  orderNotes?: T;
+  itemsSnapshot?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1423,6 +1463,37 @@ export interface SiteSetting {
     description?: string | null;
     ogImage?: (number | null) | Media;
   };
+  paymentSettings?: {
+    /**
+     * Upload the merchant eSewa QR code image to show at checkout
+     */
+    esewaQrImage?: (number | null) | Media;
+    /**
+     * Merchant / Account holder name displayed to customer (e.g. Aura 3D Technologies)
+     */
+    esewaMerchantName?: string | null;
+    /**
+     * Optional registered eSewa phone or merchant ID
+     */
+    esewaId?: string | null;
+  };
+  /**
+   * Temporary development defaults for shipping fees. Update with real business rules before production.
+   */
+  shippingSettings?: {
+    /**
+     * Standard flat rate shipping fee in NPR for orders below free shipping threshold (Temporary test default)
+     */
+    shippingFee?: number | null;
+    /**
+     * Cart subtotal in NPR required to qualify for free delivery (Temporary test default)
+     */
+    freeShippingThreshold?: number | null;
+    /**
+     * Whether qualifying orders receive free delivery (Temporary test default)
+     */
+    freeShippingEnabled?: boolean | null;
+  };
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1704,6 +1775,20 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         title?: T;
         description?: T;
         ogImage?: T;
+      };
+  paymentSettings?:
+    | T
+    | {
+        esewaQrImage?: T;
+        esewaMerchantName?: T;
+        esewaId?: T;
+      };
+  shippingSettings?:
+    | T
+    | {
+        shippingFee?: T;
+        freeShippingThreshold?: T;
+        freeShippingEnabled?: T;
       };
   updatedAt?: T;
   createdAt?: T;

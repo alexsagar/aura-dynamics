@@ -316,7 +316,7 @@ export async function seedCmsFoundation() {
 
   // Gap-fill product photography: existing migrated Media, no downloads.
   console.log('🖼  Product image assignment')
-  await assignProductImages(payload, 'numakers-pla-plus', [staff, catFilaments])
+  await assignProductImages(payload, 'numakers-pla', [staff, catFilaments])
   await assignProductImages(payload, 'dragon-figure', [useMini])
 
   console.log('🧱 Done. Globals: homepage, header, footer, site-settings')

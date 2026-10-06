@@ -6,9 +6,9 @@ import { FilamentCard } from '@/components/storefront/product/FilamentCard'
 
 const MOCK_RECOMMENDATIONS = [
   {
-    href: '/product/numakers-pla-plus',
-    title: 'Numakers PLA+ High Speed',
-    material: 'PLA+',
+    href: '/product/numakers-pla',
+    title: 'Numakers PLA',
+    material: 'PLA',
     weight: '1 kg',
     price: 2200,
     fromPrice: true,

@@ -113,7 +113,7 @@ const PopularFallback = () => (
     </div>
     <div className={carouselItem}>
       <FilamentCard
-        product={{ ...demoFilament, imageUrl: imageFallback.categoryFilaments, price: 2300, title: 'Matte Black PLA+' }}
+        product={{ ...demoFilament, imageUrl: imageFallback.categoryFilaments, price: 2500, title: 'Pitch Black PLA' }}
         ratio="portrait"
       />
     </div>

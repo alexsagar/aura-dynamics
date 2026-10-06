@@ -73,13 +73,12 @@ const TOKENS = [
 
 const filament: FilamentCardProduct = {
   colors: COLORS,
-  fromPrice: true,
-  href: '/filaments/numakers-pla-plus',
-  material: 'PLA+',
-  packaging: ['full-spool', 'refill'],
-  price: 2300,
+  fromPrice: false,
+  href: '/product/numakers-pla',
+  material: 'PLA',
+  price: 2500,
   stock: 'in',
-  title: 'Numakers PLA+',
+  title: 'Numakers PLA',
   weight: '1 KG',
 }
 
@@ -211,7 +210,7 @@ export default function DesignSystemPage() {
             </div>
             <div className="col-span-2 md:col-span-3">
               <FilamentCard
-                product={{ ...filament, featured: true, title: 'Numakers PLA+ Matte' }}
+                product={{ ...filament, featured: true, title: 'Numakers PLA' }}
                 ratio="feature"
               />
             </div>
