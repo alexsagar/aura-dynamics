@@ -22,12 +22,12 @@ export const Wordmark = () => (
   </Link>
 )
 
-/** Trigger only — search backend is not implemented yet. */
+/** Navigates to the /search page (server-rendered results, shareable ?q= URL). */
 export const SearchTrigger = () => (
-  <button aria-label="Search" className={ICON_BTN} type="button">
+  <Link aria-label="Search" className={ICON_BTN} href="/search">
     <SearchIcon />
     <span className="hidden min-[900px]:inline">Search</span>
-  </button>
+  </Link>
 )
 
 export const CartIndicator = ({ count = 0, onClick }: { count?: number; onClick: () => void }) => (
