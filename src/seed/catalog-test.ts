@@ -1,6 +1,71 @@
 import { getPayload } from 'payload'
 import configPromise from '../payload.config'
 
+// ---------------------------------------------------------------------------
+// Minimal Lexical rich-text builders. Payload stores richText as a Lexical
+// editor state; these produce the node shapes the editor and the storefront
+// RichText renderer expect, so seeded product copy renders identically to copy
+// authored in Admin.
+// ---------------------------------------------------------------------------
+const txt = (text: string) => ({
+  type: 'text',
+  detail: 0,
+  format: 0,
+  mode: 'normal',
+  style: '',
+  text,
+  version: 1,
+})
+const paragraph = (text: string) => ({
+  type: 'paragraph',
+  direction: 'ltr' as const,
+  format: '' as const,
+  indent: 0,
+  version: 1,
+  textFormat: 0,
+  children: [txt(text)],
+})
+const heading = (text: string, tag: 'h2' | 'h3' = 'h3') => ({
+  type: 'heading',
+  tag,
+  direction: 'ltr' as const,
+  format: '' as const,
+  indent: 0,
+  version: 1,
+  children: [txt(text)],
+})
+const bulletList = (items: string[]) => ({
+  type: 'list',
+  listType: 'bullet' as const,
+  tag: 'ul' as const,
+  start: 1,
+  direction: 'ltr' as const,
+  format: '' as const,
+  indent: 0,
+  version: 1,
+  children: items.map((text, i) => ({
+    type: 'listitem',
+    value: i + 1,
+    direction: 'ltr' as const,
+    format: '' as const,
+    indent: 0,
+    version: 1,
+    children: [txt(text)],
+  })),
+})
+const richText = (
+  nodes: Array<ReturnType<typeof paragraph> | ReturnType<typeof heading> | ReturnType<typeof bulletList>>,
+) => ({
+  root: {
+    type: 'root',
+    direction: 'ltr' as const,
+    format: '' as const,
+    indent: 0,
+    version: 1,
+    children: nodes,
+  },
+})
+
 export async function seedCatalogTest() {
   console.log('🌱 Starting Aura Catalog Test Seed...')
   const payload = await getPayload({ config: configPromise })
@@ -316,7 +381,40 @@ export async function seedCatalogTest() {
   const filamentProductData = {
     title: 'Numakers PLA',
     slug: 'numakers-pla',
-    shortDescription: '1 kg Numakers PLA filament (1.75 mm) for reliable everyday 3D printing.',
+    shortDescription:
+      'Numakers PLA — a 1.75 mm, 1 kg spool for dependable everyday 3D printing, available in seven colours.',
+    // Description is built only from confirmed product facts (brand, material,
+    // diameter, weight, colour range, use case, currency, fulfilment). No
+    // invented temperatures, tolerances, certifications or strength claims.
+    description: richText([
+      paragraph(
+        'Numakers PLA is a 1 kg spool of 1.75 mm PLA filament for everyday 3D printing. PLA is the most widely used 3D-printing material — straightforward to print and well suited to prototypes, models and display pieces.',
+      ),
+      paragraph(
+        'Each spool is a single, solid colour from the Numakers range, so you can match a project end to end or keep a few shades on hand for quick swaps.',
+      ),
+      heading('Available colours'),
+      bulletList([
+        'Pure White',
+        'Pitch Black',
+        'Forest Green',
+        'Nuclear Red',
+        'Royal Blue',
+        'Lemon Yellow',
+        'Transparent',
+      ]),
+      heading('Specifications'),
+      bulletList([
+        'Brand: Numakers',
+        'Material: PLA',
+        'Filament diameter: 1.75 mm',
+        'Net weight: 1 kg per spool',
+      ]),
+      heading('Ordering & delivery'),
+      paragraph(
+        'Prices are shown in Nepalese Rupees (NPR). Checkout is available as a guest, with payment by eSewa QR or Cash on Delivery, and orders ship across Nepal.',
+      ),
+    ]),
     productType: 'filament' as const,
     enableVariants: true,
     variantTypes: [variantTypeDocs['Color'].id],

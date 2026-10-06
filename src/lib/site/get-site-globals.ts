@@ -25,9 +25,9 @@ const FOOTER_COLUMNS_FALLBACK = [
     title: 'Company',
     links: [
       { label: 'About Us', url: '/about' },
-      { label: 'Contact', url: '/contact' },
-      { label: 'Shipping Info', url: '/shipping' },
-      { label: 'FAQ', url: '/faq' },
+      // /contact, /shipping and /faq routes don't exist yet — omitted from the
+      // outage fallback so it never renders a dead link. Add them here (and in
+      // the Footer global) once those pages ship.
     ],
   },
 ]

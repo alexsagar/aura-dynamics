@@ -178,19 +178,20 @@ export default function MaterialsPage() {
         <Container>
           <div className="grid gap-12 md:grid-cols-2">
             <div className="flex flex-col items-start justify-center">
-              <h2 className="mb-6 text-4xl font-medium tracking-[-0.02em]">Still not sure what to use?</h2>
+              <h2 className="mb-6 text-4xl font-medium tracking-[-0.02em]">Ready to get started?</h2>
               <p className="mb-8 text-lg text-muted">
-                Read our comprehensive guide comparing the specific applications, tensile strengths, and printer requirements for every polymer we offer.
+                Browse the Numakers range and pick the colour that fits your next
+                project. Every spool in the catalogue is in stock and ready to ship across Nepal.
               </p>
-              <Button as="a" href="/guides/materials" size="lg" variant="primary">
-                Read the Material Guide
+              <Button as="a" href="/filaments" size="lg" variant="primary">
+                Shop Filaments
               </Button>
             </div>
-            <Link className="group relative aspect-video overflow-hidden rounded-3xl bg-[#f4f4f4]" href="/guides/materials">
-              <img alt="Material Guide" className="size-full object-cover transition-transform duration-1000 group-hover:scale-105" src={P_GUIDE} />
+            <Link className="group relative aspect-video overflow-hidden rounded-3xl bg-[#f4f4f4]" href="/filaments">
+              <img alt="Browse Aura filaments" className="size-full object-cover transition-transform duration-1000 group-hover:scale-105" src={P_GUIDE} />
               <div className="absolute inset-0 bg-linear-to-t from-black/80 to-transparent" />
               <div className="absolute inset-x-0 bottom-0 p-8 text-white">
-                <h3 className="text-2xl font-medium">The Ultimate Filament Guide &rarr;</h3>
+                <h3 className="text-2xl font-medium">Explore the filament catalogue &rarr;</h3>
               </div>
             </Link>
           </div>

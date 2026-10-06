@@ -309,7 +309,12 @@ export async function seedCmsFoundation() {
         },
       ],
       // contact + socialLinks intentionally empty: unverified placeholders.
-      legalLinks: [],
+      // Legal links point at the baseline Privacy and Terms pages that exist in
+      // the app; replace their copy with counsel-reviewed content before launch.
+      legalLinks: [
+        { label: 'Privacy Policy', url: '/privacy' },
+        { label: 'Terms of Service', url: '/terms' },
+      ],
       copyright: 'Aura Dynamics. All rights reserved.',
     },
   })
