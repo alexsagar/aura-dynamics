@@ -640,7 +640,10 @@ function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
     ({ getPlatformProxy }) =>
       getPlatformProxy({
         environment: process.env.CLOUDFLARE_ENV,
-        remoteBindings: isProduction,
+        // Remote bindings follow the per-binding `remote: true` flags in wrangler.jsonc.
+        // Enable when an env is explicitly selected (e.g. CLOUDFLARE_ENV=staging seed/CLI)
+        // so staging reaches remote D1/R2; local dev (no env) stays fully local.
+        remoteBindings: isProduction || Boolean(process.env.CLOUDFLARE_ENV),
       } satisfies GetPlatformProxyOptions),
   )
 }

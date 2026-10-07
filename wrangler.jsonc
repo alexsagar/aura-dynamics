@@ -49,35 +49,28 @@
     // },
   ],
 
-  // Additional environments can be configured later.
-  //
-  // Example:
-  //
-  // "env": {
-  //   "staging": {
-  //     "name": "aura-dynamics-staging",
-  //
-  //     "d1_databases": [
-  //       {
-  //         "binding": "D1",
-  //         "database_id": "<STAGING_DATABASE_ID>",
-  //         "database_name": "aura-staging",
-  //       },
-  //     ],
-  //
-  //     "services": [
-  //       // {
-  //       //   "binding": "WORKER_SELF_REFERENCE",
-  //       //   "service": "aura-dynamics-staging",
-  //       // },
-  //     ],
-  //
-  //     "r2_buckets": [
-  //       {
-  //         "binding": "R2",
-  //         "bucket_name": "aura-media-staging",
-  //       },
-  //     ],
-  //   },
-  // },
+  "env": {
+    "staging": {
+      "name": "aura-dynamics-staging",
+
+      "d1_databases": [
+        {
+          "binding": "D1",
+          "database_id": "12a777c0-314f-4016-a47e-060162e6c197",
+          "database_name": "aura-staging",
+          "remote": true,
+        },
+      ],
+
+      "services": [],
+
+      "r2_buckets": [
+        {
+          "binding": "R2",
+          "bucket_name": "aura-media-staging",
+          "remote": true,
+        },
+      ],
+    },
+  },
 }
