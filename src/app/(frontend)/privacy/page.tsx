@@ -3,24 +3,25 @@ import type { Metadata } from 'next'
 
 import { LegalArticle } from '@/components/storefront/layout/LegalArticle'
 import { absoluteUrl } from '@/lib/site/seo'
+import { getPageContent } from '@/lib/site/get-page-content'
 
 // Baseline privacy notice describing Aura's actual data practices (guest
 // checkout, order fulfilment, eSewa QR / COD). It contains no invented company
 // registration, address, or contact details. Review with counsel before
 // launch and add verified contact details via CMS/site settings.
-export const metadata: Metadata = {
-  title: 'Privacy Policy · Aura',
-  description:
-    'How Aura collects and uses the limited personal information you provide to place and receive an order.',
-  alternates: { canonical: absoluteUrl('/privacy') },
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPageContent('privacy')
+  return {
+    title: c.seoTitle,
+    description: c.seoDescription,
+    alternates: { canonical: absoluteUrl('/privacy') },
+  }
 }
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const c = await getPageContent('privacy')
   return (
-    <LegalArticle
-      title="Privacy Policy"
-      intro="Aura collects only the information needed to process and deliver your order. This notice explains what we collect, why, and how it is handled."
-    >
+    <LegalArticle title={c.heading} intro={c.intro}>
       <section>
         <h2>Information we collect</h2>
         <p>

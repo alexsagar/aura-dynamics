@@ -3,24 +3,25 @@ import type { Metadata } from 'next'
 
 import { LegalArticle } from '@/components/storefront/layout/LegalArticle'
 import { absoluteUrl } from '@/lib/site/seo'
+import { getPageContent } from '@/lib/site/get-page-content'
 
 // Baseline terms reflecting how the store actually operates (NPR pricing,
 // eSewa QR / COD, guest checkout, delivery within Nepal). No invented company
 // registration or governing-entity details beyond jurisdiction. Review with
 // counsel before launch.
-export const metadata: Metadata = {
-  title: 'Terms of Service · Aura',
-  description:
-    'The terms that apply when you browse Aura and place an order for filaments or 3D prints.',
-  alternates: { canonical: absoluteUrl('/terms') },
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPageContent('terms')
+  return {
+    title: c.seoTitle,
+    description: c.seoDescription,
+    alternates: { canonical: absoluteUrl('/terms') },
+  }
 }
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const c = await getPageContent('terms')
   return (
-    <LegalArticle
-      title="Terms of Service"
-      intro="These terms apply when you browse Aura and place an order. By placing an order you agree to them."
-    >
+    <LegalArticle title={c.heading} intro={c.intro}>
       <section>
         <h2>Pricing</h2>
         <p>

@@ -273,6 +273,14 @@ pnpm run deploy:app
 
   This staging environment is **temporary** and will be removed after Aura production launches.
 
+### CMS content & rendering
+
+Marketing content is Payload-driven: the **Homepage**, **Header**, **Footer**, **Site Settings** and **Page Content** globals own the storefront's headings, intros, imagery, navigation and SEO. The `(frontend)` route group renders dynamically (`export const dynamic = 'force-dynamic'`) so Admin edits appear on the next refresh without a redeploy. Product/catalogue data stays in the Products/Variants/Categories/Materials collections; functional UI microcopy (Add to cart, Sort, Filters, validation, etc.) stays in code.
+
+> **Future production optimization:** replace the broad `force-dynamic` storefront rendering with targeted path/tag revalidation (Payload `afterChange` → `revalidatePath`/`revalidateTag`) once the OpenNext incremental cache (R2 cache bucket) is configured. Tracked as a follow-up; not required for staging.
+
+Standalone Payload CLI/seed scripts can target an alternate Cloudflare environment by setting `WRANGLER_CONFIG_PATH` to a Wrangler config (e.g. `wrangler.sevenseas-staging.jsonc`); unset, local dev and the personal config behave exactly as before.
+
 ---
 
 ## License

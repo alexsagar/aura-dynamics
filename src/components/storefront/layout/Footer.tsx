@@ -45,15 +45,15 @@ export function Footer({ data }: { data: FooterViewModel }) {
             <Logo height={40} loading="lazy" title="Aura" variant="wordmark-offwhite" />
             
             <h2 className="mt-12 text-[clamp(2rem,4vw,3rem)] leading-[1.1] font-medium tracking-[-0.02em] text-white">
-              Engineered perfectly for makers across Nepal.
+              {data.brandHeading}
             </h2>
             <p className="mt-6 max-w-[480px] text-lg text-white/60 leading-[1.6]">
-              Numakers filaments and ready-stock 3D prints, shipped directly to your door with unmatched precision and reliability.
+              {data.brandCopy}
             </p>
 
             <div className="mt-12 flex w-full max-w-[440px] flex-col gap-4">
               <span className="text-sm font-semibold tracking-[0.1em] text-white/40 uppercase">
-                Join our newsletter
+                {data.newsletterHeading}
               </span>
               <div className="flex h-14 w-full overflow-hidden rounded-[100px] border border-white/20 bg-white/5 transition-colors focus-within:border-lime focus-within:bg-white/10">
                 <input

@@ -19,6 +19,7 @@ import { Homepage } from './globals/Homepage'
 import { Header } from './globals/Header'
 import { Footer } from './globals/Footer'
 import { SiteSettings } from './globals/SiteSettings'
+import { PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
 import {
   adminOnlyFieldAccess,
@@ -96,7 +97,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Customers, Media, Categories, Materials],
-  globals: [Homepage, Header, Footer, SiteSettings],
+  globals: [Homepage, Header, Footer, SiteSettings, PageContent],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {
@@ -105,6 +106,11 @@ export default buildConfig({
   db: sqliteD1Adapter({
     binding: cloudflare.env.D1,
     push: false,
+    // Bundle migrations (production/Worker) and pin the dev migrations dir to an
+    // absolute path so `payload.db.migrate()` resolves them from any cwd — CLI
+    // and seed runs execute from outside the repo root.
+    prodMigrations: migrations,
+    migrationDir: path.resolve(dirname, 'migrations'),
   }),
   logger: isProduction ? cloudflareLogger : undefined,
   plugins: [
@@ -636,14 +642,22 @@ export default buildConfig({
 
 // Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46
 function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
+  // Optional explicit Wrangler config for standalone CLI/seed runs. Lets a
+  // script target an alternate environment (e.g. the Seven Seas staging
+  // config) without touching the committed default. Unset = normal behaviour:
+  // local dev stays local, CLOUDFLARE_ENV selects an env of the main config.
+  // No account/resource IDs live here — the chosen .jsonc stays authoritative.
+  const configPath = process.env.WRANGLER_CONFIG_PATH || undefined
   return import(/* webpackIgnore: true */ `${'__wrangler'.replaceAll('_', '')}`).then(
     ({ getPlatformProxy }) =>
       getPlatformProxy({
-        environment: process.env.CLOUDFLARE_ENV,
-        // Remote bindings follow the per-binding `remote: true` flags in wrangler.jsonc.
-        // Enable when an env is explicitly selected (e.g. CLOUDFLARE_ENV=staging seed/CLI)
-        // so staging reaches remote D1/R2; local dev (no env) stays fully local.
-        remoteBindings: isProduction || Boolean(process.env.CLOUDFLARE_ENV),
+        configPath,
+        // A standalone config file is flat (no named envs), so don't pass one.
+        environment: configPath ? undefined : process.env.CLOUDFLARE_ENV,
+        // Remote bindings follow the per-binding `remote: true` flags in the
+        // selected config. Enable when an env/config is explicitly chosen (CLI
+        // seed/migrate) so it reaches remote D1/R2; plain local dev stays local.
+        remoteBindings: isProduction || Boolean(process.env.CLOUDFLARE_ENV) || Boolean(configPath),
       } satisfies GetPlatformProxyOptions),
   )
 }

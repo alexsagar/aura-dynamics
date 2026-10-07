@@ -6,12 +6,13 @@ import { CatalogToolbar } from '@/components/storefront/catalog/catalog-toolbar'
 import { Container } from '@/components/storefront/layout/Container'
 import { FilamentCard } from '@/components/storefront/product/FilamentCard'
 import { getFilamentCatalog, parseFilters } from '@/lib/filaments/catalog'
+import { getPageContent } from '@/lib/site/get-page-content'
 
 import { CatalogFilters } from './catalog-filters'
 
-export const metadata = {
-  description: 'Browse Numakers 3D printing filaments — PLA, PETG and more, shipped across Nepal.',
-  title: 'Filaments — Aura',
+export async function generateMetadata() {
+  const c = await getPageContent('filaments')
+  return { title: c.seoTitle, description: c.seoDescription }
 }
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -19,7 +20,10 @@ type SearchParams = Record<string, string | string[] | undefined>
 export default async function FilamentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams
   const filters = parseFilters(sp)
-  const { cards, catalogTotal, facets, page, pageCount, total } = await getFilamentCatalog(filters)
+  const [{ cards, catalogTotal, facets, page, pageCount, total }, content] = await Promise.all([
+    getFilamentCatalog(filters),
+    getPageContent('filaments'),
+  ])
 
   return (
     <Container className="pt-28 pb-8 lg:pt-32 lg:pb-10">
@@ -33,8 +37,8 @@ export default async function FilamentsPage({ searchParams }: { searchParams: Pr
       </nav>
 
       <div className="mt-3 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">Filaments</h1>
-        <p className="mt-1.5 text-muted">Explore our range of 3D printing filaments.</p>
+        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">{content.heading}</h1>
+        <p className="mt-1.5 text-muted">{content.intro}</p>
       </div>
 
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">

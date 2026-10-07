@@ -1,9 +1,16 @@
 import Link from 'next/link'
 import React from 'react'
+import type { Metadata } from 'next'
 
 import { Container, Section } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
 import { cn } from '@/components/storefront/ui/cn'
+import { getPageContent } from '@/lib/site/get-page-content'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPageContent('materials')
+  return { title: c.seoTitle, description: c.seoDescription }
+}
 
 const P_HERO = 'https://images.unsplash.com/photo-1617478755490-e21232a5eeaf?q=80&w=1600&auto=format&fit=crop'
 const P_MACRO_PLA = 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=1200&auto=format&fit=crop'
@@ -28,7 +35,8 @@ const MATRIX = [
   { material: 'ABS/ASA', strength: 5, flex: 2, heat: 5, ease: 1 },
 ]
 
-export default function MaterialsPage() {
+export default async function MaterialsPage() {
+  const content = await getPageContent('materials')
   return (
     <>
       {/* 1. Technical Hero */}
@@ -40,10 +48,10 @@ export default function MaterialsPage() {
                 Technical Data
               </div>
               <h1 className="mb-8 text-[clamp(4rem,7vw,7rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
-                The Library.
+                {content.heading}
               </h1>
               <p className="mb-10 max-w-[500px] text-lg leading-[1.6] text-muted">
-                An index of high-performance polymers. Engineered to rigorous tolerances to ensure perfect bed adhesion, minimal warping, and predictable extrusion.
+                {content.intro}
               </p>
               <div className="flex gap-4">
                 <Button size="lg" variant="primary">Shop All Filaments</Button>

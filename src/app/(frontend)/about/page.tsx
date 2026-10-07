@@ -1,8 +1,15 @@
 import React from 'react'
+import type { Metadata } from 'next'
 
 import { Container, Section } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
 import { cn } from '@/components/storefront/ui/cn'
+import { getPageContent } from '@/lib/site/get-page-content'
+
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPageContent('about')
+  return { title: c.seoTitle, description: c.seoDescription }
+}
 
 const P_HERO = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1600&auto=format&fit=crop'
 const P_STORY = 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=1200&auto=format&fit=crop'
@@ -12,7 +19,8 @@ const P_FACTORY_3 = 'https://images.unsplash.com/photo-1617478755490-e21232a5eea
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const content = await getPageContent('about')
   return (
     <>
       {/* 1. Manifesto Hero */}
@@ -32,7 +40,7 @@ export default function AboutPage() {
               the builders.
             </h1>
             <p className="text-[clamp(1.25rem,2vw,1.5rem)] leading-[1.6] text-white/80">
-              Aura is the premier 3D printing ecosystem in Nepal. We don't just supply filament; we provide the foundation for innovation, rapid prototyping, and digital manufacturing.
+              {content.intro}
             </p>
           </div>
         </Container>

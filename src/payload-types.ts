@@ -127,12 +127,14 @@ export interface Config {
     header: Header;
     footer: Footer;
     'site-settings': SiteSetting;
+    'page-content': PageContent;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
+    'page-content': PageContentSelect<false> | PageContentSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1498,6 +1500,139 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
+ * Headings, intros and SEO for the storefront landing and legal pages.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-content".
+ */
+export interface PageContent {
+  id: number;
+  filaments?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  prints?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  collections?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  about?: {
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  materials?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  privacy?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  terms?: {
+    /**
+     * Main page heading
+     */
+    heading?: string | null;
+    /**
+     * Short introductory line shown under the heading
+     */
+    intro?: string | null;
+    /**
+     * Browser tab / search-result title. Falls back to the site default.
+     */
+    seoTitle?: string | null;
+    /**
+     * Search-result and social description.
+     */
+    seoDescription?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "homepage_select".
  */
@@ -1789,6 +1924,70 @@ export interface SiteSettingsSelect<T extends boolean = true> {
         shippingFee?: T;
         freeShippingThreshold?: T;
         freeShippingEnabled?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "page-content_select".
+ */
+export interface PageContentSelect<T extends boolean = true> {
+  filaments?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  prints?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  collections?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  about?:
+    | T
+    | {
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  materials?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  privacy?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
+      };
+  terms?:
+    | T
+    | {
+        heading?: T;
+        intro?: T;
+        seoTitle?: T;
+        seoDescription?: T;
       };
   updatedAt?: T;
   createdAt?: T;

@@ -32,6 +32,10 @@
       "binding": "D1",
       "database_name": "aura-staging",
       "database_id": "12a777c0-314f-4016-a47e-060162e6c197",
+      // `remote: true` only affects local/CLI tooling (getPlatformProxy): it
+      // lets standalone Payload scripts talk to the real staging D1. Ignored
+      // by the deployed Worker, which always binds the real resource.
+      "remote": true,
     },
   ],
 
@@ -39,6 +43,7 @@
     {
       "binding": "R2",
       "bucket_name": "aura-media-staging",
+      "remote": true,
     },
   ],
 }

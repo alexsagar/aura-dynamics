@@ -8,12 +8,15 @@ import type { Category } from '@/payload-types'
 import { Container } from '@/components/storefront/layout/Container'
 import { absoluteUrl } from '@/lib/site/seo'
 import { imageFallback } from '@/lib/homepage/fallback'
+import { getPageContent } from '@/lib/site/get-page-content'
 
-export const metadata: Metadata = {
-  title: 'Shop · Aura',
-  description:
-    'Browse the Aura catalogue — Numakers filaments and ready-stock 3D prints, shipped across Nepal.',
-  alternates: { canonical: absoluteUrl('/collections') },
+export async function generateMetadata(): Promise<Metadata> {
+  const c = await getPageContent('collections')
+  return {
+    title: c.seoTitle,
+    description: c.seoDescription,
+    alternates: { canonical: absoluteUrl('/collections') },
+  }
 }
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
@@ -63,7 +66,7 @@ async function getPrintCategories(): Promise<ShopCategory[]> {
 }
 
 export default async function CollectionsPage() {
-  const categories = await getPrintCategories()
+  const [categories, content] = await Promise.all([getPrintCategories(), getPageContent('collections')])
 
   const primary = [
     {
@@ -90,11 +93,10 @@ export default async function CollectionsPage() {
               Shop
             </div>
             <h1 className="mb-6 text-[clamp(3rem,6vw,6rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
-              The Aura catalogue.
+              {content.heading}
             </h1>
             <p className="max-w-[460px] text-lg leading-[1.6] text-muted">
-              Everything we make, in one place — high-performance filaments and ready-stock 3D
-              prints, all in stock and ready to ship across Nepal.
+              {content.intro}
             </p>
           </div>
         </Container>

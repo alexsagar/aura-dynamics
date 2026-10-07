@@ -6,12 +6,13 @@ import { CatalogToolbar } from '@/components/storefront/catalog/catalog-toolbar'
 import { Container } from '@/components/storefront/layout/Container'
 import { PrintCard } from '@/components/storefront/product/PrintCard'
 import { getPrintCatalog, parseFilters } from '@/lib/prints/catalog'
+import { getPageContent } from '@/lib/site/get-page-content'
 
 import { CatalogFilters } from './catalog-filters'
 
-export const metadata = {
-  description: 'Browse Aura ready-made 3D prints — figures, miniatures and more, shipped across Nepal.',
-  title: '3D Prints — Aura',
+export async function generateMetadata() {
+  const c = await getPageContent('prints')
+  return { title: c.seoTitle, description: c.seoDescription }
 }
 
 type SearchParams = Record<string, string | string[] | undefined>
@@ -19,7 +20,10 @@ type SearchParams = Record<string, string | string[] | undefined>
 export default async function PrintsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams
   const filters = parseFilters(sp)
-  const { cards, catalogTotal, facets, page, pageCount, total } = await getPrintCatalog(filters)
+  const [{ cards, catalogTotal, facets, page, pageCount, total }, content] = await Promise.all([
+    getPrintCatalog(filters),
+    getPageContent('prints'),
+  ])
 
   return (
     <Container className="pt-28 pb-8 lg:pt-32 lg:pb-10">
@@ -33,8 +37,8 @@ export default async function PrintsPage({ searchParams }: { searchParams: Promi
       </nav>
 
       <div className="mt-3 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">3D Prints</h1>
-        <p className="mt-1.5 text-muted">Explore our collection of ready-made 3D prints.</p>
+        <h1 className="text-3xl font-semibold tracking-tight lg:text-4xl">{content.heading}</h1>
+        <p className="mt-1.5 text-muted">{content.intro}</p>
       </div>
 
       <div className="flex flex-col gap-8 lg:flex-row lg:gap-12">

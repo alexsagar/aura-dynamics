@@ -38,6 +38,10 @@ const FOOTER_LEGAL_FALLBACK = [
 ]
 
 const FOOTER_COPY_FALLBACK = 'Aura Dynamics. All rights reserved.'
+const FOOTER_BRAND_HEADING_FALLBACK = 'Engineered perfectly for makers across Nepal.'
+const FOOTER_BRAND_COPY_FALLBACK =
+  'Numakers filaments and ready-stock 3D prints, shipped directly to your door with unmatched precision and reliability.'
+const FOOTER_NEWSLETTER_HEADING_FALLBACK = 'Join our newsletter'
 
 export type HeaderViewModel = ReturnType<typeof normalizeHeader>
 export type FooterViewModel = ReturnType<typeof normalizeFooter>
@@ -57,6 +61,9 @@ function normalizeHeader(cms: Header) {
 
 function normalizeFooter(cms: Footer) {
   return {
+    brandHeading: cms.brandHeading || FOOTER_BRAND_HEADING_FALLBACK,
+    brandCopy: cms.brandCopy || FOOTER_BRAND_COPY_FALLBACK,
+    newsletterHeading: cms.newsletterHeading || FOOTER_NEWSLETTER_HEADING_FALLBACK,
     columns: cms.columns?.length
       ? cms.columns.map((c) => ({
           title: c.title,
