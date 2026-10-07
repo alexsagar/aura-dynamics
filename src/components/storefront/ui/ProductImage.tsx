@@ -43,7 +43,20 @@ export function ProductImage({
       )}
     >
       {src ? (
-        <Image alt={alt} className="object-cover" fill priority={priority} sizes={sizes} src={src} />
+        // Media is served by Payload at /api/media/file/<name> on the same
+        // Worker. The Cloudflare/OpenNext image optimizer can't re-fetch that
+        // same-origin upstream (/_next/image → 404 "upstream response is
+        // invalid"), so cards go unoptimized and load the media directly —
+        // the same plain-URL strategy the product gallery already uses.
+        <Image
+          alt={alt}
+          className="object-cover"
+          fill
+          priority={priority}
+          sizes={sizes}
+          src={src}
+          unoptimized
+        />
       ) : (
         <span aria-hidden="true">Image coming soon</span>
       )}
