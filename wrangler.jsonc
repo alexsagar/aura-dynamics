@@ -2,6 +2,7 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
   "name": "aura-dynamics",
+  "account_id": "5c6bd0899d4d08646a4f924b7698343e",
 
   "compatibility_date": "2025-08-15",
 
@@ -56,7 +57,7 @@
       "d1_databases": [
         {
           "binding": "D1",
-          "database_id": "12a777c0-314f-4016-a47e-060162e6c197",
+          "database_id": "7a1a6774-3e87-4021-ab9e-3af436371b72",
           "database_name": "aura-staging",
           "remote": true,
         },
