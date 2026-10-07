@@ -1,0 +1,44 @@
+{
+  // ==========================================================================
+  // TEMPORARY SEVEN SEAS PAID STAGING — DO NOT USE FOR PRODUCTION
+  // --------------------------------------------------------------------------
+  // Hosts Aura staging on the PAID Seven Seas Cloudflare account
+  // (seasseven123@gmail.com, account 9fcb967b7744d3455d2f35f3efd8f921) to
+  // avoid Free-plan Error 1102 CPU limits in Payload Admin.
+  //
+  // Temporary: removed after Aura production launches.
+  // Production stays on the PERSONAL account via the main wrangler.jsonc.
+  // Always deploy this file with: --config wrangler.sevenseas-staging.jsonc --profile default
+  // ==========================================================================
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "main": ".open-next/worker.js",
+  "name": "aura-dynamics-staging",
+  "account_id": "9fcb967b7744d3455d2f35f3efd8f921",
+
+  "compatibility_date": "2025-08-15",
+
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public",
+  ],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS",
+  },
+
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "aura-staging",
+      "database_id": "12a777c0-314f-4016-a47e-060162e6c197",
+    },
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "aura-media-staging",
+    },
+  ],
+}

@@ -261,6 +261,18 @@ pnpm run deploy:database
 pnpm run deploy:app
 ```
 
+### Hosting accounts
+
+- **Production** — runs on the **personal** Cloudflare account (`aura-production` D1, `aura-media` R2). The main `wrangler.jsonc` is permanently pinned to this account.
+- **Temporary staging** — currently hosted on the **paid Seven Seas** Cloudflare account to avoid Free-plan Error 1102 CPU limits in Payload Admin. Config: `wrangler.sevenseas-staging.jsonc` (account `9fcb967b…`, Worker `aura-dynamics-staging`, D1 `aura-staging`, R2 `aura-media-staging`). Deploy with the explicit `default` auth profile:
+
+  ```bash
+  pnpm run staging:sevenseas:dry-run   # verify bindings
+  pnpm run staging:sevenseas:deploy    # deploy staging only (never production)
+  ```
+
+  This staging environment is **temporary** and will be removed after Aura production launches.
+
 ---
 
 ## License

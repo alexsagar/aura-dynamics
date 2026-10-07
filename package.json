@@ -20,6 +20,8 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview --env=$CLOUDFLARE_ENV",
     "seed:test": "cross-env NODE_OPTIONS=--no-deprecation tsx src/seed/seed-runner.ts",
+    "staging:sevenseas:dry-run": "wrangler deploy --config wrangler.sevenseas-staging.jsonc --profile default --dry-run",
+    "staging:sevenseas:deploy": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" NEXT_PUBLIC_SITE_URL=https://aura-dynamics-staging.seasseven123.workers.dev opennextjs-cloudflare build -c wrangler.sevenseas-staging.jsonc && wrangler deploy --config wrangler.sevenseas-staging.jsonc --profile default",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
