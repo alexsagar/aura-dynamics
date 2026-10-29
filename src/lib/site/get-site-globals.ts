@@ -2,6 +2,7 @@ import { getPayload } from 'payload'
 
 import configPromise from '@/payload.config'
 import type { Footer, Header } from '@/payload-types'
+import { isRetiredUrl } from '@/lib/site/routes'
 
 export type HeaderViewModel = ReturnType<typeof normalizeHeader>
 export type FooterViewModel = ReturnType<typeof normalizeFooter>
@@ -9,7 +10,7 @@ export type FooterViewModel = ReturnType<typeof normalizeFooter>
 /** Header/Footer copy and links are owned by their Payload globals — no in-code duplicate. */
 function normalizeHeader(cms: Header) {
   return {
-    navLinks: (cms.navLinks ?? []).map((l) => ({ label: l.label, url: l.url })),
+    navLinks: (cms.navLinks ?? []).filter((l) => !isRetiredUrl(l.url)).map((l) => ({ label: l.label, url: l.url })),
     announcement: {
       enabled: cms.announcement?.enabled ?? false,
       text: cms.announcement?.text || '',
@@ -23,10 +24,12 @@ function normalizeFooter(cms: Footer) {
     brandHeading: cms.brandHeading || '',
     brandCopy: cms.brandCopy || '',
     newsletterHeading: cms.newsletterHeading || '',
-    columns: (cms.columns ?? []).map((c) => ({
-      title: c.title,
-      links: (c.links ?? []).map((l) => ({ label: l.label, url: l.url })),
-    })),
+    columns: (cms.columns ?? [])
+      .map((c) => ({
+        title: c.title,
+        links: (c.links ?? []).filter((l) => !isRetiredUrl(l.url)).map((l) => ({ label: l.label, url: l.url })),
+      }))
+      .filter((c) => c.links.length > 0),
     contact: {
       companyName: cms.contact?.companyName || '',
       address: cms.contact?.address || '',
@@ -34,7 +37,7 @@ function normalizeFooter(cms: Footer) {
       email: cms.contact?.email || '',
     },
     socialLinks: (cms.socialLinks ?? []).map((s) => ({ platform: s.platform, url: s.url })),
-    legalLinks: (cms.legalLinks ?? []).map((l) => ({ label: l.label, url: l.url })),
+    legalLinks: (cms.legalLinks ?? []).filter((l) => !isRetiredUrl(l.url)).map((l) => ({ label: l.label, url: l.url })),
     copyright: cms.copyright || '',
   }
 }

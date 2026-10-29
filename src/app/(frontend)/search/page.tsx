@@ -71,13 +71,9 @@ export default async function SearchPage({
               <p className="mt-2 text-muted">
                 Try a different term, or browse the{' '}
                 <Link className="underline hover:text-foreground" href="/filaments">
-                  filament
-                </Link>{' '}
-                and{' '}
-                <Link className="underline hover:text-foreground" href="/3d-prints">
-                  3D print
-                </Link>{' '}
-                catalogues.
+                  filament catalogue
+                </Link>
+                .
               </p>
             </div>
           ) : (

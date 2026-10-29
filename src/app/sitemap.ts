@@ -4,6 +4,7 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import type { Product } from '@/payload-types'
 import { SITE_URL } from '@/lib/site/seo'
+import { publicProductWhere } from '@/access/ecommerce'
 
 /**
  * Sitemap: static informational/catalogue routes plus every published product.
@@ -15,9 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: MetadataRoute.Sitemap = [
     '/',
     '/filaments',
-    '/3d-prints',
     '/materials',
-    '/collections',
     '/about',
     '/privacy',
     '/terms',
@@ -32,7 +31,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const payload = await getPayload({ config: configPromise })
     const { docs } = await payload.find({
       collection: 'products',
-      where: { _status: { equals: 'published' } },
+      where: publicProductWhere,
       depth: 0,
       limit: 1000,
       pagination: false,

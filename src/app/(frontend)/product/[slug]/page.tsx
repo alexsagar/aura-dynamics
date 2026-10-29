@@ -13,6 +13,7 @@ import { ProductJsonLd } from '@/components/storefront/product/ProductJsonLd'
 import { getRelatedProducts } from '@/lib/catalog/related'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 import { absoluteUrl } from '@/lib/site/seo'
+import { publicProductWhere } from '@/access/ecommerce'
 
 /**
  * Fetch a single published product by slug. `cache` dedupes the query so the
@@ -24,7 +25,7 @@ const getProductBySlug = cache(async (slug: string): Promise<Product | null> => 
     const { docs } = await payload.find({
       collection: 'products',
       where: {
-        and: [{ slug: { equals: slug } }, { _status: { equals: 'published' } }],
+        and: [{ slug: { equals: slug } }, publicProductWhere],
       },
       depth: 2,
       limit: 1,

@@ -25,3 +25,17 @@ describe('rankRelated', () => {
     expect(ranked.map((x) => x.id)).toEqual([4, 3, 2])
   })
 })
+
+describe('filament-only storefront scope', () => {
+  it('only published filaments are public', async () => {
+    const { isPublicProduct } = await import('@/access/ecommerce')
+    expect(isPublicProduct({ _status: 'published', productType: 'filament' })).toBe(true)
+    expect(isPublicProduct({ _status: 'published', productType: '3d-print' })).toBe(false)
+    expect(isPublicProduct({ _status: 'draft', productType: 'filament' })).toBe(false)
+  })
+  it('detects retired routes, not look-alikes', async () => {
+    const { isRetiredUrl } = await import('@/lib/site/routes')
+    expect(['/3d-prints', '/collections/', 'https://x.com/3d-prints?a=1', '/3d-prints/dragon'].every(isRetiredUrl)).toBe(true)
+    expect(['/filaments', '/collections-guide', '', null].some(isRetiredUrl)).toBe(false)
+  })
+})

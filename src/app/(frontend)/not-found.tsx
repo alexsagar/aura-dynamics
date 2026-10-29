@@ -21,9 +21,6 @@ export default function NotFound() {
             <Button as="a" href="/filaments" variant="primary" size="lg">
               Shop Filaments
             </Button>
-            <Button as="a" href="/3d-prints" variant="tertiary" size="lg">
-              Explore 3D Prints
-            </Button>
             <Button as="a" href="/" variant="tertiary" size="lg">
               Back home
             </Button>

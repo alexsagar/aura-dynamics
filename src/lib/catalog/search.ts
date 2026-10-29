@@ -1,5 +1,6 @@
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { isPopulated, productHref } from '@/lib/catalog/shared'
+import { publicProductWhere } from '@/access/ecommerce'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
 export type SearchResult = {
@@ -103,7 +104,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
 
     const { docs } = await payload.find({
       collection: 'products',
-      where: { _status: { equals: 'published' } },
+      where: publicProductWhere,
       depth: 2,
       limit: 200,
       pagination: false,

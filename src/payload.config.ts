@@ -28,6 +28,8 @@ import {
   isAuthenticated,
   isCustomer,
   isDocumentOwner,
+  productReadAccess,
+  variantReadAccess,
 } from './access/ecommerce'
 
 const filename = fileURLToPath(import.meta.url)
@@ -339,6 +341,7 @@ export default buildConfig({
           }),
           variantsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
             ...defaultCollection,
+            access: { ...defaultCollection.access, read: variantReadAccess },
             admin: {
               ...defaultCollection.admin,
               group: 'Catalog',
@@ -382,6 +385,7 @@ export default buildConfig({
         },
         productsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
           ...defaultCollection,
+          access: { ...defaultCollection.access, read: productReadAccess },
           admin: {
             ...defaultCollection.admin,
             group: 'Catalog',

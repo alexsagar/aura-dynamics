@@ -1,9 +1,11 @@
 import { getPayload } from 'payload'
 
 import configPromise from '@/payload.config'
-import type { Homepage } from '@/payload-types'
+import type { Homepage, Product } from '@/payload-types'
 import { mediaAlt, mediaUrl } from '@/lib/payload-media'
-import { populatedProducts, toFilamentCard, toPrintCard } from './product-cards'
+import { isPublicProduct, publicProductWhere } from '@/access/ecommerce'
+import { isRetiredUrl } from '@/lib/site/routes'
+import { toFilamentCard } from './product-cards'
 
 export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
 
@@ -13,7 +15,7 @@ export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
  * explicit `enabled: false` hides a section. A missing image renders the
  * section's own background as the placeholder.
  */
-function normalizeHomepage(cms: Homepage) {
+function normalizeHomepage(cms: Homepage, popularDocs: Product[] = []) {
   const hero = {
     heading: cms.hero?.heading || '',
     imageAlt: mediaAlt(cms.hero?.image, ''),
@@ -25,7 +27,8 @@ function normalizeHomepage(cms: Homepage) {
 
   const categories = {
     enabled: cms.categories?.enabled ?? true,
-    items: (cms.categories?.items ?? []).map((item) => ({
+    // Cards for retired routes (3D Prints) or with no destination are dropped.
+    items: (cms.categories?.items ?? []).filter((item) => item.url && !isRetiredUrl(item.url)).map((item) => ({
       imageUrl: mediaUrl(item.image),
       subtitle: item.subtitle || '',
       title: item.title || '',
@@ -33,21 +36,15 @@ function normalizeHomepage(cms: Homepage) {
     })),
   }
 
-  const popularProducts = populatedProducts(cms.popular?.products)
-  type PopularCard =
-    | { card: NonNullable<ReturnType<typeof toFilamentCard>>; type: 'filament' }
-    | { card: NonNullable<ReturnType<typeof toPrintCard>>; type: 'print' }
+  // Editor order, public products only (popularDocs is already scoped; isPublicProduct is belt-and-braces).
+  const popularProducts = (cms.popular?.products ?? [])
+    .map((ref) => popularDocs.find((d) => d.id === (typeof ref === 'number' ? ref : ref?.id)))
+    .filter((p): p is Product => Boolean(p) && isPublicProduct(p))
   const popular = {
-    cards: popularProducts.reduce<PopularCard[]>((acc, p) => {
-      if (p.productType === 'filament') {
-        const card = toFilamentCard(p)
-        if (card) acc.push({ card, type: 'filament' })
-      } else {
-        const card = toPrintCard(p)
-        if (card) acc.push({ card, type: 'print' })
-      }
-      return acc
-    }, []),
+    cards: popularProducts.flatMap((p) => {
+      const card = toFilamentCard(p)
+      return card ? [{ card, type: 'filament' as const }] : []
+    }),
     enabled: cms.popular?.enabled ?? true,
     heading: cms.popular?.heading || '',
   }
@@ -77,20 +74,14 @@ function normalizeHomepage(cms: Homepage) {
       imageUrl: mediaUrl(item.image),
       subtitle: item.subtitle || '',
       title: item.title || '',
-      // Editorial "what you can print" cards: route to the ready-stock prints
-      // catalog when no explicit URL is set, never an inert '#'.
-      url: item.url || '/3d-prints',
+      // Editorial "what you can print" cards: route to the filament catalog
+      // when no (or a retired) URL is set, never an inert '#'.
+      url: item.url && !isRetiredUrl(item.url) ? item.url : '/filaments',
     })),
   }
 
-  const freshProducts = populatedProducts(cms.freshPrints?.products)
-  const freshPrints = {
-    enabled: cms.freshPrints?.enabled ?? true,
-    heading: cms.freshPrints?.heading || '',
-    printCards: freshProducts.map(toPrintCard).filter((c) => c != null),
-    viewAllLabel: cms.freshPrints?.viewAll?.label || '',
-    viewAllUrl: cms.freshPrints?.viewAll?.url || '/3d-prints',
-  }
+  // Fresh Prints promoted ready-made 3D prints, which the storefront no longer
+  // sells: retired from the page. Its CMS fields stay for possible future use.
 
   const staffPickProduct = cms.staffPick?.product && typeof cms.staffPick.product === 'object' ? cms.staffPick.product : null
   const staffPick = {
@@ -151,19 +142,32 @@ function normalizeHomepage(cms: Homepage) {
     viewAllUrl: cms.learningHub?.viewAll?.url || '',
   }
 
-  return { categories, compare, freshPrints, hero, learningHub, materialsSection, popular, shadeShowcase, staffPick, testimonials, useCases, whyAura }
+  return { categories, compare, hero, learningHub, materialsSection, popular, shadeShowcase, staffPick, testimonials, useCases, whyAura }
 }
 
 
 export async function getHomepageViewModel(): Promise<HomepageViewModel> {
   try {
     const payload = await getPayload({ config: configPromise })
-    const homepage = await payload.findGlobal({
-      slug: 'homepage',
-      // 3: homepage → product → variants join → variant images (card photos).
-      depth: 3,
-    })
-    return normalizeHomepage(homepage)
+    const homepage = await payload.findGlobal({ slug: 'homepage', depth: 2, overrideAccess: false })
+    // Upload fields inside a join are not populated through a global, at any
+    // depth, so card products are loaded directly (variant photos populated),
+    // with the public visibility scope applied server-side.
+    const ids = (homepage.popular?.products ?? []).map((r) => (typeof r === 'number' ? r : r?.id)).filter(Boolean)
+    const popularDocs = ids.length
+      ? ((
+          await payload.find({
+            collection: 'products',
+            where: { and: [publicProductWhere, { id: { in: ids } }] },
+            depth: 2,
+            limit: ids.length,
+            pagination: false,
+            joins: { variants: { limit: 100, sort: 'createdAt' } },
+            overrideAccess: false,
+          })
+        ).docs as Product[])
+      : []
+    return normalizeHomepage(homepage, popularDocs)
   } catch (error) {
     // CMS unreachable: render the empty shell (no copy) instead of crashing
     // the storefront; content returns as soon as Payload is reachable.

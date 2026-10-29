@@ -1,6 +1,7 @@
 import type { FilamentCardProduct, PrintCardProduct } from '@/components/storefront/types'
 import type { Product, Variant, VariantOption } from '@/payload-types'
 import { toFilamentCard, toPrintCard } from '@/lib/homepage/product-cards'
+import { publicProductWhere } from '@/access/ecommerce'
 
 export type RelatedCard =
   | { card: FilamentCardProduct; type: 'filament' }
@@ -69,7 +70,7 @@ export async function getRelatedProducts(current: Product, limit = 4): Promise<R
     // type/material pre-filter here if the catalogue grows past ~100.
     const { docs } = await payload.find({
       collection: 'products',
-      where: { and: [{ _status: { equals: 'published' } }, { id: { not_equals: current.id } }] },
+      where: { and: [publicProductWhere, { id: { not_equals: current.id } }] },
       depth: 2, // variants join → variant images populated for card photos
       limit: 100,
       pagination: false,

@@ -1,4 +1,4 @@
-import type { Access, FieldAccess } from 'payload'
+import type { Access, FieldAccess, Where } from 'payload'
 
 /**
  * isAdmin: Return true only when user.collection === 'users'
@@ -65,3 +65,27 @@ export const isDocumentOwner: Access = ({ req: { user } }) => {
 
   return false
 }
+
+/**
+ * Storefront scope: product types the public can discover and buy. Other types
+ * (3D prints) stay in Payload for admins and historical orders but are hidden
+ * from every public read and rejected at checkout.
+ */
+export const PUBLIC_PRODUCT_TYPES = ['filament'] as const
+
+export const publicProductWhere: Where = {
+  and: [{ _status: { equals: 'published' } }, { productType: { in: [...PUBLIC_PRODUCT_TYPES] } }],
+}
+
+export const isPublicProduct = (p: { _status?: string | null; productType?: string | null } | null | undefined) =>
+  p?._status === 'published' && (PUBLIC_PRODUCT_TYPES as readonly string[]).includes(p.productType ?? '')
+
+/** Products read: admins see everything; everyone else only public, published products. */
+export const productReadAccess: Access = ({ req: { user } }) =>
+  user && user.collection === 'users' ? true : publicProductWhere
+
+/** Variants read: same scope, through the parent product. */
+export const variantReadAccess: Access = ({ req: { user } }) =>
+  user && user.collection === 'users'
+    ? true
+    : { and: [{ _status: { equals: 'published' } }, { 'product.productType': { in: [...PUBLIC_PRODUCT_TYPES] } }] }

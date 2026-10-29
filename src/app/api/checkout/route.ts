@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
+import { isPublicProduct } from '@/access/ecommerce'
 
 /**
  * ============================================================================
@@ -187,7 +188,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: `Product with ID ${productId} not found.` }, { status: 400 })
       }
 
-      if (!productDoc) {
+      if (!productDoc || !isPublicProduct(productDoc)) {
         return NextResponse.json({ error: `Product not found.` }, { status: 400 })
       }
 

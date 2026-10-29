@@ -4,7 +4,6 @@ import React from 'react'
 import { getHomepageViewModel } from '@/lib/homepage/get-homepage'
 import { Container, Section } from '@/components/storefront/layout/Container'
 import { FilamentCard } from '@/components/storefront/product/FilamentCard'
-import { PrintCard } from '@/components/storefront/product/PrintCard'
 import { Button } from '@/components/storefront/ui/Button'
 import { cn } from '@/components/storefront/ui/cn'
 import { InteractiveShades } from '@/components/storefront/ui/InteractiveShades'
@@ -134,7 +133,8 @@ export default async function HomePage() {
       </section>
 
       {/* 2. SHOP CATEGORIES */}
-      {vm.categories.enabled ? (
+      {/* Single card would only repeat the hero CTA */}
+      {vm.categories.enabled && vm.categories.items.length > 1 ? (
         <Section>
           <div className="grid gap-8 md:grid-cols-3">
             {vm.categories.items.map((c) => {
@@ -184,30 +184,15 @@ export default async function HomePage() {
           <Container>
             <div className={RULE_HEADER}>
               <h2 className={SECTION_TITLE}>{vm.popular.heading}</h2>
-              <div className="no-scrollbar flex gap-4 overflow-x-auto pb-2 md:gap-8 md:pb-0">
-                <span className="cursor-pointer text-lg font-medium text-black">All</span>
-                <span className="cursor-pointer text-lg font-medium text-muted transition-colors hover:text-black">
-                  Filaments
-                </span>
-                <span className="cursor-pointer text-lg font-medium text-muted transition-colors hover:text-black">
-                  3D Prints
-                </span>
-              </div>
             </div>
           </Container>
 
           <ScrollableCarousel>
-            {vm.popular.cards.map(({ card, type }, i) =>
-              type === 'filament' ? (
-                <div className={carouselItem} key={i}>
-                  <FilamentCard product={card} ratio="portrait" />
-                </div>
-              ) : (
-                <div className={carouselItem} key={i}>
-                  <PrintCard product={card} ratio="portrait" />
-                </div>
-              ),
-            )}
+            {vm.popular.cards.map(({ card }, i) => (
+              <div className={carouselItem} key={i}>
+                <FilamentCard product={card} ratio="portrait" />
+              </div>
+            ))}
           </ScrollableCarousel>
         </section>
       ) : null}
@@ -266,39 +251,6 @@ export default async function HomePage() {
             ))}
           </div>
         </Section>
-      ) : null}
-
-      {/* 6. FRESH FROM THE PRINTER — real print products only; hidden when none */}
-      {vm.freshPrints.enabled && vm.freshPrints.printCards.length ? (
-        <section className="py-[clamp(64px,10vw,120px)]">
-          <Container>
-            <div className={RULE_HEADER}>
-              <h2 className={SECTION_TITLE}>{vm.freshPrints.heading}</h2>
-              <a className="text-lg font-medium hover:underline" href={vm.freshPrints.viewAllUrl}>
-                {vm.freshPrints.viewAllLabel} &rarr;
-              </a>
-            </div>
-          </Container>
-
-          <ScrollableCarousel>
-            {vm.freshPrints.printCards.map((f) => (
-              <a className={cn('group flex flex-col gap-4', carouselItem)} href={f.href} key={f.href}>
-                <div className="aspect-square w-full overflow-hidden rounded-xl bg-[#f4f4f4]">
-                  {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
-                  <img
-                    alt={f.title}
-                    className="size-full object-cover transition-transform duration-600 ease-editorial group-hover:scale-105"
-                    src={f.imageUrl}
-                  />
-                </div>
-                <div className="flex items-baseline justify-between border-b border-black/10 pb-3 text-lg font-medium transition-colors group-hover:border-black/50">
-                  <span>{f.title}</span>
-                  <span>{formatNPR(f.price)}</span>
-                </div>
-              </a>
-            ))}
-          </ScrollableCarousel>
-        </section>
       ) : null}
 
       {/* 7. STAFF PICK */}
@@ -376,7 +328,7 @@ export default async function HomePage() {
               <CompareLabel last>Best For</CompareLabel>
               {vm.compare.columns.map((col) => (
                 <CompareCell key={col.label} last>
-                  {col.bestFor}
+                  <span className="min-w-0 text-xs wrap-break-word hyphens-auto min-[360px]:text-sm md:text-lg">{col.bestFor}</span>
                 </CompareCell>
               ))}
             </div>
