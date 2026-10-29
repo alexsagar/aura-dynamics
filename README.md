@@ -275,11 +275,13 @@ pnpm run deploy:app
 
 ### CMS content & rendering
 
-Marketing content is Payload-driven: the **Homepage**, **Header**, **Footer**, **Site Settings** and **Page Content** globals own the storefront's headings, intros, imagery, navigation and SEO. The `(frontend)` route group renders dynamically (`export const dynamic = 'force-dynamic'`) so Admin edits appear on the next refresh without a redeploy. Product/catalogue data stays in the Products/Variants/Categories/Materials collections; functional UI microcopy (Add to cart, Sort, Filters, validation, etc.) stays in code.
+Marketing content is Payload-driven: the **Homepage**, **Header**, **Footer**, **Site Settings**, **Page Content** (Filaments, 3D Prints, Collections, Privacy, Terms), **About Page** and **Materials Page** globals own every storefront heading, body copy, legal text (Lexical rich text), editorial image, navigation link and page SEO. There is no duplicate copy in React: an empty CMS field renders empty. Initial content lives in `src/seed/page-content-fixture.ts` and is applied non-destructively (fills blanks only) by `src/seed/seed-page-content.ts` (`--dry-run` to preview). The `(frontend)` route group renders dynamically (`export const dynamic = 'force-dynamic'`) so Admin edits appear on the next refresh without a redeploy. Product/catalogue data stays in the Products/Variants/Categories/Materials collections; functional UI microcopy (Add to cart, Sort, Filters, validation, etc.) stays in code.
 
 > **Future production optimization:** replace the broad `force-dynamic` storefront rendering with targeted path/tag revalidation (Payload `afterChange` → `revalidatePath`/`revalidateTag`) once the OpenNext incremental cache (R2 cache bucket) is configured. Tracked as a follow-up; not required for staging.
 
-Standalone Payload CLI/seed scripts can target an alternate Cloudflare environment by setting `WRANGLER_CONFIG_PATH` to a Wrangler config (e.g. `wrangler.sevenseas-staging.jsonc`); unset, local dev and the personal config behave exactly as before.
+> **D1 limit:** a global save binds each main-table column twice and D1 caps a query at 100 bound parameters, so keep any one global under ~48 scalar columns (the Homepage is near that). Put new repeated content in arrays (own tables) or a new global.
+
+Standalone Payload CLI/seed scripts can target an alternate Cloudflare environment by setting `WRANGLER_CONFIG_PATH` to a Wrangler config (e.g. `wrangler.sevenseas-staging.jsonc`); unset, local dev and the personal config behave exactly as before. Note: Wrangler auth profiles bind to a directory (`~/.wrangler/profiles/directory-bindings.json`) and `getPlatformProxy` has no `--profile` option, so run Seven Seas scripts from a cwd outside the repo (where the `default` profile applies), e.g. `cd /tmp && PAYLOAD_SECRET=ignore TSX_TSCONFIG_PATH=<repo>/tsconfig.json WRANGLER_CONFIG_PATH=<repo>/wrangler.sevenseas-staging.jsonc <repo>/node_modules/.bin/tsx <repo>/src/seed/seed-page-content.ts`. A wrong profile fails on the pinned account/database id; it cannot reach another database.
 
 ---
 

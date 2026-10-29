@@ -1,87 +1,50 @@
+import type { Metadata } from 'next'
 import { getPayload } from 'payload'
 
 import configPromise from '@/payload.config'
-import type { PageContent } from '@/payload-types'
+import type { AboutPage, MaterialsPage, PageContent } from '@/payload-types'
+
+type Pages = {
+  filaments: NonNullable<PageContent['filaments']>
+  prints: NonNullable<PageContent['prints']>
+  collections: NonNullable<PageContent['collections']>
+  privacy: NonNullable<PageContent['privacy']>
+  terms: NonNullable<PageContent['terms']>
+  about: AboutPage
+  materials: MaterialsPage
+}
+export type PageKey = keyof Pages
+
+/** About/Materials live in their own globals; the rest are Page Content groups. */
+const OWN_GLOBAL = { about: 'about-page', materials: 'materials-page' } as const
 
 /**
- * Approved in-code copy for the fixed landing/legal pages. These are the exact
- * current literals; they double as fallbacks so an empty CMS field never
- * blanks a live page. The CMS value (when set) wins.
+ * One page's content from Payload (depth 1, so image slots are populated
+ * Media). Payload owns the copy — there is no in-code duplicate. If the CMS is
+ * unreachable the page renders an empty, non-crashing shell and metadata falls
+ * back to the Site Settings default.
  */
-export const PAGE_FALLBACKS = {
-  filaments: {
-    heading: 'Filaments',
-    intro: 'Explore our range of 3D printing filaments.',
-    seoTitle: 'Filaments — Aura',
-    seoDescription:
-      'Browse Numakers 3D printing filaments — PLA, PETG and more, shipped across Nepal.',
-  },
-  prints: {
-    heading: '3D Prints',
-    intro: 'Explore our collection of ready-made 3D prints.',
-    seoTitle: '3D Prints — Aura',
-    seoDescription:
-      'Browse Aura ready-made 3D prints — figures, miniatures and more, shipped across Nepal.',
-  },
-  collections: {
-    heading: 'The Aura catalogue.',
-    intro:
-      'Everything we make, in one place — high-performance filaments and ready-stock 3D prints, all in stock and ready to ship across Nepal.',
-    seoTitle: 'Shop · Aura',
-    seoDescription:
-      'Browse the Aura catalogue — Numakers filaments and ready-stock 3D prints, shipped across Nepal.',
-  },
-  about: {
-    heading: '',
-    intro:
-      "Aura is the premier 3D printing ecosystem in Nepal. We don't just supply filament; we provide the foundation for innovation, rapid prototyping, and digital manufacturing.",
-    seoTitle: 'About — Aura',
-    seoDescription:
-      'Aura is the premier 3D printing ecosystem in Nepal — filament, ready-stock prints and the foundation for digital manufacturing.',
-  },
-  materials: {
-    heading: 'The Library.',
-    intro:
-      'An index of high-performance polymers. Engineered to rigorous tolerances to ensure perfect bed adhesion, minimal warping, and predictable extrusion.',
-    seoTitle: 'Materials — Aura',
-    seoDescription:
-      'An index of high-performance 3D printing polymers — PLA, PETG, ABS and TPU — engineered to rigorous tolerances.',
-  },
-  privacy: {
-    heading: 'Privacy Policy',
-    intro:
-      'Aura collects only the information needed to process and deliver your order. This notice explains what we collect, why, and how it is handled.',
-    seoTitle: 'Privacy Policy · Aura',
-    seoDescription:
-      'How Aura collects and uses the limited personal information you provide to place and receive an order.',
-  },
-  terms: {
-    heading: 'Terms of Service',
-    intro:
-      'These terms apply when you browse Aura and place an order. By placing an order you agree to them.',
-    seoTitle: 'Terms of Service · Aura',
-    seoDescription:
-      'The terms that apply when you browse Aura and place an order for filaments or 3D prints.',
-  },
-} as const
-
-export type PageKey = keyof typeof PAGE_FALLBACKS
-export type ResolvedPage = { heading: string; intro: string; seoTitle: string; seoDescription: string }
-
-/** Fetch one page's resolved content (CMS value or approved fallback). */
-export async function getPageContent(key: PageKey): Promise<ResolvedPage> {
-  const fb = PAGE_FALLBACKS[key]
+export async function getPageContent<K extends PageKey>(key: K): Promise<Pages[K]> {
   try {
     const payload = await getPayload({ config: configPromise })
-    const doc = (await payload.findGlobal({ slug: 'page-content', depth: 0 })) as PageContent
-    const cms = (doc?.[key] ?? {}) as Partial<ResolvedPage>
-    return {
-      heading: cms.heading?.trim() || fb.heading,
-      intro: cms.intro?.trim() || fb.intro,
-      seoTitle: cms.seoTitle?.trim() || fb.seoTitle,
-      seoDescription: cms.seoDescription?.trim() || fb.seoDescription,
+    if (key === 'about' || key === 'materials') {
+      const slug = OWN_GLOBAL[key as keyof typeof OWN_GLOBAL]
+      return (await payload.findGlobal({ slug, depth: 1 })) as Pages[K]
     }
-  } catch {
-    return { ...fb }
+    const doc = await payload.findGlobal({ slug: 'page-content', depth: 1 })
+    return (doc?.[key as keyof PageContent] ?? {}) as Pages[K]
+  } catch (error) {
+    console.error(`Failed to load "${key}" page content from Payload`, error)
+    return {} as Pages[K]
+  }
+}
+
+/** Page SEO from CMS; empty values defer to the layout's Site Settings default. */
+export async function pageMetadata(key: PageKey, extra: Metadata = {}): Promise<Metadata> {
+  const c: { seoTitle?: string | null; seoDescription?: string | null } = await getPageContent(key)
+  return {
+    ...(c.seoTitle?.trim() ? { title: c.seoTitle } : {}),
+    ...(c.seoDescription?.trim() ? { description: c.seoDescription } : {}),
+    ...extra,
   }
 }

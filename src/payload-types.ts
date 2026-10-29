@@ -128,6 +128,8 @@ export interface Config {
     footer: Footer;
     'site-settings': SiteSetting;
     'page-content': PageContent;
+    'about-page': AboutPage;
+    'materials-page': MaterialsPage;
   };
   globalsSelect: {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
@@ -135,6 +137,8 @@ export interface Config {
     footer: FooterSelect<false> | FooterSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'page-content': PageContentSelect<false> | PageContentSelect<true>;
+    'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
+    'materials-page': MaterialsPageSelect<false> | MaterialsPageSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1279,12 +1283,24 @@ export interface Homepage {
     };
   };
   /**
-   * Copy only. The colour swatches, images, and interaction stay code-driven.
+   * Copy, swatches and swatch photography. The interaction stays code-driven.
    */
   shadeShowcase?: {
     enabled?: boolean | null;
     heading?: string | null;
     description?: string | null;
+    shades?:
+      | {
+          name?: string | null;
+          hex?: string | null;
+          image?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * e.g. "40+ colors available"
+     */
+    availabilityNote?: string | null;
     ctaLabel?: string | null;
     ctaUrl?: string | null;
   };
@@ -1500,7 +1516,7 @@ export interface SiteSetting {
   createdAt?: string | null;
 }
 /**
- * Headings, intros and SEO for the storefront landing and legal pages.
+ * Headings, copy, imagery and SEO for the catalogue landing and legal pages.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "page-content".
@@ -1544,6 +1560,7 @@ export interface PageContent {
     seoDescription?: string | null;
   };
   collections?: {
+    eyebrow?: string | null;
     /**
      * Main page heading
      */
@@ -1552,38 +1569,16 @@ export interface PageContent {
      * Short introductory line shown under the heading
      */
     intro?: string | null;
-    /**
-     * Browser tab / search-result title. Falls back to the site default.
-     */
-    seoTitle?: string | null;
-    /**
-     * Search-result and social description.
-     */
-    seoDescription?: string | null;
-  };
-  about?: {
-    /**
-     * Short introductory line shown under the heading
-     */
-    intro?: string | null;
-    /**
-     * Browser tab / search-result title. Falls back to the site default.
-     */
-    seoTitle?: string | null;
-    /**
-     * Search-result and social description.
-     */
-    seoDescription?: string | null;
-  };
-  materials?: {
-    /**
-     * Main page heading
-     */
-    heading?: string | null;
-    /**
-     * Short introductory line shown under the heading
-     */
-    intro?: string | null;
+    cards?:
+      | {
+          title?: string | null;
+          subtitle?: string | null;
+          url?: string | null;
+          image?: (number | null) | Media;
+          id?: string | null;
+        }[]
+      | null;
+    categoriesHeading?: string | null;
     /**
      * Browser tab / search-result title. Falls back to the site default.
      */
@@ -1602,6 +1597,21 @@ export interface PageContent {
      * Short introductory line shown under the heading
      */
     intro?: string | null;
+    body?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
     /**
      * Browser tab / search-result title. Falls back to the site default.
      */
@@ -1620,6 +1630,21 @@ export interface PageContent {
      * Short introductory line shown under the heading
      */
     intro?: string | null;
+    body?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
     /**
      * Browser tab / search-result title. Falls back to the site default.
      */
@@ -1629,6 +1654,177 @@ export interface PageContent {
      */
     seoDescription?: string | null;
   };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Copy, imagery and SEO for /about.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about-page".
+ */
+export interface AboutPage {
+  id: number;
+  headingLine1?: string | null;
+  headingLine2?: string | null;
+  /**
+   * Short introductory line shown under the heading
+   */
+  intro?: string | null;
+  heroImage?: (number | null) | Media;
+  mission?: {
+    eyebrow?: string | null;
+    heading?: string | null;
+    paragraphs?:
+      | {
+          text?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+    image?: (number | null) | Media;
+    closing?: string | null;
+  };
+  studio?: {
+    heading?: string | null;
+    subheading?: string | null;
+    imageLarge?: (number | null) | Media;
+    imageTop?: (number | null) | Media;
+    imageBottom?: (number | null) | Media;
+  };
+  local?: {
+    heading?: string | null;
+    body?: string | null;
+  };
+  contact?: {
+    heading?: string | null;
+    body?: string | null;
+    locationLabel?: string | null;
+    location?: string | null;
+    locationNote?: string | null;
+    contactLabel?: string | null;
+    email?: string | null;
+    phone?: string | null;
+    socialLabel?: string | null;
+    /**
+     * Leave URL empty to show the label without a link.
+     */
+    socialLinks?:
+      | {
+          label?: string | null;
+          url?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  /**
+   * Browser tab / search-result title. Falls back to the site default.
+   */
+  seoTitle?: string | null;
+  /**
+   * Search-result and social description.
+   */
+  seoDescription?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Copy, imagery and SEO for /materials.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "materials-page".
+ */
+export interface MaterialsPage {
+  id: number;
+  eyebrow?: string | null;
+  /**
+   * Main page heading
+   */
+  heading?: string | null;
+  /**
+   * Short introductory line shown under the heading
+   */
+  intro?: string | null;
+  primaryCta?: {
+    label?: string | null;
+    url?: string | null;
+  };
+  secondaryCta?: {
+    label?: string | null;
+    url?: string | null;
+  };
+  heroImage?: (number | null) | Media;
+  matrix?: {
+    heading?: string | null;
+    subheading?: string | null;
+    rows?:
+      | {
+          material?: string | null;
+          strength?: number | null;
+          flex?: number | null;
+          heat?: number | null;
+          ease?: number | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  deepDives?:
+    | {
+        eyebrow?: string | null;
+        heading?: string | null;
+        body?: string | null;
+        points?:
+          | {
+              text?: string | null;
+              id?: string | null;
+            }[]
+          | null;
+        cta?: {
+          label?: string | null;
+          url?: string | null;
+        };
+        watermark?: string | null;
+        image?: (number | null) | Media;
+        id?: string | null;
+      }[]
+    | null;
+  quality?: {
+    heading?: string | null;
+    body?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    image?: (number | null) | Media;
+  };
+  cta?: {
+    heading?: string | null;
+    body?: string | null;
+    button?: {
+      label?: string | null;
+      url?: string | null;
+    };
+    cardTitle?: string | null;
+    cardUrl?: string | null;
+    image?: (number | null) | Media;
+  };
+  /**
+   * Browser tab / search-result title. Falls back to the site default.
+   */
+  seoTitle?: string | null;
+  /**
+   * Search-result and social description.
+   */
+  seoDescription?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1742,6 +1938,15 @@ export interface HomepageSelect<T extends boolean = true> {
         enabled?: T;
         heading?: T;
         description?: T;
+        shades?:
+          | T
+          | {
+              name?: T;
+              hex?: T;
+              image?: T;
+              id?: T;
+            };
+        availabilityNote?: T;
         ctaLabel?: T;
         ctaUrl?: T;
       };
@@ -1953,23 +2158,19 @@ export interface PageContentSelect<T extends boolean = true> {
   collections?:
     | T
     | {
+        eyebrow?: T;
         heading?: T;
         intro?: T;
-        seoTitle?: T;
-        seoDescription?: T;
-      };
-  about?:
-    | T
-    | {
-        intro?: T;
-        seoTitle?: T;
-        seoDescription?: T;
-      };
-  materials?:
-    | T
-    | {
-        heading?: T;
-        intro?: T;
+        cards?:
+          | T
+          | {
+              title?: T;
+              subtitle?: T;
+              url?: T;
+              image?: T;
+              id?: T;
+            };
+        categoriesHeading?: T;
         seoTitle?: T;
         seoDescription?: T;
       };
@@ -1978,6 +2179,7 @@ export interface PageContentSelect<T extends boolean = true> {
     | {
         heading?: T;
         intro?: T;
+        body?: T;
         seoTitle?: T;
         seoDescription?: T;
       };
@@ -1986,9 +2188,161 @@ export interface PageContentSelect<T extends boolean = true> {
     | {
         heading?: T;
         intro?: T;
+        body?: T;
         seoTitle?: T;
         seoDescription?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "about-page_select".
+ */
+export interface AboutPageSelect<T extends boolean = true> {
+  headingLine1?: T;
+  headingLine2?: T;
+  intro?: T;
+  heroImage?: T;
+  mission?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        paragraphs?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        image?: T;
+        closing?: T;
+      };
+  studio?:
+    | T
+    | {
+        heading?: T;
+        subheading?: T;
+        imageLarge?: T;
+        imageTop?: T;
+        imageBottom?: T;
+      };
+  local?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+      };
+  contact?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        locationLabel?: T;
+        location?: T;
+        locationNote?: T;
+        contactLabel?: T;
+        email?: T;
+        phone?: T;
+        socialLabel?: T;
+        socialLinks?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+              id?: T;
+            };
+      };
+  seoTitle?: T;
+  seoDescription?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "materials-page_select".
+ */
+export interface MaterialsPageSelect<T extends boolean = true> {
+  eyebrow?: T;
+  heading?: T;
+  intro?: T;
+  primaryCta?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+      };
+  secondaryCta?:
+    | T
+    | {
+        label?: T;
+        url?: T;
+      };
+  heroImage?: T;
+  matrix?:
+    | T
+    | {
+        heading?: T;
+        subheading?: T;
+        rows?:
+          | T
+          | {
+              material?: T;
+              strength?: T;
+              flex?: T;
+              heat?: T;
+              ease?: T;
+              id?: T;
+            };
+      };
+  deepDives?:
+    | T
+    | {
+        eyebrow?: T;
+        heading?: T;
+        body?: T;
+        points?:
+          | T
+          | {
+              text?: T;
+              id?: T;
+            };
+        cta?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+        watermark?: T;
+        image?: T;
+        id?: T;
+      };
+  quality?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        image?: T;
+      };
+  cta?:
+    | T
+    | {
+        heading?: T;
+        body?: T;
+        button?:
+          | T
+          | {
+              label?: T;
+              url?: T;
+            };
+        cardTitle?: T;
+        cardUrl?: T;
+        image?: T;
+      };
+  seoTitle?: T;
+  seoDescription?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

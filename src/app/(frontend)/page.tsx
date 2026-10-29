@@ -334,11 +334,13 @@ export default async function HomePage() {
         </section>
       ) : null}
 
-      {/* 8. MADE IN EVERY SHADE — copy is CMS-sourced; swatches/interaction stay code-driven */}
+      {/* 8. MADE IN EVERY SHADE — copy, swatches and photos CMS-sourced; interaction in code */}
       {vm.shadeShowcase.enabled ? (
         <section className="bg-background py-[clamp(80px,15vw,160px)]">
           <Container>
             <InteractiveShades
+              availabilityNote={vm.shadeShowcase.availabilityNote}
+              shades={vm.shadeShowcase.shades}
               ctaLabel={vm.shadeShowcase.ctaLabel}
               ctaUrl={vm.shadeShowcase.ctaUrl}
               description={vm.shadeShowcase.description}

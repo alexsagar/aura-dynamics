@@ -6,13 +6,12 @@ import { CatalogToolbar } from '@/components/storefront/catalog/catalog-toolbar'
 import { Container } from '@/components/storefront/layout/Container'
 import { FilamentCard } from '@/components/storefront/product/FilamentCard'
 import { getFilamentCatalog, parseFilters } from '@/lib/filaments/catalog'
-import { getPageContent } from '@/lib/site/get-page-content'
+import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
 import { CatalogFilters } from './catalog-filters'
 
 export async function generateMetadata() {
-  const c = await getPageContent('filaments')
-  return { title: c.seoTitle, description: c.seoDescription }
+  return pageMetadata('filaments')
 }
 
 type SearchParams = Record<string, string | string[] | undefined>

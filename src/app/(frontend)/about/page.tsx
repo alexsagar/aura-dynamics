@@ -1,46 +1,44 @@
 import React from 'react'
 import type { Metadata } from 'next'
 
-import { Container, Section } from '@/components/storefront/layout/Container'
+import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
-import { cn } from '@/components/storefront/ui/cn'
-import { getPageContent } from '@/lib/site/get-page-content'
+import { mediaAlt, mediaUrl } from '@/lib/payload-media'
+import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const c = await getPageContent('about')
-  return { title: c.seoTitle, description: c.seoDescription }
+  return pageMetadata('about')
 }
-
-const P_HERO = 'https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?q=80&w=1600&auto=format&fit=crop'
-const P_STORY = 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=1200&auto=format&fit=crop'
-const P_FACTORY_1 = 'https://images.unsplash.com/photo-1622737133809-d95047b9e673?q=80&w=800&auto=format&fit=crop'
-const P_FACTORY_2 = 'https://images.unsplash.com/photo-1603984362497-0a878f607b92?q=80&w=800&auto=format&fit=crop'
-const P_FACTORY_3 = 'https://images.unsplash.com/photo-1617478755490-e21232a5eeaf?q=80&w=1600&auto=format&fit=crop'
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
 
+/* eslint-disable @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */
 export default async function AboutPage() {
-  const content = await getPageContent('about')
+  const c = await getPageContent('about')
+  const mission = c.mission ?? {}
+  const studio = c.studio ?? {}
+  const local = c.local ?? {}
+  const contact = c.contact ?? {}
   return (
     <>
       {/* 1. Manifesto Hero */}
       <section className="relative flex min-h-[90vh] items-end overflow-hidden bg-black py-[10vh]">
         <div className="absolute inset-0 z-0">
           <img
-            alt="Numakers Factory"
+            alt={mediaAlt(c.heroImage, '')}
             className="size-full object-cover opacity-50 mix-blend-luminosity"
-            src={P_HERO}
+            src={mediaUrl(c.heroImage)}
           />
           <div className="absolute inset-0 bg-linear-to-t from-black via-black/40 to-transparent" />
         </div>
         <Container className="relative z-10 w-full">
           <div className="max-w-[800px] text-white">
             <h1 className="mb-8 text-[clamp(4rem,8vw,8rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
-              We build <br />
-              the builders.
+              {c.headingLine1} <br />
+              {c.headingLine2}
             </h1>
             <p className="text-[clamp(1.25rem,2vw,1.5rem)] leading-[1.6] text-white/80">
-              {content.intro}
+              {c.intro}
             </p>
           </div>
         </Container>
@@ -53,26 +51,21 @@ export default async function AboutPage() {
             <div>
               <div className="sticky top-32">
                 <h2 className="mb-4 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
-                  Our Mission
+                  {mission.eyebrow}
                 </h2>
                 <h3 className="text-4xl font-medium leading-[1.1] tracking-[-0.03em]">
-                  Empowering the creators of tomorrow.
+                  {mission.heading}
                 </h3>
               </div>
             </div>
             <div className="flex flex-col gap-8 text-lg leading-[1.6] text-muted">
-              <p>
-                The 3D printing landscape in Nepal used to be fragmented. Makers relied on expensive imports, inconsistent filament quality, and weeks of shipping delays just to get basic materials. Prototyping was a luxury.
-              </p>
-              <p>
-                We started Aura to fix that. By bringing Numakers' high-performance polymers directly to the local market and maintaining a massive ready-stock inventory, we eliminated the friction of creation.
-              </p>
+              {(mission.paragraphs ?? []).map((p) => (
+                <p key={p.id}>{p.text}</p>
+              ))}
               <div className="my-8 aspect-video w-full overflow-hidden rounded-[32px] bg-black">
-                <img alt="The beginning" className="size-full object-cover mix-blend-luminosity opacity-80" src={P_STORY} />
+                <img alt={mediaAlt(mission.image, '')} className="size-full object-cover mix-blend-luminosity opacity-80" src={mediaUrl(mission.image)} />
               </div>
-              <p>
-                Today, Aura is the trusted supplier for architectural firms, engineering students, cosplay artists, and functional design studios across the country. If you can dream it, we provide the material to make it real.
-              </p>
+              <p>{mission.closing}</p>
             </div>
           </div>
         </Container>
@@ -82,19 +75,19 @@ export default async function AboutPage() {
       <section className="bg-deep-forest py-[clamp(80px,10vw,160px)] text-white">
         <Container>
           <div className="mb-16 flex flex-col items-start justify-between gap-6 border-b border-white/20 pb-6 md:flex-row md:items-end">
-            <h2 className={SECTION_TITLE}>The Studio.</h2>
-            <p className="text-xl text-white/60">Where digital models become physical reality.</p>
+            <h2 className={SECTION_TITLE}>{studio.heading}</h2>
+            <p className="text-xl text-white/60">{studio.subheading}</p>
           </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div className="aspect-square overflow-hidden rounded-[32px] bg-black md:aspect-[4/5]">
-              <img alt="Print farm" className="size-full object-cover mix-blend-luminosity opacity-80" src={P_FACTORY_1} />
+              <img alt={mediaAlt(studio.imageLarge, '')} className="size-full object-cover mix-blend-luminosity opacity-80" src={mediaUrl(studio.imageLarge)} />
             </div>
             <div className="flex flex-col gap-4">
               <div className="aspect-video overflow-hidden rounded-[32px] bg-black md:aspect-[4/3]">
-                <img alt="Extrusion" className="size-full object-cover mix-blend-luminosity opacity-80" src={P_FACTORY_2} />
+                <img alt={mediaAlt(studio.imageTop, '')} className="size-full object-cover mix-blend-luminosity opacity-80" src={mediaUrl(studio.imageTop)} />
               </div>
               <div className="aspect-square overflow-hidden rounded-[32px] bg-black md:aspect-auto md:flex-1">
-                <img alt="Finished Print" className="size-full object-cover mix-blend-luminosity opacity-80" src={P_FACTORY_3} />
+                <img alt={mediaAlt(studio.imageBottom, '')} className="size-full object-cover mix-blend-luminosity opacity-80" src={mediaUrl(studio.imageBottom)} />
               </div>
             </div>
           </div>
@@ -111,10 +104,10 @@ export default async function AboutPage() {
               </svg>
             </div>
             <h2 className="mb-6 text-[clamp(2.5rem,5vw,4rem)] leading-[1.1] font-medium tracking-[-0.03em]">
-              Designed & Printed in Nepal.
+              {local.heading}
             </h2>
             <p className="max-w-[600px] text-lg leading-[1.6] text-muted">
-              We are proud to operate locally. By supporting Aura, you are supporting a local ecosystem of designers, engineers, and makers who are pushing the boundaries of what's possible in the Himalayas.
+              {local.body}
             </p>
           </div>
         </Container>
@@ -125,38 +118,46 @@ export default async function AboutPage() {
         <Container>
           <div className="grid gap-16 md:grid-cols-2">
             <div>
-              <h2 className={SECTION_TITLE}>Get in touch.</h2>
+              <h2 className={SECTION_TITLE}>{contact.heading}</h2>
               <p className="mt-6 max-w-[400px] text-lg text-muted">
-                Whether you need a custom print quote, wholesale filament pricing, or just want to talk shop, we're here for you.
+                {contact.body}
               </p>
             </div>
             <div className="flex flex-col gap-12">
               <div>
                 <h3 className="mb-2 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
-                  Studio Location
+                  {contact.locationLabel}
                 </h3>
                 <p className="text-2xl font-medium tracking-[-0.02em]">
-                  Kathmandu, Nepal <br />
-                  <span className="text-muted">(Visits by appointment only)</span>
+                  {contact.location} <br />
+                  <span className="text-muted">{contact.locationNote}</span>
                 </p>
               </div>
               <div>
                 <h3 className="mb-2 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
-                  Contact
+                  {contact.contactLabel}
                 </h3>
                 <p className="text-2xl font-medium tracking-[-0.02em]">
-                  hello@aura.com.np <br />
-                  +977 980-0000000
+                  {contact.email} <br />
+                  {contact.phone}
                 </p>
               </div>
               <div>
                 <h3 className="mb-4 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
-                  Social
+                  {contact.socialLabel}
                 </h3>
                 <div className="flex gap-4">
-                  <Button variant="secondary">Instagram</Button>
-                  <Button variant="secondary">Facebook</Button>
-                  <Button variant="secondary">TikTok</Button>
+                  {(contact.socialLinks ?? []).map((s) =>
+                    s.url ? (
+                      <Button as="a" href={s.url} key={s.id} rel="noreferrer" target="_blank" variant="secondary">
+                        {s.label}
+                      </Button>
+                    ) : (
+                      <Button key={s.id} variant="secondary">
+                        {s.label}
+                      </Button>
+                    ),
+                  )}
                 </div>
               </div>
             </div>

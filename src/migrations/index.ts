@@ -6,6 +6,9 @@ import * as migration_20261004_172006_variant_images from './20261004_172006_var
 import * as migration_20261005_175000_order_esewa_qr from './20261005_175000_order_esewa_qr';
 import * as migration_20261005_190000_checkout_hardening from './20261005_190000_checkout_hardening';
 import * as migration_20261007_101456_page_content from './20261007_101456_page_content';
+import * as migration_20261029_102429_page_content_completion from './20261029_102429_page_content_completion';
+import * as migration_20261029_104832_about_materials_globals from './20261029_104832_about_materials_globals';
+import * as migration_20261029_105745_homepage_shades from './20261029_105745_homepage_shades';
 
 export const migrations = [
   {
@@ -46,6 +49,21 @@ export const migrations = [
   {
     up: migration_20261007_101456_page_content.up,
     down: migration_20261007_101456_page_content.down,
-    name: '20261007_101456_page_content'
+    name: '20261007_101456_page_content',
+  },
+  {
+    up: migration_20261029_102429_page_content_completion.up,
+    down: migration_20261029_102429_page_content_completion.down,
+    name: '20261029_102429_page_content_completion',
+  },
+  {
+    up: migration_20261029_104832_about_materials_globals.up,
+    down: migration_20261029_104832_about_materials_globals.down,
+    name: '20261029_104832_about_materials_globals',
+  },
+  {
+    up: migration_20261029_105745_homepage_shades.up,
+    down: migration_20261029_105745_homepage_shades.down,
+    name: '20261029_105745_homepage_shades'
   },
 ];

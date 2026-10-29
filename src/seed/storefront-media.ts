@@ -23,7 +23,7 @@ export async function findMediaByKey(payload: Payload, key: string) {
   return docs[0]
 }
 
-export async function seedStorefrontMedia() {
+export async function seedStorefrontMedia(onlyKeys?: string[]) {
   console.log('🖼  Storefront media migration')
   const payload = await getPayload({ config: configPromise })
 
@@ -31,7 +31,10 @@ export async function seedStorefrontMedia() {
   let skipped = 0
   let failed = 0
 
-  for (const entry of storefrontMediaManifest) {
+  const entries = onlyKeys
+    ? storefrontMediaManifest.filter((e) => onlyKeys.includes(e.key))
+    : storefrontMediaManifest
+  for (const entry of entries) {
     const existing = await findMediaByKey(payload, entry.key)
     if (existing) {
       skipped++
@@ -79,7 +82,7 @@ export async function seedStorefrontMedia() {
   }
 
   console.log(
-    `🖼  Done. created=${created} reused=${skipped} skipped=${failed} total=${storefrontMediaManifest.length}`,
+    `🖼  Done. created=${created} reused=${skipped} skipped=${failed} total=${entries.length}`,
   )
   return { created, skipped, failed }
 }

@@ -19,7 +19,7 @@ import { Homepage } from './globals/Homepage'
 import { Header } from './globals/Header'
 import { Footer } from './globals/Footer'
 import { SiteSettings } from './globals/SiteSettings'
-import { PageContent } from './globals/PageContent'
+import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
 import {
   adminOnlyFieldAccess,
@@ -97,7 +97,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Customers, Media, Categories, Materials],
-  globals: [Homepage, Header, Footer, SiteSettings, PageContent],
+  globals: [Homepage, Header, Footer, SiteSettings, PageContent, AboutPage, MaterialsPage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   typescript: {

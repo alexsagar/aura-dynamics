@@ -6,17 +6,12 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import type { Category } from '@/payload-types'
 import { Container } from '@/components/storefront/layout/Container'
+import { mediaUrl } from '@/lib/payload-media'
 import { absoluteUrl } from '@/lib/site/seo'
-import { imageFallback } from '@/lib/homepage/fallback'
-import { getPageContent } from '@/lib/site/get-page-content'
+import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const c = await getPageContent('collections')
-  return {
-    title: c.seoTitle,
-    description: c.seoDescription,
-    alternates: { canonical: absoluteUrl('/collections') },
-  }
+  return pageMetadata('collections', { alternates: { canonical: absoluteUrl('/collections') } })
 }
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
@@ -68,20 +63,12 @@ async function getPrintCategories(): Promise<ShopCategory[]> {
 export default async function CollectionsPage() {
   const [categories, content] = await Promise.all([getPrintCategories(), getPageContent('collections')])
 
-  const primary = [
-    {
-      title: 'Filaments',
-      subtitle: 'Numakers spools for everyday 3D printing.',
-      href: '/filaments',
-      image: imageFallback.categoryFilaments,
-    },
-    {
-      title: '3D Prints',
-      subtitle: 'Ready-stock printed objects, shipped from Nepal.',
-      href: '/3d-prints',
-      image: imageFallback.categoryPrints,
-    },
-  ]
+  const primary = (content.cards ?? []).map((c) => ({
+    title: c.title ?? '',
+    subtitle: c.subtitle ?? '',
+    href: c.url || '#',
+    image: mediaUrl(c.image),
+  }))
 
   return (
     <>
@@ -90,7 +77,7 @@ export default async function CollectionsPage() {
         <Container>
           <div className="max-w-[640px]">
             <div className="mb-6 inline-flex items-center rounded-full border border-black/10 px-4 py-1.5 text-sm font-semibold tracking-[0.1em] text-black uppercase">
-              Shop
+              {content.eyebrow}
             </div>
             <h1 className="mb-6 text-[clamp(3rem,6vw,6rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
               {content.heading}
@@ -112,7 +99,7 @@ export default async function CollectionsPage() {
                 href={c.href}
                 className="group relative aspect-[16/10] overflow-hidden rounded-[32px] bg-[#f4f4f4]"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element -- placeholder photography, replaced via CMS */}
+                {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
                 <img
                   alt={c.title}
                   className="size-full object-cover opacity-90 transition-transform duration-1000 ease-editorial group-hover:scale-105"
@@ -134,7 +121,7 @@ export default async function CollectionsPage() {
         <section className="bg-background py-[clamp(48px,8vw,96px)]">
           <Container>
             <h2 className="mb-10 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
-              Browse 3D prints by category
+              {content.categoriesHeading}
             </h2>
             <div className="flex flex-col border-t border-black/10">
               {categories.map((cat, i) => (

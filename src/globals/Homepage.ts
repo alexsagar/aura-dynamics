@@ -212,12 +212,25 @@ export const Homepage: GlobalConfig = {
           name: 'shadeShowcase',
           admin: {
             hideGutter: true,
-            description: 'Copy only. The colour swatches, images, and interaction stay code-driven.',
+            description: 'Copy, swatches and swatch photography. The interaction stays code-driven.',
           },
+          // ponytail: the homepage main table is at ~47 scalar columns; D1 caps a
+          // query at 100 bound params and a global save binds each column twice.
+          // New homepage copy should go in arrays (own tables) or a new global.
           fields: [
             enabledField,
             { name: 'heading', type: 'text' },
             { name: 'description', type: 'textarea' },
+            {
+              name: 'shades',
+              type: 'array',
+              dbName: 'hp_shades',
+              fields: [
+                { type: 'row', fields: [{ name: 'name', type: 'text' }, { name: 'hex', type: 'text' }] },
+                { name: 'image', type: 'upload', relationTo: 'media' },
+              ],
+            },
+            { name: 'availabilityNote', type: 'text', admin: { description: 'e.g. "40+ colors available"' } },
             { name: 'ctaLabel', type: 'text' },
             { name: 'ctaUrl', type: 'text' },
           ],

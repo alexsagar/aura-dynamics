@@ -1,70 +1,7 @@
 import { getPayload } from 'payload'
 import configPromise from '../payload.config'
 
-// ---------------------------------------------------------------------------
-// Minimal Lexical rich-text builders. Payload stores richText as a Lexical
-// editor state; these produce the node shapes the editor and the storefront
-// RichText renderer expect, so seeded product copy renders identically to copy
-// authored in Admin.
-// ---------------------------------------------------------------------------
-const txt = (text: string) => ({
-  type: 'text',
-  detail: 0,
-  format: 0,
-  mode: 'normal',
-  style: '',
-  text,
-  version: 1,
-})
-const paragraph = (text: string) => ({
-  type: 'paragraph',
-  direction: 'ltr' as const,
-  format: '' as const,
-  indent: 0,
-  version: 1,
-  textFormat: 0,
-  children: [txt(text)],
-})
-const heading = (text: string, tag: 'h2' | 'h3' = 'h3') => ({
-  type: 'heading',
-  tag,
-  direction: 'ltr' as const,
-  format: '' as const,
-  indent: 0,
-  version: 1,
-  children: [txt(text)],
-})
-const bulletList = (items: string[]) => ({
-  type: 'list',
-  listType: 'bullet' as const,
-  tag: 'ul' as const,
-  start: 1,
-  direction: 'ltr' as const,
-  format: '' as const,
-  indent: 0,
-  version: 1,
-  children: items.map((text, i) => ({
-    type: 'listitem',
-    value: i + 1,
-    direction: 'ltr' as const,
-    format: '' as const,
-    indent: 0,
-    version: 1,
-    children: [txt(text)],
-  })),
-})
-const richText = (
-  nodes: Array<ReturnType<typeof paragraph> | ReturnType<typeof heading> | ReturnType<typeof bulletList>>,
-) => ({
-  root: {
-    type: 'root',
-    direction: 'ltr' as const,
-    format: '' as const,
-    indent: 0,
-    version: 1,
-    children: nodes,
-  },
-})
+import { bulletList, heading, paragraph, richText } from './lexical'
 
 export async function seedCatalogTest() {
   console.log('🌱 Starting Aura Catalog Test Seed...')

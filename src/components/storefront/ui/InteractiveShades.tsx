@@ -5,31 +5,27 @@ import React, { useState } from 'react'
 
 import { cn } from './cn'
 
-const MOCK_SHADES = [
-  { hex: '#111', id: 'black', image: 'https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?q=80&w=1200&auto=format&fit=crop', name: 'Black' },
-  { hex: '#f9f9f9', id: 'white', image: 'https://images.unsplash.com/photo-1595225476474-87563907a212?q=80&w=1200&auto=format&fit=crop', name: 'White' },
-  { hex: '#dc2626', id: 'red', image: 'https://images.unsplash.com/photo-1617478755490-e21232a5eeaf?q=80&w=1200&auto=format&fit=crop', name: 'Red' },
-  { hex: '#16a34a', id: 'green', image: 'https://images.unsplash.com/photo-1622737133809-d95047b9e673?q=80&w=1200&auto=format&fit=crop', name: 'Green' },
-  { hex: '#2563eb', id: 'blue', image: 'https://images.unsplash.com/photo-1612825173281-9a193378527e?q=80&w=1200&auto=format&fit=crop', name: 'Blue' },
-  { hex: '#9333ea', id: 'purple', image: 'https://images.unsplash.com/photo-1581092580497-e0d23cbdf1dc?q=80&w=1200&auto=format&fit=crop', name: 'Purple' },
-  { hex: '#ea580c', id: 'orange', image: 'https://images.unsplash.com/photo-1603984362497-0a878f607b92?q=80&w=1200&auto=format&fit=crop', name: 'Orange' },
-  { hex: '#eab308', id: 'yellow', image: 'https://images.unsplash.com/photo-1628155930542-3c7a64e2c833?q=80&w=1200&auto=format&fit=crop', name: 'Yellow' },
-]
+export type Shade = { hex: string; id: string; image?: string; name: string }
 
 type InteractiveShadesProps = {
-  heading?: string
-  description?: string
-  ctaLabel?: string
-  ctaUrl?: string
+  heading: string
+  description: string
+  shades: Shade[]
+  availabilityNote: string
+  ctaLabel: string
+  ctaUrl: string
 }
 
+/** Copy, swatches and photos come from the Homepage global; only the interaction lives here. */
 export function InteractiveShades({
-  heading = 'Made in every shade.',
-  description = 'From pure matte black to vibrant neon green, find the perfect high-precision color for your next project.',
-  ctaLabel = 'Explore all colors →',
-  ctaUrl = '/filaments',
-}: InteractiveShadesProps = {}) {
-  const [activeId, setActiveId] = useState(MOCK_SHADES[0].id)
+  heading,
+  description,
+  shades,
+  availabilityNote,
+  ctaLabel,
+  ctaUrl,
+}: InteractiveShadesProps) {
+  const [activeId, setActiveId] = useState(shades[0]?.id)
 
   return (
     <div className="grid gap-16 min-[900px]:grid-cols-[40%_1fr] min-[900px]:items-center min-[900px]:gap-20">
@@ -40,7 +36,7 @@ export function InteractiveShades({
         <p className="mb-8 max-w-[480px] text-xl leading-[1.5] text-muted">{description}</p>
 
         <div className="mb-10 grid grid-cols-2 gap-2">
-          {MOCK_SHADES.map((shade) => (
+          {shades.map((shade) => (
             <button
               className={cn(
                 'flex cursor-pointer items-center gap-3 rounded-control p-2 text-left text-base font-medium transition',
@@ -69,7 +65,7 @@ export function InteractiveShades({
 
         <div className="flex flex-col gap-2 border-t border-border pt-6">
           <span className="text-sm font-semibold tracking-[0.05em] text-muted uppercase">
-            40+ colors available
+            {availabilityNote}
           </span>
           <Link
             className="inline-flex items-center gap-2 text-lg font-medium transition-colors hover:text-cta"
@@ -81,8 +77,8 @@ export function InteractiveShades({
       </div>
 
       <div className="relative aspect-4/5 w-full overflow-hidden rounded-3xl bg-black/5">
-        {MOCK_SHADES.map((shade) => (
-          /* eslint-disable-next-line @next/next/no-img-element -- remote placeholder photography */
+        {shades.map((shade) => (
+          /* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */
           <img
             alt={`${shade.name} filament`}
             className={cn(

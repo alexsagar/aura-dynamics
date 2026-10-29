@@ -4,58 +4,34 @@ import configPromise from '@/payload.config'
 import type { Homepage } from '@/payload-types'
 import { mediaAlt, mediaUrl } from '@/lib/payload-media'
 import { populatedProducts, toFilamentCard, toPrintCard } from './product-cards'
-import {
-  categoriesFallback,
-  compareFallback,
-  heroFallback,
-  imageFallback,
-  shadeShowcaseFallback,
-  staffPickFallback,
-  useCasesFallback,
-  whyAuraFallback,
-} from './fallback'
 
 export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
 
-const HERO_IMAGE_FALLBACK_ALT = 'Filament spools in a printing workspace'
-
 /**
- * Payload Homepage Global -> UI-safe view model. Every CMS field is
- * optional, so this is where nullability gets resolved once instead of in
- * JSX. `text || fallback` keeps a section intact if a single field is
- * cleared; only an explicit `enabled: false` (or, pre-launch, `undefined`
- * defaulting true) hides a whole section.
+ * Payload Homepage Global -> UI-safe view model. Payload owns every string and
+ * image; this only resolves nullability once instead of in JSX. Only an
+ * explicit `enabled: false` hides a section. A missing image renders the
+ * section's own background as the placeholder.
  */
 function normalizeHomepage(cms: Homepage) {
   const hero = {
-    heading: cms.hero?.heading || heroFallback.heading,
-    imageAlt: mediaAlt(cms.hero?.image, HERO_IMAGE_FALLBACK_ALT),
-    imageUrl: mediaUrl(cms.hero?.image) || imageFallback.hero,
-    primaryCta: {
-      label: cms.hero?.primaryCta?.label || heroFallback.primaryCta.label,
-      url: cms.hero?.primaryCta?.url || heroFallback.primaryCta.url,
-    },
-    secondaryCta: {
-      label: cms.hero?.secondaryCta?.label || heroFallback.secondaryCta.label,
-      url: cms.hero?.secondaryCta?.url || heroFallback.secondaryCta.url,
-    },
-    subheading: cms.hero?.subheading || heroFallback.subheading,
+    heading: cms.hero?.heading || '',
+    imageAlt: mediaAlt(cms.hero?.image, ''),
+    imageUrl: mediaUrl(cms.hero?.image),
+    primaryCta: { label: cms.hero?.primaryCta?.label || '', url: cms.hero?.primaryCta?.url || '' },
+    secondaryCta: { label: cms.hero?.secondaryCta?.label || '', url: cms.hero?.secondaryCta?.url || '' },
+    subheading: cms.hero?.subheading || '',
   }
 
-  const categoryImageFallbacks = [
-    imageFallback.categoryFilaments,
-    imageFallback.categoryPrints,
-    imageFallback.categoryAccessories,
-  ]
-  const categoryItems = cms.categories?.items?.length
-    ? cms.categories.items.map((item, i) => ({
-        imageUrl: mediaUrl(item.image) || categoryImageFallbacks[i] || imageFallback.hero,
-        subtitle: item.subtitle || categoriesFallback[i]?.subtitle || '',
-        title: item.title || categoriesFallback[i]?.title || '',
-        url: item.url ?? categoriesFallback[i]?.url ?? '',
-      }))
-    : categoriesFallback.map((c, i) => ({ imageUrl: categoryImageFallbacks[i], ...c }))
-  const categories = { enabled: cms.categories?.enabled ?? true, items: categoryItems }
+  const categories = {
+    enabled: cms.categories?.enabled ?? true,
+    items: (cms.categories?.items ?? []).map((item) => ({
+      imageUrl: mediaUrl(item.image),
+      subtitle: item.subtitle || '',
+      title: item.title || '',
+      url: item.url || '',
+    })),
+  }
 
   const popularProducts = populatedProducts(cms.popular?.products)
   type PopularCard =
@@ -73,7 +49,7 @@ function normalizeHomepage(cms: Homepage) {
       return acc
     }, []),
     enabled: cms.popular?.enabled ?? true,
-    heading: cms.popular?.heading || 'Popular.',
+    heading: cms.popular?.heading || '',
   }
 
   const materialItems = (cms.materialsSection?.items ?? []).map((item) => {
@@ -90,83 +66,80 @@ function normalizeHomepage(cms: Homepage) {
   })
   const materialsSection = {
     enabled: cms.materialsSection?.enabled ?? true,
-    heading: cms.materialsSection?.heading || 'Explore by Material',
+    heading: cms.materialsSection?.heading || '',
     items: materialItems,
   }
 
-  const useCaseItems = cms.useCases?.items?.length
-    ? cms.useCases.items.map((item, i) => ({
-        imageUrl:
-          mediaUrl(item.image) ||
-          [imageFallback.useCaseFunctional, imageFallback.useCaseMiniatures, imageFallback.useCaseCosplay][i] ||
-          imageFallback.hero,
-        subtitle: item.subtitle || useCasesFallback[i]?.subtitle || '',
-        title: item.title || useCasesFallback[i]?.title || '',
-        // Editorial "what you can print" cards: route to the ready-stock prints
-        // catalog when no explicit URL is set, never an inert '#'.
-        url: item.url || useCasesFallback[i]?.url || '/3d-prints',
-      }))
-    : useCasesFallback.map((u, i) => ({
-        imageUrl: [imageFallback.useCaseFunctional, imageFallback.useCaseMiniatures, imageFallback.useCaseCosplay][i],
-        ...u,
-        url: u.url || '/3d-prints',
-      }))
-  const useCases = { enabled: cms.useCases?.enabled ?? true, heading: cms.useCases?.heading || 'What are you printing?', items: useCaseItems }
+  const useCases = {
+    enabled: cms.useCases?.enabled ?? true,
+    heading: cms.useCases?.heading || '',
+    items: (cms.useCases?.items ?? []).map((item) => ({
+      imageUrl: mediaUrl(item.image),
+      subtitle: item.subtitle || '',
+      title: item.title || '',
+      // Editorial "what you can print" cards: route to the ready-stock prints
+      // catalog when no explicit URL is set, never an inert '#'.
+      url: item.url || '/3d-prints',
+    })),
+  }
 
   const freshProducts = populatedProducts(cms.freshPrints?.products)
   const freshPrints = {
     enabled: cms.freshPrints?.enabled ?? true,
-    heading: cms.freshPrints?.heading || 'Fresh Prints.',
+    heading: cms.freshPrints?.heading || '',
     printCards: freshProducts.map(toPrintCard).filter((c) => c != null),
-    viewAllLabel: cms.freshPrints?.viewAll?.label || 'See all prints',
+    viewAllLabel: cms.freshPrints?.viewAll?.label || '',
     viewAllUrl: cms.freshPrints?.viewAll?.url || '/3d-prints',
   }
 
   const staffPickProduct = cms.staffPick?.product && typeof cms.staffPick.product === 'object' ? cms.staffPick.product : null
   const staffPick = {
-    body: cms.staffPick?.body || staffPickFallback.body,
-    ctaLabel: cms.staffPick?.cta?.label || staffPickFallback.cta.label,
-    ctaUrl: cms.staffPick?.cta?.url || staffPickFallback.cta.url,
+    body: cms.staffPick?.body || '',
+    ctaLabel: cms.staffPick?.cta?.label || '',
+    ctaUrl: cms.staffPick?.cta?.url || '',
     enabled: cms.staffPick?.enabled ?? true,
-    eyebrow: cms.staffPick?.eyebrow || staffPickFallback.eyebrow,
-    heading: cms.staffPick?.heading || staffPickFallback.heading,
-    imageUrl: mediaUrl(cms.staffPick?.image) || (staffPickProduct ? mediaUrl(staffPickProduct.images?.[0]) : undefined) || imageFallback.staffPick,
+    eyebrow: cms.staffPick?.eyebrow || '',
+    heading: cms.staffPick?.heading || '',
+    imageUrl: mediaUrl(cms.staffPick?.image) || (staffPickProduct ? mediaUrl(staffPickProduct.images?.[0]) : undefined),
   }
 
   const shadeShowcase = {
-    ctaLabel: cms.shadeShowcase?.ctaLabel || shadeShowcaseFallback.ctaLabel,
-    ctaUrl: cms.shadeShowcase?.ctaUrl || shadeShowcaseFallback.ctaUrl,
-    description: cms.shadeShowcase?.description || shadeShowcaseFallback.description,
+    availabilityNote: cms.shadeShowcase?.availabilityNote || '',
+    shades: (cms.shadeShowcase?.shades ?? []).map((s, i) => ({
+      hex: s.hex || '',
+      id: s.id || String(i),
+      image: mediaUrl(s.image),
+      name: s.name || '',
+    })),
+    ctaLabel: cms.shadeShowcase?.ctaLabel || '',
+    ctaUrl: cms.shadeShowcase?.ctaUrl || '',
+    description: cms.shadeShowcase?.description || '',
     enabled: cms.shadeShowcase?.enabled ?? true,
-    heading: cms.shadeShowcase?.heading || shadeShowcaseFallback.heading,
+    heading: cms.shadeShowcase?.heading || '',
   }
 
-  const compareColumns = cms.compare?.columns?.length
-    ? cms.compare.columns.map((c) => ({ bestFor: c.bestFor || '', label: c.label || '' }))
-    : compareFallback.columns
-  const compareRows = cms.compare?.rows?.length
-    ? cms.compare.rows.map((r) => ({
-        label: r.label || '',
-        scores: (r.scores ?? []).map((s) => s.score ?? 0),
-      }))
-    : compareFallback.rows
-  const compare = { columns: compareColumns, enabled: cms.compare?.enabled ?? true, heading: cms.compare?.heading || compareFallback.heading, rows: compareRows }
+  const compare = {
+    columns: (cms.compare?.columns ?? []).map((c) => ({ bestFor: c.bestFor || '', label: c.label || '' })),
+    enabled: cms.compare?.enabled ?? true,
+    heading: cms.compare?.heading || '',
+    rows: (cms.compare?.rows ?? []).map((r) => ({
+      label: r.label || '',
+      scores: (r.scores ?? []).map((s) => s.score ?? 0),
+    })),
+  }
 
   const testimonials = { enabled: cms.testimonials?.enabled ?? false }
 
-  const whyAuraItems = cms.whyAura?.items?.length
-    ? cms.whyAura.items.map((i) => ({ body: i.body || '', title: i.title || '' }))
-    : whyAuraFallback.items
   const whyAura = {
     enabled: cms.whyAura?.enabled ?? true,
-    heading: cms.whyAura?.heading || whyAuraFallback.heading,
-    items: whyAuraItems,
-    subheading: cms.whyAura?.subheading || whyAuraFallback.subheading,
+    heading: cms.whyAura?.heading || '',
+    items: (cms.whyAura?.items ?? []).map((i) => ({ body: i.body || '', title: i.title || '' })),
+    subheading: cms.whyAura?.subheading || '',
   }
 
   const learningHub = {
     enabled: cms.learningHub?.enabled ?? false,
-    heading: cms.learningHub?.heading || 'Learning Hub',
+    heading: cms.learningHub?.heading || '',
     items: (cms.learningHub?.items ?? []).map((i) => ({
       imageUrl: mediaUrl(i.image),
       meta: i.meta || '',
@@ -174,7 +147,7 @@ function normalizeHomepage(cms: Homepage) {
       title: i.title || '',
       url: i.url || '',
     })),
-    viewAllLabel: cms.learningHub?.viewAll?.label || 'View all guides',
+    viewAllLabel: cms.learningHub?.viewAll?.label || '',
     viewAllUrl: cms.learningHub?.viewAll?.url || '',
   }
 
@@ -191,8 +164,8 @@ export async function getHomepageViewModel(): Promise<HomepageViewModel> {
     })
     return normalizeHomepage(homepage)
   } catch (error) {
-    // CMS unreachable: fall back to the fully-static approved homepage so a
-    // Payload/DB outage doesn't take the storefront down with it.
+    // CMS unreachable: render the empty shell (no copy) instead of crashing
+    // the storefront; content returns as soon as Payload is reachable.
     console.error('Failed to load Homepage global from Payload', error)
     return normalizeHomepage({} as Homepage)
   }
