@@ -1,5 +1,6 @@
 'use client'
 
+import type React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCart } from '../../../providers/CartProvider'
@@ -14,11 +15,11 @@ type NavLink = { href: string; label: string }
 const ICON_BTN =
   'relative inline-flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent bg-black/3 px-2 text-sm font-medium text-foreground transition duration-300 ease-editorial hover:scale-105 hover:bg-black/8'
 
-/** Official logo: full horizontal lockup on desktop, symbol only when the bar is tight. */
+/** Official logo, always at the start of the bar: full lockup, symbol only on the narrowest phones. */
 export const Wordmark = () => (
-  <Link aria-label="Aura — home" className="inline-flex items-center" href="/">
-    <Logo className="max-[899px]:hidden" height={26} variant="full" />
-    <Logo className="min-[900px]:hidden" height={26} loading="lazy" variant="symbol" />
+  <Link aria-label="Aura — home" className="inline-flex min-h-10 flex-none items-center pl-1" href="/">
+    <Logo className="max-[379px]:hidden" height={24} variant="full" />
+    <Logo className="min-[380px]:hidden" height={26} loading="lazy" variant="symbol" />
   </Link>
 )
 
@@ -53,6 +54,9 @@ export const CartIndicator = ({ count = 0, onClick }: { count?: number; onClick:
  * Mobile menu uses a native <details> disclosure: keyboard accessible, no client JS.
  * ponytail: convert to a client component only if it needs close-on-navigate or a focus trap.
  */
+// Header persists across client navigations, so close the disclosure on link tap.
+const closeMenu = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.closest('details')?.removeAttribute('open')
+
 const MobileNav = ({ navLinks }: { navLinks: NavLink[] }) => (
   <details className="min-[900px]:hidden">
     <summary className="inline-flex size-10 cursor-pointer list-none items-center justify-center rounded-control [&::-webkit-details-marker]:hidden">
@@ -68,11 +72,12 @@ const MobileNav = ({ navLinks }: { navLinks: NavLink[] }) => (
           className="block border-b border-black/5 py-3 text-lg font-medium text-[#111] last:border-b-0"
           href={l.href}
           key={l.href}
+          onClick={closeMenu}
         >
           {l.label}
         </Link>
       ))}
-      <Link className="block py-3 text-lg font-medium text-[#111]" href="/account">
+      <Link className="block py-3 text-lg font-medium text-[#111]" href="/account" onClick={closeMenu}>
         Account
       </Link>
     </nav>
@@ -93,7 +98,6 @@ export function Header({ data }: { data: HeaderViewModel }) {
     <header className="fixed top-6 left-1/2 z-40 w-[calc(100%-48px)] max-w-[1000px] -translate-x-1/2 rounded-full border border-white/40 bg-white/70 px-2 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.5)] backdrop-blur-[24px] backdrop-saturate-180 transition duration-400 ease-editorial">
       <Container>
         <div className="flex min-h-14 items-center justify-between gap-3 min-[900px]:gap-6">
-          <MobileNav navLinks={navLinks} />
           <Wordmark />
 
           <nav
@@ -118,6 +122,7 @@ export function Header({ data }: { data: HeaderViewModel }) {
               <UserIcon />
             </Link>
             <CartIndicator count={cartCount} onClick={openCart} />
+            <MobileNav navLinks={navLinks} />
           </div>
         </div>
       </Container>

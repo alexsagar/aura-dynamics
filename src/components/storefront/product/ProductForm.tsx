@@ -228,7 +228,7 @@ export function ProductForm({
             type="button"
             onClick={() => setQuantity((prev) => Math.max(1, prev - 1))}
             disabled={quantity <= 1 || isOutOfStock}
-            className="text-2xl text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+            className="grid size-10 place-items-center text-2xl text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
             aria-label="Decrease quantity"
           >
             -
@@ -243,7 +243,7 @@ export function ProductForm({
             type="button"
             onClick={() => setQuantity((prev) => Math.min(stock, prev + 1))}
             disabled={quantity >= stock || isOutOfStock}
-            className="text-2xl text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+            className="grid size-10 place-items-center text-2xl text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
             aria-label="Increase quantity"
           >
             +

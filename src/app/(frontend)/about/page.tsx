@@ -33,7 +33,7 @@ export default async function AboutPage() {
         </div>
         <Container className="relative z-10 w-full">
           <div className="max-w-[800px] text-white">
-            <h1 className="mb-8 text-[clamp(4rem,8vw,8rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
+            <h1 className="mb-8 text-[clamp(3rem,8vw,8rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
               {c.headingLine1} <br />
               {c.headingLine2}
             </h1>
@@ -116,7 +116,7 @@ export default async function AboutPage() {
       {/* 5. Team / Contact */}
       <section className="bg-white py-[clamp(80px,10vw,160px)]">
         <Container>
-          <div className="grid gap-16 md:grid-cols-2">
+          <div className="grid gap-16 *:min-w-0 md:grid-cols-2">
             <div>
               <h2 className={SECTION_TITLE}>{contact.heading}</h2>
               <p className="mt-6 max-w-[400px] text-lg text-muted">
@@ -128,7 +128,7 @@ export default async function AboutPage() {
                 <h3 className="mb-2 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
                   {contact.locationLabel}
                 </h3>
-                <p className="text-2xl font-medium tracking-[-0.02em]">
+                <p className="text-2xl font-medium tracking-[-0.02em] wrap-anywhere">
                   {contact.location} <br />
                   <span className="text-muted">{contact.locationNote}</span>
                 </p>
@@ -137,7 +137,7 @@ export default async function AboutPage() {
                 <h3 className="mb-2 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
                   {contact.contactLabel}
                 </h3>
-                <p className="text-2xl font-medium tracking-[-0.02em]">
+                <p className="text-2xl font-medium tracking-[-0.02em] wrap-anywhere">
                   {contact.email} <br />
                   {contact.phone}
                 </p>
@@ -146,7 +146,7 @@ export default async function AboutPage() {
                 <h3 className="mb-4 text-sm font-semibold tracking-[0.1em] text-muted uppercase">
                   {contact.socialLabel}
                 </h3>
-                <div className="flex gap-4">
+                <div className="flex flex-wrap gap-4">
                   {(contact.socialLinks ?? []).map((s) =>
                     s.url ? (
                       <Button as="a" href={s.url} key={s.id} rel="noreferrer" target="_blank" variant="secondary">

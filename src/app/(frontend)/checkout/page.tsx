@@ -193,7 +193,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col-reverse bg-background lg:flex-row">
+    <div className="flex min-h-screen flex-col bg-background lg:flex-row">
       {/* Left Column: Form */}
       <div className="w-full px-6 py-12 sm:px-12 lg:w-3/5 lg:py-24">
         <div className="mx-auto max-w-[580px]">

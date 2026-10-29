@@ -17,17 +17,20 @@ export function CartSidebar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname])
 
-  // Prevent scrolling when sidebar is open
+  // Prevent scrolling when sidebar is open; Escape closes it
   useEffect(() => {
+    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && closeCart()
+    if (isCartOpen) document.addEventListener('keydown', onKey)
     if (isCartOpen) {
       document.body.style.overflow = 'hidden'
     } else {
       document.body.style.overflow = ''
     }
     return () => {
+      document.removeEventListener('keydown', onKey)
       document.body.style.overflow = ''
     }
-  }, [isCartOpen])
+  }, [isCartOpen, closeCart])
 
   return (
     <>
@@ -49,6 +52,9 @@ export function CartSidebar() {
         )}
         role="dialog"
         aria-label="Cart"
+        aria-modal="true"
+        // Closed drawer is only translated off-screen: keep it out of tab order and the a11y tree.
+        inert={!isCartOpen}
       >
         <div className="flex items-center justify-between border-b border-black/10 px-6 py-5">
           <h2 className="text-xl font-medium tracking-[-0.02em]">Your Cart</h2>
@@ -149,7 +155,7 @@ export function CartSidebar() {
                             type="button"
                             onClick={() => updateQuantity(item.id, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                            className="grid size-8 place-items-center text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
                             aria-label={`Decrease quantity of ${item.title}`}
                           >
                             -
@@ -161,7 +167,7 @@ export function CartSidebar() {
                             type="button"
                             onClick={() => updateQuantity(item.id, item.quantity + 1)}
                             disabled={item.quantity >= item.maxStock}
-                            className="text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                            className="grid size-8 place-items-center text-lg font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
                             aria-label={`Increase quantity of ${item.title}`}
                           >
                             +

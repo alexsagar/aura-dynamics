@@ -37,9 +37,9 @@ export function Footer({ data }: { data: FooterViewModel }) {
   }
 
   return (
-    <footer className="relative z-10 overflow-hidden bg-black pt-24 pb-60 text-white md:pt-40">
+    <footer className="relative z-10 overflow-hidden bg-black pt-20 pb-[calc(11vw+3rem)] text-white md:pt-32">
       <Container>
-        <div className="relative z-2 mb-32 grid gap-16 lg:grid-cols-[1.2fr_0.8fr] lg:gap-32">
+        <div className="relative z-2 mb-16 grid gap-14 *:min-w-0 md:mb-24 lg:grid-cols-[1.2fr_0.8fr] lg:gap-32">
           {/* Left Column: Brand Statement & Newsletter */}
           <div className="flex flex-col items-start">
             <Logo height={40} loading="lazy" title="Aura" variant="wordmark-offwhite" />
@@ -58,11 +58,11 @@ export function Footer({ data }: { data: FooterViewModel }) {
               <div className="flex h-14 w-full overflow-hidden rounded-[100px] border border-white/20 bg-white/5 transition-colors focus-within:border-lime focus-within:bg-white/10">
                 <input
                   aria-label="Email address"
-                  className="h-full flex-1 bg-transparent px-6 text-white outline-none placeholder:text-white/30"
+                  className="h-full min-w-0 flex-1 bg-transparent px-5 text-white sm:px-6 outline-none placeholder:text-white/30"
                   placeholder="Enter your email"
                   type="email"
                 />
-                <button className="flex h-full items-center justify-center bg-white px-8 text-sm font-semibold text-black transition-colors hover:bg-lime">
+                <button className="flex h-full flex-none items-center justify-center bg-white px-6 text-sm sm:px-8 font-semibold text-black transition-colors hover:bg-lime">
                   Subscribe
                 </button>
               </div>
@@ -71,13 +71,13 @@ export function Footer({ data }: { data: FooterViewModel }) {
 
           {/* Right Column: Links Grid & Contact */}
           <div className="flex flex-col lg:pt-4">
-            <div className="grid grid-cols-2 gap-x-8 gap-y-16 sm:grid-cols-3">
+            <div className="flex flex-wrap gap-x-16 gap-y-10 lg:justify-end lg:gap-x-24">
               {data.columns.map((col) => (
                 <div key={col.title}>
                   <h3 className="mb-6 text-sm font-semibold tracking-[0.1em] text-white/40 uppercase">
                     {col.title}
                   </h3>
-                  <ul className="flex list-none flex-col gap-5">
+                  <ul className="flex list-none flex-col gap-4">
                     {col.links.map((l) => (
                       <li key={l.url}>
                         <Link
@@ -97,7 +97,7 @@ export function Footer({ data }: { data: FooterViewModel }) {
 
         {/* Contact and Socials (Full Width) */}
         {(data.contact.companyName || data.contact.address || data.contact.phone || data.contact.email || data.socialLinks.length > 0) && (
-          <div className="mb-16 flex flex-col gap-8 border-t border-white/10 pt-16 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-12 flex flex-col gap-8 border-t border-white/10 pt-12 sm:flex-row sm:items-end sm:justify-between">
             <div className="text-[0.9375rem] leading-[1.8] text-white/60">
               {data.contact.companyName ? (
                 <p>
@@ -135,7 +135,7 @@ export function Footer({ data }: { data: FooterViewModel }) {
         {/* Bottom Bar */}
         <div className="relative z-2 flex flex-col items-start gap-4 border-t border-white/10 pt-8 text-sm text-white/40 sm:flex-row sm:items-center sm:justify-between sm:gap-0">
           <span>© {new Date().getFullYear()} {data.copyright}</span>
-          <div className="flex gap-8">
+          <div className="flex flex-wrap gap-x-8 gap-y-2">
             {data.legalLinks.map((l) => (
               <Link className="transition-colors hover:text-white" href={l.url} key={l.url}>
                 {l.label}
@@ -148,7 +148,7 @@ export function Footer({ data }: { data: FooterViewModel }) {
       {/* Massive Brand Watermark */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-5px] left-1/2 z-1 w-full -translate-x-1/2 whitespace-nowrap bg-linear-to-b from-white/6 to-transparent bg-clip-text text-center text-[clamp(3rem,15vw,15rem)] leading-[0.8] font-extrabold tracking-[-0.04em] text-transparent select-none"
+        className="pointer-events-none absolute bottom-[-5px] left-1/2 z-1 w-full -translate-x-1/2 whitespace-nowrap bg-linear-to-b from-white/6 to-transparent bg-clip-text text-center text-[min(11.5vw,15rem)] leading-[0.8] font-extrabold tracking-[-0.04em] text-transparent select-none"
       >
         AURA DYNAMICS
       </div>

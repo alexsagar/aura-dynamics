@@ -53,13 +53,13 @@ export default async function MaterialsPage() {
               <div className="mb-6 inline-flex items-center rounded-full border border-black/10 px-4 py-1.5 text-sm font-semibold tracking-[0.1em] uppercase">
                 {c.eyebrow}
               </div>
-              <h1 className="mb-8 text-[clamp(4rem,7vw,7rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
+              <h1 className="mb-8 text-[clamp(3rem,7vw,7rem)] leading-[0.9] font-extrabold tracking-[-0.04em]">
                 {c.heading}
               </h1>
               <p className="mb-10 max-w-[500px] text-lg leading-[1.6] text-muted">
                 {c.intro}
               </p>
-              <div className="flex gap-4">
+              <div className="flex flex-wrap gap-4">
                 <CtaButton cta={c.primaryCta} variant="primary" />
                 <CtaButton cta={c.secondaryCta} variant="secondary" />
               </div>

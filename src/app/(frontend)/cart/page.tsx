@@ -128,7 +128,7 @@ export default function CartPage() {
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity - 1)}
                           disabled={item.quantity <= 1}
-                          className="text-xl font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                          className="grid size-10 place-items-center text-xl font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
                           aria-label={`Decrease quantity of ${item.title}`}
                         >
                           -
@@ -143,7 +143,7 @@ export default function CartPage() {
                           type="button"
                           onClick={() => updateQuantity(item.id, item.quantity + 1)}
                           disabled={item.quantity >= item.maxStock}
-                          className="text-xl font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
+                          className="grid size-10 place-items-center text-xl font-medium text-muted transition-colors hover:text-black disabled:opacity-30 disabled:pointer-events-none"
                           aria-label={`Increase quantity of ${item.title}`}
                         >
                           +

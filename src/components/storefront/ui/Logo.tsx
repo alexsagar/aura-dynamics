@@ -14,7 +14,7 @@ export type LogoVariant = 'full' | 'wordmark' | 'wordmark-offwhite' | 'symbol'
 const ASSETS: Record<LogoVariant, { h: number; left: number; src: string; top: number; w: number }> =
   {
     full: { h: 0.2375, left: 0.1075, src: '/brand/aura-logo.svg', top: 0.4025, w: 0.7675 },
-    symbol: { h: 0.235, left: 0.38, src: '/brand/aura-symbol.svg', top: 0.3825, w: 0.24 },
+    symbol: { h: 0.8425, left: 0.0775, src: '/brand/aura-symbol.svg', top: 0.0775, w: 0.8425 },
     wordmark: { h: 0.135, left: 0.245, src: '/brand/aura-wordmark.svg', top: 0.4325, w: 0.495 },
     'wordmark-offwhite': { h: 0.135, left: 0.245, src: '/brand/aura-wordmark-offwhite.svg', top: 0.4325, w: 0.495 },
   }
