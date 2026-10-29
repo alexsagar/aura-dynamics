@@ -426,6 +426,76 @@ export default buildConfig({
             {
               name: 'description',
               type: 'richText',
+              admin: {
+                description:
+                  'The "About this product" story. Keep specifications, colours and delivery out of it — those render from structured data.',
+              },
+            },
+            {
+              type: 'collapsible',
+              label: 'Product Content',
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  name: 'keyFeatures',
+                  label: 'Key Features',
+                  type: 'array',
+                  dbName: 'prod_features',
+                  maxRows: 4,
+                  admin: {
+                    description: 'Up to 4 short highlights shown as cards. Only claims you can stand behind; leave empty to hide the section.',
+                  },
+                  fields: [
+                    { name: 'title', type: 'text', required: true },
+                    { name: 'description', type: 'textarea' },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Specifications',
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  name: 'specifications',
+                  label: 'Additional Specifications',
+                  type: 'array',
+                  dbName: 'prod_specs',
+                  admin: {
+                    description:
+                      'Extra label/value rows. Brand, material, diameter, weight, finish and print settings already come from Filament Details — do not repeat them here.',
+                  },
+                  fields: [
+                    {
+                      type: 'row',
+                      fields: [
+                        { name: 'label', type: 'text', required: true },
+                        { name: 'value', type: 'text', required: true },
+                      ],
+                    },
+                  ],
+                },
+              ],
+            },
+            {
+              type: 'collapsible',
+              label: 'Related Products',
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  name: 'relatedProducts',
+                  type: 'relationship',
+                  relationTo: 'products',
+                  hasMany: true,
+                  maxRows: 4,
+                  filterOptions: ({ id }: { id?: string | number }) => (id ? { id: { not_equals: id } } : true),
+                  admin: {
+                    description:
+                      'Optional. Shown first under "You May Also Like"; remaining slots are filled automatically.',
+                  },
+                },
+              ],
             },
             {
               name: 'images',

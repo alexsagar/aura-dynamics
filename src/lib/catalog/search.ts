@@ -1,6 +1,6 @@
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { isPopulated, productHref } from '@/lib/catalog/shared'
-import { mediaUrl } from '@/lib/payload-media'
+import { resolveProductImage } from '@/lib/catalog/product-image'
 
 export type SearchResult = {
   slug: string
@@ -125,7 +125,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
         title: product.title,
         type,
         typeLabel: type === 'filament' ? 'Filament' : '3D Print',
-        imageUrl: mediaUrl(product.images?.[0]),
+        imageUrl: resolveProductImage(product, variants),
         price,
         fromPrice,
         meta: metaLabel(product),

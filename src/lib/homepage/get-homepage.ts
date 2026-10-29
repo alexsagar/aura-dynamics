@@ -160,7 +160,8 @@ export async function getHomepageViewModel(): Promise<HomepageViewModel> {
     const payload = await getPayload({ config: configPromise })
     const homepage = await payload.findGlobal({
       slug: 'homepage',
-      depth: 2,
+      // 3: homepage → product → variants join → variant images (card photos).
+      depth: 3,
     })
     return normalizeHomepage(homepage)
   } catch (error) {

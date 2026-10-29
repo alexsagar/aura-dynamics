@@ -161,14 +161,16 @@ describe('buildCard variant image resolution & fallbacks', () => {
     expect(card.imageUrl).toBe('/api/media/file/numakers-pla-pure-white.png')
   })
 
-  it('4. Falls back to first in-stock variant image if product primary image is missing', () => {
+  // Variant fallback now happens once in normalizeProduct via the shared
+  // resolver (tests/int/product-image-related.int.spec.ts); buildCard trusts it.
+  it('4. Uses the resolved image and leaves the placeholder when none resolved', () => {
     const productWithoutImage: NProduct = {
       ...numakersPLA,
       imageUrl: undefined,
     }
     const matching = matchingVariants(productWithoutImage, base())
     const card = buildCard(productWithoutImage, matching, false)
-    expect(card.imageUrl).toBe('/api/media/file/numakers-pla-pure-white.png')
+    expect(card.imageUrl).toBeUndefined()
   })
 
   it('5. Falls back to parent product gallery image if matching variant has no image', () => {

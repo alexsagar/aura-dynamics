@@ -1,7 +1,7 @@
 import type { FilamentColor, FilamentCardProduct, PackagingKind, PrintCardProduct, StockState } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { productHref } from '@/lib/catalog/shared'
-import { mediaUrl } from '@/lib/payload-media'
+import { resolveProductImage } from '@/lib/catalog/product-image'
 
 /** Real product records only — populated relationships (depth >= 2), not IDs. */
 type PopulatedVariant = Variant & { options: VariantOption[] }
@@ -92,16 +92,13 @@ function deriveMaterialNames(variants: PopulatedVariant[], fallback?: number | M
 }
 
 /**
- * Builds a FilamentCard prop from a real, populated Product. Returns null
- * when the product can't be rendered as a real card yet — currently, when it
- * has no product photography. That keeps the merchandising row from showing
- * a placeholder box next to real photos.
+ * Builds a FilamentCard prop from a real, populated Product. Returns null only
+ * when it has no sellable price. Image comes from the shared resolver
+ * (product → variant photos); none → the card's "Image coming soon" state.
  */
 export function toFilamentCard(product: Product): FilamentCardProduct | null {
-  const imageUrl = mediaUrl(product.images?.[0])
-  if (!imageUrl) return null
-
   const variants = populatedVariants(product)
+  const imageUrl = resolveProductImage(product, variants)
   const priceInfo = derivePrice(product, variants)
   if (!priceInfo) return null
 
@@ -126,10 +123,8 @@ export function toFilamentCard(product: Product): FilamentCardProduct | null {
 }
 
 export function toPrintCard(product: Product): PrintCardProduct | null {
-  const imageUrl = mediaUrl(product.images?.[0])
-  if (!imageUrl) return null
-
   const variants = populatedVariants(product)
+  const imageUrl = resolveProductImage(product, variants)
   const priceInfo = derivePrice(product, variants)
   if (!priceInfo) return null
 

@@ -1,7 +1,7 @@
 import type { PrintCardProduct } from '@/components/storefront/types'
 import type { Category, Material, Product, Variant, VariantOption } from '@/payload-types'
 import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
-import { mediaUrl } from '@/lib/payload-media'
+import { resolveProductImage } from '@/lib/catalog/product-image'
 
 import type { SortKey } from '@/lib/filaments/sort-options'
 
@@ -118,7 +118,7 @@ function normalizeProduct(product: Product, variantDocs: Variant[]): NPrintProdu
     categorySlug: category?.slug,
     createdAt: Date.parse(product.createdAt) || 0,
     featured: Boolean(product.featured),
-    imageUrl: mediaUrl(product.images?.[0]),
+    imageUrl: resolveProductImage(product, activeVariants),
     slug: product.slug,
     title: product.title,
     variants,

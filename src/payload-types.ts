@@ -441,6 +441,9 @@ export interface Product {
    * Used for product cards, listings and search previews
    */
   shortDescription?: string | null;
+  /**
+   * The "About this product" story. Keep specifications, colours and delivery out of it — those render from structured data.
+   */
   description?: {
     root: {
       type: string;
@@ -456,6 +459,30 @@ export interface Product {
     };
     [k: string]: unknown;
   } | null;
+  /**
+   * Up to 4 short highlights shown as cards. Only claims you can stand behind; leave empty to hide the section.
+   */
+  keyFeatures?:
+    | {
+        title: string;
+        description?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Extra label/value rows. Brand, material, diameter, weight, finish and print settings already come from Filament Details — do not repeat them here.
+   */
+  specifications?:
+    | {
+        label: string;
+        value: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Optional. Shown first under "You May Also Like"; remaining slots are filled automatically.
+   */
+  relatedProducts?: (number | Product)[] | null;
   images?: (number | Media)[] | null;
   featured?: boolean | null;
   productType: 'filament' | '3d-print';
@@ -1008,6 +1035,21 @@ export interface ProductsSelect<T extends boolean = true> {
   slug?: T;
   shortDescription?: T;
   description?: T;
+  keyFeatures?:
+    | T
+    | {
+        title?: T;
+        description?: T;
+        id?: T;
+      };
+  specifications?:
+    | T
+    | {
+        label?: T;
+        value?: T;
+        id?: T;
+      };
+  relatedProducts?: T;
   images?: T;
   featured?: T;
   productType?: T;

@@ -1,7 +1,7 @@
 import type { FilamentCardProduct, FilamentColor } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
-import { mediaUrl } from '@/lib/payload-media'
+import { firstMediaUrl, resolveProductImage } from '@/lib/catalog/product-image'
 
 import type { SortKey } from './sort-options'
 
@@ -97,7 +97,7 @@ export type NProduct = {
 
 function normalizeVariant(variant: Variant): NVariant {
   const nv: NVariant = {
-    imageUrl: mediaUrl(variant.images?.[0]),
+    imageUrl: firstMediaUrl(variant.images),
     inventory: variant.inventory ?? 0,
     lowStock: variant.lowStockThreshold ?? 3,
     price: variant.priceInNPREnabled && typeof variant.priceInNPR === 'number' ? variant.priceInNPR : null,
@@ -146,7 +146,7 @@ function normalizeProduct(product: Product): NProduct {
     featured: Boolean(product.featured),
     finish,
     finishLabel: finish ? FINISH_LABELS[finish] ?? finish : undefined,
-    imageUrl: mediaUrl(product.images?.[0]),
+    imageUrl: resolveProductImage(product, variantDocs),
     materialName: material?.name,
     materialSlug: material?.slug,
     slug: product.slug,
@@ -196,26 +196,9 @@ export function buildCard(
   const lowest = Math.min(...matching.map((v) => v.lowStock))
   const stock = deriveStock(totalInventory, lowest)
 
-  // Variant-level image matching:
-  // If a color filter is active, display that matching variant's image.
-  // Fallbacks:
-  // 1. Product's primary/default image (np.imageUrl)
-  // 2. Sensible first in-stock variant image
-  // 3. First available variant image
-  let cardImage: string | undefined
-  if (isColorFiltered) {
-    const matchingWithImage = matching.find((v) => v.imageUrl)
-    if (matchingWithImage) {
-      cardImage = matchingWithImage.imageUrl
-    }
-  }
-
-  if (!cardImage) {
-    cardImage =
-      np.imageUrl ||
-      np.variants.find((v) => v.inventory > 0 && v.imageUrl)?.imageUrl ||
-      np.variants.find((v) => v.imageUrl)?.imageUrl
-  }
+  // A colour filter shows the matching variant's photo; otherwise the shared
+  // resolver's pick (np.imageUrl: product → in-stock variant → any variant).
+  const cardImage = (isColorFiltered ? matching.find((v) => v.imageUrl)?.imageUrl : undefined) ?? np.imageUrl
 
   return {
     colors: np.allColors,

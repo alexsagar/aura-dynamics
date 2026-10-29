@@ -2,17 +2,16 @@ import React, { cache } from 'react'
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
-import { RichText } from '@payloadcms/richtext-lexical/react'
 
 import configPromise from '@/payload.config'
 import type { Product } from '@/payload-types'
-import { Container } from '@/components/storefront/layout/Container'
+import { AboutProduct, DeliveryInfo, KeyFeatures, ProductSpecs } from '@/components/storefront/product/ProductDetails'
 import { ProductView } from './ProductView'
 import { TechSpecs } from '@/components/storefront/product/TechSpecs'
 import { ProductRecommendations } from '@/components/storefront/product/ProductRecommendations'
 import { ProductJsonLd } from '@/components/storefront/product/ProductJsonLd'
 import { getRelatedProducts } from '@/lib/catalog/related'
-import { mediaUrl } from '@/lib/payload-media'
+import { resolveProductImage } from '@/lib/catalog/product-image'
 import { absoluteUrl } from '@/lib/site/seo'
 
 /**
@@ -53,7 +52,7 @@ export async function generateMetadata({
   const description =
     product.shortDescription ||
     `${product.title} — available now from Aura, shipped across Nepal.`
-  const image = mediaUrl(product.images?.[0])
+  const image = resolveProductImage(product, (product.variants?.docs ?? []).filter((v) => typeof v === 'object'))
   const url = absoluteUrl(`/product/${product.slug}`)
 
   return {
@@ -78,49 +77,36 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   // fabricated product page.
   if (!product) notFound()
 
-  const productType = product.productType === '3d-print' ? '3d-print' : 'filament'
-  const related = await getRelatedProducts(product.slug, productType)
+  const [related, settings] = await Promise.all([
+    getRelatedProducts(product),
+    getPayload({ config: configPromise })
+      .then((payload) => payload.findGlobal({ slug: 'site-settings', depth: 0 }))
+      .catch((): null => null),
+  ])
 
-  const description = product.description as unknown
-  const hasRichText =
-    typeof description === 'object' && description !== null && 'root' in (description as object)
-
+  // A: purchase (unchanged) · B: about · C: features · D: specs · E: colours
+  // (client, shares variant selection) · F: print settings · G: delivery · H: related
   return (
     <div className="min-h-screen bg-background pt-32">
       <ProductJsonLd product={product} />
-      <Container>
-        <ProductView product={product} />
-      </Container>
-
-      {/* Product Description: full content lower on the product page */}
-      {description ? (
-        <section
-          className="border-t border-black/10 bg-white py-16 lg:py-24"
-          data-testid="product-description-section"
-        >
-          <Container>
-            <div className="mx-auto max-w-3xl">
-              <h2 className="mb-6 text-2xl font-medium tracking-[-0.02em] md:text-3xl">
-                About this Product
-              </h2>
-              <div className="prose prose-neutral max-w-none leading-relaxed text-muted">
-                {hasRichText ? (
-                  <RichText data={description as never} />
-                ) : typeof description === 'string' ? (
-                  <p>{description}</p>
-                ) : null}
-              </div>
-            </div>
-          </Container>
-        </section>
-      ) : null}
-
-      {/* Full-width Technical Specs Section (only when real technical specifications exist) */}
-      {product.productType === 'filament' && product.filamentDetails?.technicalSpecifications ? (
-        <TechSpecs specs={product.filamentDetails.technicalSpecifications} />
-      ) : null}
-
-      {/* Recommendations: real same-type products only, hidden when there are none */}
+      <ProductView
+        product={product}
+        beforeColours={
+          <>
+            <AboutProduct product={product} />
+            <KeyFeatures product={product} />
+            <ProductSpecs product={product} />
+          </>
+        }
+        afterColours={
+          <>
+            {product.productType === 'filament' && product.filamentDetails?.technicalSpecifications ? (
+              <TechSpecs specs={product.filamentDetails.technicalSpecifications} />
+            ) : null}
+            <DeliveryInfo settings={settings} />
+          </>
+        }
+      />
       <ProductRecommendations items={related} />
     </div>
   )
