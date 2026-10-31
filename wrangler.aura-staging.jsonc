@@ -1,0 +1,53 @@
+{
+  // ==========================================================
+  // AURA OFFICIAL STAGING — aura3dtech@gmail.com
+  // ==========================================================
+  // Permanent staging environment for printwithaura.com
+  // NEVER use this configuration for production deployment.
+  // ==========================================================
+
+  "$schema": "node_modules/wrangler/config-schema.json",
+
+  "main": ".open-next/worker.js",
+  "name": "aura-dynamics-staging",
+  "workers_dev": false,
+  "preview_urls": false,
+
+  "account_id": "f388d9461c4f6f9f1efa0145c1f6eb47",
+
+  "compatibility_date": "2025-08-15",
+
+  "compatibility_flags": [
+    "nodejs_compat",
+    "global_fetch_strictly_public"
+  ],
+
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+
+  "d1_databases": [
+    {
+      "binding": "D1",
+      "database_name": "aura-staging",
+      "database_id": "a7add72b-61ac-424e-8e92-72000733839b",
+      "remote": true
+    }
+  ],
+
+  "services": [],
+
+  "vars": {
+    "CLOUDFLARE_ENV": "staging",
+    "NEXT_PUBLIC_SITE_URL": "https://staging.printwithaura.com"
+  },
+
+  "r2_buckets": [
+    {
+      "binding": "R2",
+      "bucket_name": "aura-media-staging",
+      "remote": true
+    }
+  ]
+}
