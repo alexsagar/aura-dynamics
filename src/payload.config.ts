@@ -51,6 +51,10 @@ const isCLI = process.argv.some((value) => {
   )
 })
 const isProduction = process.env.NODE_ENV === 'production'
+// `next build` runs with NODE_ENV=production. Never reach remote bindings or
+// apply migrations while collecting page data: migrations are applied
+// deliberately via the Payload CLI, never as a side effect of a build.
+const isBuild = process.env.NEXT_PHASE === 'phase-production-build'
 
 const createLog =
   (level: string, fn: typeof console.log) => (objOrMsg: object | string, msg?: string) => {
@@ -111,7 +115,7 @@ export default buildConfig({
     // Bundle migrations (production/Worker) and pin the dev migrations dir to an
     // absolute path so `payload.db.migrate()` resolves them from any cwd — CLI
     // and seed runs execute from outside the repo root.
-    prodMigrations: migrations,
+    prodMigrations: isBuild ? undefined : migrations,
     migrationDir: path.resolve(dirname, 'migrations'),
   }),
   logger: isProduction ? cloudflareLogger : undefined,
@@ -731,7 +735,9 @@ function getCloudflareContextFromWrangler(): Promise<CloudflareContext> {
         // Remote bindings follow the per-binding `remote: true` flags in the
         // selected config. Enable when an env/config is explicitly chosen (CLI
         // seed/migrate) so it reaches remote D1/R2; plain local dev stays local.
-        remoteBindings: isProduction || Boolean(process.env.CLOUDFLARE_ENV) || Boolean(configPath),
+        remoteBindings:
+          !isBuild &&
+          (isProduction || Boolean(process.env.CLOUDFLARE_ENV) || Boolean(configPath)),
       } satisfies GetPlatformProxyOptions),
   )
 }

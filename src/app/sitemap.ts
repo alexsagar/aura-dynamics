@@ -6,6 +6,10 @@ import type { Product } from '@/payload-types'
 import { SITE_URL } from '@/lib/site/seo'
 import { publicProductWhere } from '@/access/ecommerce'
 
+// Render per request from the deployed D1. Prerendering at build time would
+// bake in products from whatever database the build machine can see.
+export const dynamic = 'force-dynamic'
+
 /**
  * Sitemap: static informational/catalogue routes plus every published product.
  * Excludes admin, API, cart, checkout, success and other internal/transactional
