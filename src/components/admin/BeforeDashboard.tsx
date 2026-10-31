@@ -7,10 +7,10 @@ import React from 'react'
  */
 export const BeforeDashboard: React.FC = () => {
   const isProduction = process.env.NODE_ENV === 'production'
-  const envLabel = isProduction
-    ? 'Production'
-    : process.env.CLOUDFLARE_ENV === 'staging'
-      ? 'Staging'
+  const envLabel = process.env.CLOUDFLARE_ENV === 'staging'
+    ? 'Staging'
+    : isProduction
+      ? 'Production'
       : 'Development'
   const storageLabel = isProduction ? 'Cloudflare R2' : 'Local R2 Emulator'
 
