@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './AuthProvider'
+import { CHECKOUT_LIMITS } from '@/lib/checkout-limits'
 
 export type CartItem = {
   id: string
@@ -49,10 +50,8 @@ const CartContext = createContext<CartContextType>({
 function normalizeStoredItem(rawItem: any): CartItem {
   // If already normalized
   if (rawItem.id && typeof rawItem.unitPrice === 'number') {
-    return {
-      ...rawItem,
-      maxStock: typeof rawItem.maxStock === 'number' ? rawItem.maxStock : 999,
-    }
+    const maxStock = Math.min(CHECKOUT_LIMITS.MAX_QTY_PER_LINE, typeof rawItem.maxStock === 'number' ? rawItem.maxStock : 999)
+    return { ...rawItem, maxStock, quantity: Math.min(rawItem.quantity, maxStock) }
   }
 
   // Handle legacy items
@@ -78,8 +77,8 @@ function normalizeStoredItem(rawItem: any): CartItem {
     hexColor: rawItem.hexColor || '',
     unitPrice: price,
     image: rawItem.image || product?.images?.[0]?.url || '',
-    quantity: rawItem.quantity || 1,
-    maxStock: rawItem.maxStock || 999,
+    quantity: Math.min(rawItem.quantity || 1, CHECKOUT_LIMITS.MAX_QTY_PER_LINE),
+    maxStock: Math.min(rawItem.maxStock || 999, CHECKOUT_LIMITS.MAX_QTY_PER_LINE),
     product: rawItem.product,
   }
 }
@@ -177,12 +176,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const sku = variant?.sku || ''
     const title = product?.title || 'Product'
     const variantTitle = variant?.title || title
-    const maxStock =
+    // Same per-line cap as the checkout API, so the cart never exceeds it.
+    const maxStock = Math.min(
+      CHECKOUT_LIMITS.MAX_QTY_PER_LINE,
       typeof variant?.inventory === 'number'
         ? variant.inventory
         : typeof product?.inventory === 'number'
           ? product.inventory
-          : 999
+          : 999,
+    )
 
     const unitPrice =
       variant?.priceInNPR ??
