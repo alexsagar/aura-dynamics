@@ -80,7 +80,16 @@ describe('order cancellation stock release (unit; atomicity is verified end to e
   it('orders that never reserved stock (no checkout idempotencyKey) release nothing', async () => {
     const { batch, req } = setup()
     await call(req, { ...order, idempotencyKey: null }, 'cancelled')
-    expect(batch).not.toHaveBeenCalled()
+    expect(batch).toHaveBeenCalledTimes(1)
+    expect(batch.mock.calls[0][0]).toHaveLength(1) // guarded status flip only
+  })
+
+  it('a cancel that lost the race to a concurrent cancel gets 409, not a duplicate item rewrite', async () => {
+    for (const key of ['checkout-key-1', null]) {
+      const { batch, req } = setup()
+      batch.mockResolvedValue([{ meta: { changes: 0 } }])
+      await expect(call(req, { ...order, idempotencyKey: key }, 'cancelled')).rejects.toMatchObject({ status: 409 })
+    }
   })
 
   it('re-saving an already cancelled order releases nothing', async () => {
