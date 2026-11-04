@@ -8,6 +8,10 @@ import { SITE_URL } from '@/lib/site/seo'
  * fully crawlable.
  */
 export default function robots(): MetadataRoute.Robots {
+  // Staging builds set NEXT_PUBLIC_NOINDEX=true; production never does.
+  if (process.env.NEXT_PUBLIC_NOINDEX === 'true') {
+    return { rules: { userAgent: '*', disallow: '/' } }
+  }
   return {
     rules: {
       userAgent: '*',
