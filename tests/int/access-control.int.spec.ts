@@ -119,3 +119,13 @@ describe('version history is admin-only (audit run-1 readVersions lead)', () => 
     expect(config).toMatch(/read: variantReadAccess, readVersions: isAdmin/)
   })
 })
+
+describe('homepage drafts are admin-only, also under ?draft=true', () => {
+  it('non-admins only match the published document', async () => {
+    const { Homepage } = await import('@/globals/Homepage')
+    const read = Homepage.access!.read as any
+    expect(run(read, admin)).toBe(true)
+    expect(run(read, customer)).toEqual({ _status: { equals: 'published' } })
+    expect(run(read, null)).toEqual({ _status: { equals: 'published' } })
+  })
+})

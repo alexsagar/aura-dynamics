@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { isAdmin } from '../access/ecommerce'
+import { adminOrPublishedStatus, isAdmin } from '../access/ecommerce'
 import { enabledField, imageField, linkGroup } from './fields'
 
 /**
@@ -15,7 +15,8 @@ export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'Homepage',
   admin: { group: 'Content' },
-  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
+  // Drafts: non-admins only ever get the published document, also under ?draft=true.
+  access: { read: adminOrPublishedStatus, update: isAdmin, readVersions: isAdmin },
   versions: { drafts: true, max: 20 },
   fields: [
     {
