@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
-import { isPublicProduct } from '@/access/ecommerce'
+import { isPublicProduct, isVariantOfProduct } from '@/access/ecommerce'
 
 /**
  * ============================================================================
@@ -214,9 +214,7 @@ export async function POST(req: Request) {
       // The variant must belong to this product and be published; otherwise a
       // client could pair a hidden product's variant with a public product's
       // price, or buy a draft variant.
-      const variantProductId =
-        typeof variantDoc.product === 'object' ? variantDoc.product?.id : variantDoc.product
-      if (Number(variantProductId) !== productId || variantDoc._status !== 'published') {
+      if (!isVariantOfProduct(variantDoc, productId)) {
         return NextResponse.json({ error: `Variant not found for "${productDoc.title}".` }, { status: 400 })
       }
 
