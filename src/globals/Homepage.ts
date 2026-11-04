@@ -15,7 +15,7 @@ export const Homepage: GlobalConfig = {
   slug: 'homepage',
   label: 'Homepage',
   admin: { group: 'Content' },
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
   versions: { drafts: true, max: 20 },
   fields: [
     {

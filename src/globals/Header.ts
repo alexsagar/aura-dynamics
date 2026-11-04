@@ -10,7 +10,7 @@ export const Header: GlobalConfig = {
   slug: 'header',
   label: 'Header',
   admin: { group: 'Content' },
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
   versions: { max: 10 },
   fields: [
     {

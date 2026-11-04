@@ -348,7 +348,7 @@ export default buildConfig({
           }),
           variantsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
             ...defaultCollection,
-            access: { ...defaultCollection.access, read: variantReadAccess },
+            access: { ...defaultCollection.access, read: variantReadAccess, readVersions: isAdmin },
             admin: {
               ...defaultCollection.admin,
               group: 'Catalog',
@@ -392,7 +392,7 @@ export default buildConfig({
         },
         productsCollectionOverride: ({ defaultCollection }: { defaultCollection: any }) => ({
           ...defaultCollection,
-          access: { ...defaultCollection.access, read: productReadAccess },
+          access: { ...defaultCollection.access, read: productReadAccess, readVersions: isAdmin },
           admin: {
             ...defaultCollection.admin,
             group: 'Catalog',

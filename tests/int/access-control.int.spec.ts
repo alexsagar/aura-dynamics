@@ -94,3 +94,28 @@ describe('payload-locked-documents', () => {
     expect(config).toMatch(/slug === 'payload-locked-documents'[\s\S]{0,200}create: isAdmin, read: isAdmin, update: isAdmin, delete: isAdmin/)
   })
 })
+
+describe('version history is admin-only (audit run-1 readVersions lead)', () => {
+  it('versioned globals restrict readVersions to admins', async () => {
+    const globals = await Promise.all([
+      import('@/globals/Footer').then((m) => m.Footer),
+      import('@/globals/Header').then((m) => m.Header),
+      import('@/globals/Homepage').then((m) => m.Homepage),
+      import('@/globals/PageContent').then((m) => m.PageContent),
+      import('@/globals/SiteSettings').then((m) => m.SiteSettings),
+    ])
+    for (const g of globals) {
+      const fn = (g.access as any)?.readVersions
+      expect(fn, `${g.slug}.readVersions`).toBeTypeOf('function')
+      expect(run(fn, admin)).toBe(true)
+      expect(run(fn, customer)).toBe(false)
+      expect(run(fn, null)).toBe(false)
+    }
+  })
+
+  it('products and variants restrict readVersions to admins', () => {
+    const config = readFileSync('src/payload.config.ts', 'utf8')
+    expect(config).toMatch(/read: productReadAccess, readVersions: isAdmin/)
+    expect(config).toMatch(/read: variantReadAccess, readVersions: isAdmin/)
+  })
+})

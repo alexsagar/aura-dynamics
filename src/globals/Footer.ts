@@ -7,7 +7,7 @@ export const Footer: GlobalConfig = {
   slug: 'footer',
   label: 'Footer',
   admin: { group: 'Content' },
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
   versions: { max: 10 },
   fields: [
     { name: 'brandHeading', type: 'text' },
