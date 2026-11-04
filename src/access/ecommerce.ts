@@ -89,6 +89,15 @@ export const isVariantOfProduct = (
   return Number(owner) === productId && variant?._status === 'published'
 }
 
+/** Checkout replay: the order's owner (customer id, or null for guest) must match the caller. */
+export const canReplayOrder = (
+  order: { customer?: number | string | { id?: number | string } | null } | null | undefined,
+  customerId: number | string | null,
+) => {
+  const owner = typeof order?.customer === 'object' ? (order.customer?.id ?? null) : (order?.customer ?? null)
+  return String(owner) === String(customerId)
+}
+
 /** Products read: admins see everything; everyone else only public, published products. */
 export const productReadAccess: Access = ({ req: { user } }) =>
   user && user.collection === 'users' ? true : publicProductWhere
