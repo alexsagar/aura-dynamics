@@ -53,6 +53,9 @@
   "env": {
     "staging": {
       "name": "aura-dynamics-staging",
+      // Legacy staging: public workers.dev disabled 2026-11-04 (security). Keep off.
+      "workers_dev": false,
+      "preview_urls": false,
 
       "d1_databases": [
         {
