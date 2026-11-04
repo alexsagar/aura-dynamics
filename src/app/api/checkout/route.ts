@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
-import { isPublicProduct, isVariantOfProduct } from '@/access/ecommerce'
+import { canReplayOrder, isPublicProduct, isVariantOfProduct } from '@/access/ecommerce'
 import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
 
 /**
@@ -102,21 +102,7 @@ export async function POST(req: Request) {
     })
 
     if (existingOrders.docs.length > 0) {
-      const existing = existingOrders.docs[0] as any
-      return NextResponse.json({
-        success: true,
-        order: {
-          id: existing.id,
-          orderNumber: existing.orderNumber,
-          amount: existing.amount,
-          subtotal: existing.subtotal,
-          shipping: existing.shipping,
-          currency: existing.currency,
-          paymentMethod: existing.paymentMethod,
-          paymentStatus: existing.paymentStatus,
-        },
-        idempotentReplay: true,
-      })
+      return replayResponse(existingOrders.docs[0], customerId)
     }
 
     // 6. Fetch Site Settings for payment and shipping configuration
@@ -429,34 +415,44 @@ export async function POST(req: Request) {
         })
 
         if (replayOrder.docs.length > 0) {
-          const existing = replayOrder.docs[0] as any
-          return NextResponse.json({
-            success: true,
-            order: {
-              id: existing.id,
-              orderNumber: existing.orderNumber,
-              amount: existing.amount,
-              subtotal: existing.subtotal,
-              shipping: existing.shipping,
-              currency: existing.currency,
-              paymentMethod: existing.paymentMethod,
-              paymentStatus: existing.paymentStatus,
-            },
-            idempotentReplay: true,
-          })
+          return replayResponse(replayOrder.docs[0], customerId)
         }
       }
 
-      return NextResponse.json(
-        { error: orderError.message || 'An error occurred while creating your order.' },
-        { status: 500 }
-      )
+      // Log the cause server-side; never echo internal/DB errors to the client.
+      console.error('Order creation failed:', orderError)
+      return NextResponse.json({ error: 'An error occurred while creating your order.' }, { status: 500 })
     }
   } catch (error: any) {
     console.error('Server checkout error:', error)
+    return NextResponse.json({ error: 'An unexpected error occurred while processing your order.' }, { status: 500 })
+  }
+}
+
+/**
+ * Idempotent replay returns the original order summary only to whoever placed
+ * it: the same signed-in customer, or a guest replaying a guest order. A reused
+ * key from anyone else gets no order metadata.
+ */
+function replayResponse(existing: any, customerId: number | string | null) {
+  if (!canReplayOrder(existing, customerId)) {
     return NextResponse.json(
-      { error: error.message || 'An unexpected error occurred while processing your order.' },
-      { status: 500 }
+      { error: 'This checkout was already submitted. Please refresh the page and try again.' },
+      { status: 409 },
     )
   }
+  return NextResponse.json({
+    success: true,
+    order: {
+      id: existing.id,
+      orderNumber: existing.orderNumber,
+      amount: existing.amount,
+      subtotal: existing.subtotal,
+      shipping: existing.shipping,
+      currency: existing.currency,
+      paymentMethod: existing.paymentMethod,
+      paymentStatus: existing.paymentStatus,
+    },
+    idempotentReplay: true,
+  })
 }

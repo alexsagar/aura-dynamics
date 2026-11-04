@@ -5,7 +5,8 @@ import { Users } from '@/collections/Users'
 import { Categories } from '@/collections/Categories'
 import { Materials } from '@/collections/Materials'
 import { Media } from '@/collections/Media'
-import { isVariantOfProduct } from '@/access/ecommerce'
+import { canReplayOrder, isVariantOfProduct } from '@/access/ecommerce'
+import { readFileSync } from 'node:fs'
 
 // Regression tests for staging QA findings (2026-11-04): Payload's default
 // access lets any logged-in user (including storefront customers) write.
@@ -70,5 +71,26 @@ describe('checkout variant ownership', () => {
     expect(isVariantOfProduct({ product: 1, _status: 'draft' }, 1)).toBe(false)
     expect(isVariantOfProduct({ product: null, _status: 'published' }, 1)).toBe(false)
     expect(isVariantOfProduct(null, 1)).toBe(false)
+  })
+})
+
+describe('checkout idempotent replay ownership', () => {
+  it('replays to the same customer or guest-to-guest', () => {
+    expect(canReplayOrder({ customer: 2 }, 2)).toBe(true)
+    expect(canReplayOrder({ customer: { id: 2 } }, 2)).toBe(true)
+    expect(canReplayOrder({ customer: null }, null)).toBe(true)
+  })
+
+  it('withholds order metadata from anyone else holding the key', () => {
+    expect(canReplayOrder({ customer: 2 }, 3)).toBe(false)
+    expect(canReplayOrder({ customer: 2 }, null)).toBe(false)
+    expect(canReplayOrder({ customer: null }, 3)).toBe(false)
+  })
+})
+
+describe('payload-locked-documents', () => {
+  it('is restricted to admins after config sanitisation', () => {
+    const config = readFileSync('src/payload.config.ts', 'utf8')
+    expect(config).toMatch(/slug === 'payload-locked-documents'[\s\S]{0,200}create: isAdmin, read: isAdmin, update: isAdmin, delete: isAdmin/)
   })
 })
