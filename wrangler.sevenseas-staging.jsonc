@@ -14,6 +14,9 @@
   "main": ".open-next/worker.js",
   "name": "aura-dynamics-staging",
   "account_id": "9fcb967b7744d3455d2f35f3efd8f921",
+  // Legacy staging: public workers.dev disabled 2026-11-04 (security). Keep off.
+  "workers_dev": false,
+  "preview_urls": false,
 
   "compatibility_date": "2025-08-15",
 
