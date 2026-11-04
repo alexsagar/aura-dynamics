@@ -26,6 +26,16 @@ describe('checkout input limits (audit lead: COD inventory exhaustion)', () => {
     expect(checkoutLimitsError({}, Array.from({ length: 20 }, () => item(10)))).toMatch(/Maximum 30 units per order/)
   })
 
+  it('accepts only whole-unit quantities from 1 to the line cap', () => {
+    const bad = (quantity: unknown) => checkoutLimitsError({}, [{ productId: 1, variantId: 1, quantity }])
+    expect(bad(1)).toBeNull()
+    expect(bad(10)).toBeNull()
+    expect(bad(11)).toMatch(/Maximum 10 units per item/)
+    for (const q of [0, -1, 1.5, '1', 'abc', null, undefined, NaN, Infinity]) {
+      expect(bad(q)).toMatch(/whole number of at least 1/)
+    }
+  })
+
   it('wholesale limits are configurable', () => {
     expect(checkoutLimitsError({}, [item(50)], { MAX_QTY_PER_LINE: 100, MAX_UNITS_PER_ORDER: 500 })).toBeNull()
   })
