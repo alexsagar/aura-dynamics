@@ -29,12 +29,15 @@ export const checkoutRateLimited = (req: Request) => rateLimited('CHECKOUT_RATE_
  * Login / forgot-password throttle per IP, checked before Payload looks at the
  * account. Slows password guessing and stops one client cheaply locking many
  * accounts via maxLoginAttempts. Generous limit because Nepali mobile networks
- * put many users behind one CGNAT address.
+ * put many users behind one CGNAT address. Covers REST and GraphQL (both run
+ * these operations); keyed on Cloudflare's own cf-connecting-ip, which clients
+ * cannot override. A request without it shares one 'unknown' bucket rather
+ * than skipping the limit. Workers rate limits are approximate and per location.
  */
+const LIMITED_AUTH_OPERATIONS = new Set(['login', 'forgotPassword', 'resetPassword'])
 export const authRateLimit: CollectionBeforeOperationHook = async ({ args, operation, req }) => {
-  if (operation !== 'login' && operation !== 'forgotPassword') return args
-  if (req.payloadAPI === 'local' || !req.headers) return args
-  if (await rateLimited('LOGIN_RATE_LIMITER', req.headers)) {
+  if (!LIMITED_AUTH_OPERATIONS.has(operation) || req.payloadAPI === 'local') return args
+  if (await rateLimited('LOGIN_RATE_LIMITER', req.headers ?? new Headers())) {
     throw new APIError('Too many attempts. Please wait a minute and try again.', 429)
   }
   return args

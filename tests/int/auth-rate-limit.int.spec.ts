@@ -31,6 +31,14 @@ describe('login brute-force / lockout protection', () => {
     await expect(run('forgotPassword')).rejects.toMatchObject({ status: 429 })
   })
 
+  it('covers GraphQL and reset-password, and missing IP info still counts (shared bucket)', async () => {
+    limit.mockResolvedValue({ success: false })
+    await expect(run('login', { payloadAPI: 'GraphQL', headers: new Headers() })).rejects.toMatchObject({ status: 429 })
+    expect(limit).toHaveBeenLastCalledWith({ key: 'unknown' })
+    await expect(run('resetPassword', { payloadAPI: 'REST' })).rejects.toMatchObject({ status: 429 })
+    limit.mockReset()
+  })
+
   it('ignores other operations and server-side Local API calls', async () => {
     limit.mockClear()
     await run('create')
