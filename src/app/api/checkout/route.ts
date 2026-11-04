@@ -211,6 +211,15 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: `Variant for product "${productDoc.title}" is required.` }, { status: 400 })
       }
 
+      // The variant must belong to this product and be published; otherwise a
+      // client could pair a hidden product's variant with a public product's
+      // price, or buy a draft variant.
+      const variantProductId =
+        typeof variantDoc.product === 'object' ? variantDoc.product?.id : variantDoc.product
+      if (Number(variantProductId) !== productId || variantDoc._status !== 'published') {
+        return NextResponse.json({ error: `Variant not found for "${productDoc.title}".` }, { status: 400 })
+      }
+
       if (variantDoc.active === false) {
         return NextResponse.json(
           { error: `Variant "${variantDoc.title}" is no longer available.` },

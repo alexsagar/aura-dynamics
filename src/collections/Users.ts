@@ -1,4 +1,4 @@
-import type { CollectionConfig } from 'payload'
+import { Forbidden, type CollectionConfig } from 'payload'
 import { isAdmin } from '../access/ecommerce'
 
 export const Users: CollectionConfig = {
@@ -17,6 +17,19 @@ export const Users: CollectionConfig = {
     update: isAdmin,
     delete: isAdmin,
     unlock: isAdmin,
+  },
+  hooks: {
+    // Payload's first-register flow creates an admin with overrideAccess when
+    // the users table is empty, so on a fresh or reset database any visitor
+    // could claim it. Only signed-in admins or the Local API (server scripts,
+    // see src/scripts/create-admin.ts) may create admin users.
+    beforeOperation: [
+      ({ operation, req }) => {
+        if (operation === 'create' && !req.user && req.payloadAPI !== 'local') {
+          throw new Forbidden(req.t)
+        }
+      },
+    ],
   },
   auth: true,
   fields: [
