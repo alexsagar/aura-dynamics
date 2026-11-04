@@ -1,8 +1,9 @@
 import { test, expect } from '@playwright/test'
 import { jwtSign } from '../../node_modules/payload/dist/auth/jwt.js'
 
-// Pre-computed internal Payload secret hash for local dev
-const SECRET = 'c0c551dd975f6f85e4969827ba4d1c30'
+// Derived Payload signing key for a LOCAL dev database only. Never commit it:
+// set E2E_PAYLOAD_SIGNING_KEY in the environment. These tests skip without it.
+const SECRET = process.env.E2E_PAYLOAD_SIGNING_KEY ?? ''
 const SESSION_ID = 'aura-test-session-1790500773476'
 const ADMIN_EMAIL = 'admin@auradynamics.com.np'
 
@@ -23,6 +24,7 @@ async function getAdminToken() {
 test.use({ channel: 'chrome' })
 
 test.describe('Aura Admin UI & Store Management Refinements', () => {
+  test.skip(!SECRET, 'E2E_PAYLOAD_SIGNING_KEY not set')
   test.setTimeout(90000)
 
   test('1. Unauthenticated Login Page Displays Official Aura Logo (Desktop)', async ({ page }) => {

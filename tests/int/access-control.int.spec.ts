@@ -129,3 +129,28 @@ describe('homepage drafts are admin-only, also under ?draft=true', () => {
     expect(run(read, null)).toEqual({ _status: { equals: 'published' } })
   })
 })
+
+describe('audit hardening', () => {
+  it('JSON-LD output escapes < so CMS text cannot close the script tag', () => {
+    const src = readFileSync('src/components/storefront/product/ProductJsonLd.tsx', 'utf8')
+    expect(src).toContain(String.raw`JSON.stringify(jsonLd).replace(/</g, '\\u003c')`)
+    expect(JSON.stringify({ t: '</script><x>' }).replace(/</g, '\\u003c')).not.toContain('</script>')
+  })
+
+  it('cookie auth is limited to trusted origins (csrf/cors allowlist)', () => {
+    const config = readFileSync('src/payload.config.ts', 'utf8')
+    expect(config).toMatch(/csrf: trustedOrigins,/)
+    expect(config).toMatch(/cors: trustedOrigins,/)
+  })
+
+  it('no derived Payload signing key is committed in tests', () => {
+    const e2e = readFileSync('tests/e2e/admin-ux.e2e.spec.ts', 'utf8')
+    expect(e2e).toMatch(/const SECRET = process\.env\.E2E_PAYLOAD_SIGNING_KEY/)
+    expect(e2e).not.toMatch(/const SECRET = '[A-Za-z0-9]{16,}'/)
+  })
+
+  it('production Worker is not exposed on workers.dev or preview URLs', () => {
+    const wrangler = readFileSync('wrangler.jsonc', 'utf8')
+    expect(wrangler).toMatch(/"name": "aura-dynamics",[\s\S]{0,400}"workers_dev": false,\s*"preview_urls": false,/)
+  })
+})

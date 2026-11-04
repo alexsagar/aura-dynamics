@@ -3,6 +3,10 @@
   "main": ".open-next/worker.js",
   "name": "aura-dynamics",
   "account_id": "5c6bd0899d4d08646a4f924b7698343e",
+  // Serve production only on its custom domain; *.workers.dev and preview URLs
+  // would bypass custom-domain WAF/rate-limit rules.
+  "workers_dev": false,
+  "preview_urls": false,
 
   "compatibility_date": "2025-08-15",
 

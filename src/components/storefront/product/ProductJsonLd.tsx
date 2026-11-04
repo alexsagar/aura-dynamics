@@ -64,7 +64,8 @@ export function ProductJsonLd({ product }: { product: Product }) {
     <script
       type="application/ld+json"
       // eslint-disable-next-line react/no-danger -- controlled, server-generated JSON-LD from verified fields
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      // Escape `<` so CMS text containing `</script>` cannot close the tag.
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, '\\u003c') }}
     />
   )
 }
