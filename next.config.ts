@@ -20,6 +20,12 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Staging builds set NEXT_PUBLIC_NOINDEX=true so no page is indexed; also
+  // covers pages whose own metadata says index. Production never sets it.
+  async headers() {
+    if (process.env.NEXT_PUBLIC_NOINDEX !== 'true') return []
+    return [{ source: '/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] }]
+  },
   // Permanent redirects for retired slugs so old links / search-engine results
   // don't 404. Numakers PLA+ was consolidated into Numakers PLA.
   async redirects() {

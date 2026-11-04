@@ -12,6 +12,7 @@
   "name": "aura-dynamics-staging",
   "workers_dev": false,
   "preview_urls": false,
+  "routes": [{ "pattern": "staging.printwithaura.com", "custom_domain": true }],
 
   "account_id": "f388d9461c4f6f9f1efa0145c1f6eb47",
 
