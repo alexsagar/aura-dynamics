@@ -21,6 +21,7 @@ import { Footer } from './globals/Footer'
 import { SiteSettings } from './globals/SiteSettings'
 import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
+import { releaseInventoryOnCancel } from './lib/order-cancellation'
 import {
   adminOnlyFieldAccess,
   adminOrPublishedStatus,
@@ -175,6 +176,10 @@ export default buildConfig({
             group: 'Store',
             defaultColumns: ['orderNumber', 'paymentMethod', 'paymentStatus', 'amount', 'status', 'createdAt'],
           },
+          hooks: {
+            ...defaultCollection.hooks,
+            beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), releaseInventoryOnCancel],
+          },
           fields: [
             ...defaultCollection.fields,
             {
@@ -191,6 +196,9 @@ export default buildConfig({
               type: 'text',
               index: true,
               unique: true,
+              // Written only by checkout (overrideAccess). Its presence marks an
+              // order whose stock was reserved, so the API must not set it either.
+              access: { create: () => false, update: () => false },
               admin: {
                 position: 'sidebar',
                 readOnly: true,
