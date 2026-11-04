@@ -1,8 +1,10 @@
 import type { CollectionConfig } from 'payload'
+import { AUTH_LOCKOUT, authRateLimit } from '../lib/rate-limit'
 
 export const Customers: CollectionConfig = {
   slug: 'customers',
-  auth: true,
+  auth: { ...AUTH_LOCKOUT },
+  hooks: { beforeOperation: [authRateLimit] },
   admin: {
     useAsTitle: 'email',
     group: 'Store',

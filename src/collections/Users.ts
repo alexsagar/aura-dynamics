@@ -1,5 +1,6 @@
 import { Forbidden, type CollectionConfig } from 'payload'
 import { isAdmin } from '../access/ecommerce'
+import { AUTH_LOCKOUT, authRateLimit } from '../lib/rate-limit'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -29,9 +30,10 @@ export const Users: CollectionConfig = {
           throw new Forbidden(req.t)
         }
       },
+      authRateLimit,
     ],
   },
-  auth: true,
+  auth: { ...AUTH_LOCKOUT },
   fields: [
     // Email added by default
     // Add more fields as needed
