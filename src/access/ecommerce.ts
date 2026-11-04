@@ -80,6 +80,15 @@ export const publicProductWhere: Where = {
 export const isPublicProduct = (p: { _status?: string | null; productType?: string | null } | null | undefined) =>
   p?._status === 'published' && (PUBLIC_PRODUCT_TYPES as readonly string[]).includes(p.productType ?? '')
 
+/** Checkout: a variant is purchasable only through its own product and only when published. */
+export const isVariantOfProduct = (
+  variant: { product?: number | { id?: number } | null; _status?: string | null } | null | undefined,
+  productId: number,
+) => {
+  const owner = typeof variant?.product === 'object' ? variant.product?.id : variant?.product
+  return Number(owner) === productId && variant?._status === 'published'
+}
+
 /** Products read: admins see everything; everyone else only public, published products. */
 export const productReadAccess: Access = ({ req: { user } }) =>
   user && user.collection === 'users' ? true : publicProductWhere
