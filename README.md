@@ -235,6 +235,8 @@ pnpm exec playwright test tests/e2e/admin-ux.e2e.spec.ts
 ## Operational Policies & Guidelines
 
 1. **Strict NPR Currency Policy:** All product prices, cart totals, and shipping quotes are denominated exclusively in Nepalese Rupees (`NPR` / `Rs.`). Never introduce multi-currency conversions without approval.
+   - **Money units:** every stored amount is a whole number of rupees: `priceInNPR`, cart lines, order `amount`/`subtotal`/`shipping`, transactions, shipping settings, and future eSewa amounts. The ecommerce plugin's NPR currency uses `decimals: 0` so Admin shows and accepts rupees. Never store paisa. Changing `decimals` would rescale every existing price and order, so it needs a reviewed data migration.
+   - **Delivery:** `src/lib/shipping.ts` is the only place the delivery rule lives (Site Settings: Rs. 150 flat, free at or above Rs. 5,000 subtotal). Cart, checkout and the checkout API all use it.
 2. **Product Imagery & Placeholders:**
    - Temporary or AI-generated product images are marked with `temporaryAsset: true` in the `Media` collection.
    - These are illustrative placeholders until real production batch photography, label verification, and color matching are finalized.

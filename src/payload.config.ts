@@ -137,7 +137,10 @@ export default buildConfig({
         supportedCurrencies: [
           {
             code: 'NPR',
-            decimals: 2,
+            // Money is stored as whole rupees everywhere (prices, cart,
+            // checkout, orders). The plugin divides stored values by
+            // 10^decimals for Admin display/input, so this must stay 0.
+            decimals: 0,
             label: 'Nepalese Rupee',
             symbol: 'Rs.',
           },

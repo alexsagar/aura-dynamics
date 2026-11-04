@@ -3,6 +3,7 @@ import { getPayload } from 'payload'
 import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
 import { isPublicProduct, isVariantOfProduct } from '@/access/ecommerce'
+import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
 
 /**
  * ============================================================================
@@ -82,6 +83,11 @@ export async function POST(req: Request) {
 
     // 4. Initialize Payload
     const payload = await getPayload({ config: configPromise })
+
+    // Signed-in customers get the order linked to their account (order history);
+    // guests stay guests. Identity comes only from the session, never the body.
+    const { user: sessionUser } = await payload.auth({ headers: req.headers })
+    const customerId = sessionUser?.collection === 'customers' ? sessionUser.id : null
 
     // 5. Check Idempotency: Return existing order if already processed for this key
     const existingOrders = await payload.find({
@@ -285,19 +291,7 @@ export async function POST(req: Request) {
     // 8. Calculate verified subtotal and dynamic shipping from CMS settings
     const subtotal = verifiedItems.reduce((acc, it) => acc + it.lineTotal, 0)
 
-    const shippingSettings = siteSettings?.shippingSettings
-    const standardShippingFee =
-      typeof shippingSettings?.shippingFee === 'number'
-        ? shippingSettings.shippingFee
-        : 150
-    const freeShippingThreshold =
-      typeof shippingSettings?.freeShippingThreshold === 'number'
-        ? shippingSettings.freeShippingThreshold
-        : 5000
-    const freeShippingEnabled = shippingSettings?.freeShippingEnabled !== false
-
-    const shipping =
-      freeShippingEnabled && subtotal >= freeShippingThreshold ? 0 : standardShippingFee
+    const shipping = shippingFor(subtotal, resolveShippingSettings(siteSettings?.shippingSettings))
     const grandTotal = subtotal + shipping
 
     // 9. Generate real human-readable order number
@@ -368,6 +362,7 @@ export async function POST(req: Request) {
           paymentStatus,
           paymentReference: storedRef,
           customerEmail: email,
+          customer: customerId,
           shippingAddress: {
             firstName: fullName,
             addressLine1: address,

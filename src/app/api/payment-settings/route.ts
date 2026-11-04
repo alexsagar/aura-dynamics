@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
+import { DEFAULT_SHIPPING, resolveShippingSettings } from '@/lib/shipping'
 
 export async function GET() {
   try {
@@ -15,27 +16,12 @@ export async function GET() {
     const qrImageUrl =
       typeof qrMedia === 'object' && qrMedia?.url ? qrMedia.url : null
 
-    const shippingSettings = siteSettings?.shippingSettings
-    const shippingFee =
-      typeof shippingSettings?.shippingFee === 'number'
-        ? shippingSettings.shippingFee
-        : 150
-    const freeShippingThreshold =
-      typeof shippingSettings?.freeShippingThreshold === 'number'
-        ? shippingSettings.freeShippingThreshold
-        : 5000
-    const freeShippingEnabled = shippingSettings?.freeShippingEnabled !== false
-
     return NextResponse.json({
       isEsewaConfigured: Boolean(qrImageUrl),
       esewaQrImageUrl: qrImageUrl,
       esewaMerchantName: paymentSettings?.esewaMerchantName?.trim() || null,
       esewaId: paymentSettings?.esewaId?.trim() || null,
-      shippingSettings: {
-        shippingFee,
-        freeShippingThreshold,
-        freeShippingEnabled,
-      },
+      shippingSettings: resolveShippingSettings(siteSettings?.shippingSettings),
     })
   } catch (error) {
     console.error('Error fetching store/payment settings:', error)
@@ -44,11 +30,7 @@ export async function GET() {
       esewaQrImageUrl: null,
       esewaMerchantName: null,
       esewaId: null,
-      shippingSettings: {
-        shippingFee: 150,
-        freeShippingThreshold: 5000,
-        freeShippingEnabled: true,
-      },
+      shippingSettings: DEFAULT_SHIPPING,
     })
   }
 }
