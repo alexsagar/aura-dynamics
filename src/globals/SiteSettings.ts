@@ -7,7 +7,7 @@ export const SiteSettings: GlobalConfig = {
   slug: 'site-settings',
   label: 'Site Settings',
   admin: { group: 'Settings' },
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
   versions: { max: 10 },
   fields: [
     { name: 'siteName', type: 'text' },

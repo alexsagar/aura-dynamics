@@ -41,7 +41,7 @@ const contentGlobal = (slug: string, label: string, description: string, fields:
   slug,
   label,
   admin: { group: 'Content', description },
-  access: { read: () => true, update: isAdmin },
+  access: { read: () => true, update: isAdmin, readVersions: isAdmin },
   versions: { max: 10 },
   fields,
 })
