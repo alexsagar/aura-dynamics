@@ -82,6 +82,10 @@ const cloudflare =
     ? await getCloudflareContextFromWrangler()
     : await getCloudflareContext({ async: true })
 
+const trustedOrigins = [process.env.NEXT_PUBLIC_SITE_URL, 'http://localhost:3000']
+  .filter((o): o is string => Boolean(o))
+  .map((o) => o.replace(/\/$/, ''))
+
 export default buildConfig({
   admin: {
     user: Users.slug,
@@ -107,6 +111,11 @@ export default buildConfig({
   globals: [Homepage, Header, Footer, SiteSettings, PageContent, AboutPage, MaterialsPage],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
+  // Cookie auth is only honoured for requests from our own site origin (plus
+  // local dev); cross-origin requests with a session cookie are treated as
+  // anonymous. Same-origin requests without an Origin header are unaffected.
+  csrf: trustedOrigins,
+  cors: trustedOrigins,
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },
