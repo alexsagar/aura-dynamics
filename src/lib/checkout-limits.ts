@@ -42,11 +42,15 @@ export function checkoutLimitsError(
   if (items.length > CHECKOUT_LIMITS.MAX_LINES) return `Too many items in one order (max ${CHECKOUT_LIMITS.MAX_LINES}).`
   let total = 0
   for (const item of items as { quantity?: unknown }[]) {
-    const qty = Math.floor(Number(item?.quantity))
+    const qty = item?.quantity
+    // Whole units only: reject 1.5, "2", NaN rather than rounding.
+    if (typeof qty !== 'number' || !Number.isInteger(qty) || qty < 1) {
+      return 'Quantity must be a whole number of at least 1.'
+    }
     if (qty > limits.MAX_QTY_PER_LINE) {
       return `Maximum ${limits.MAX_QTY_PER_LINE} units per item per order. Contact us for bulk orders.`
     }
-    if (qty > 0) total += qty
+    total += qty
   }
   if (total > limits.MAX_UNITS_PER_ORDER) {
     return `Maximum ${limits.MAX_UNITS_PER_ORDER} units per order. Contact us for bulk orders.`
