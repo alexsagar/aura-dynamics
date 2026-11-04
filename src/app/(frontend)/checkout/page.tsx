@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/providers/CartProvider'
 import { Button } from '@/components/storefront/ui/Button'
+import { DEFAULT_SHIPPING, shippingFor, type ShippingSettings } from '@/lib/shipping'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -37,11 +38,7 @@ export default function CheckoutPage() {
   const [esewaId, setEsewaId] = useState<string | null>(null)
 
   // Dynamic Shipping Configuration from CMS
-  const [shippingConfig, setShippingConfig] = useState({
-    shippingFee: 150,
-    freeShippingThreshold: 5000,
-    freeShippingEnabled: true,
-  })
+  const [shippingConfig, setShippingConfig] = useState<ShippingSettings>(DEFAULT_SHIPPING)
 
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
@@ -76,10 +73,7 @@ export default function CheckoutPage() {
   }, [])
 
   // Calculate totals using dynamic CMS shipping rules
-  const shipping =
-    shippingConfig.freeShippingEnabled && cartTotal >= shippingConfig.freeShippingThreshold
-      ? 0
-      : shippingConfig.shippingFee
+  const shipping = shippingFor(cartTotal, shippingConfig)
   const finalTotal = cartTotal + shipping
 
   const handlePlaceOrder = async (e: React.FormEvent) => {

@@ -137,7 +137,10 @@ export default buildConfig({
         supportedCurrencies: [
           {
             code: 'NPR',
-            decimals: 2,
+            // Money is stored as whole rupees everywhere (prices, cart,
+            // checkout, orders). The plugin divides stored values by
+            // 10^decimals for Admin display/input, so this must stay 0.
+            decimals: 0,
             label: 'Nepalese Rupee',
             symbol: 'Rs.',
           },
@@ -716,6 +719,15 @@ export default buildConfig({
       collections: { media: true },
     }),
   ],
+}).then((config) => {
+  // Payload adds payload-locked-documents during sanitisation with "any
+  // logged-in user" access, which includes storefront customers. Only Admin
+  // users edit documents, so only they may read or create locks.
+  const locked = config.collections.find((c) => c.slug === 'payload-locked-documents')
+  if (locked) {
+    locked.access = { ...locked.access, create: isAdmin, read: isAdmin, update: isAdmin, delete: isAdmin }
+  }
+  return config
 })
 
 // Adapted from https://github.com/opennextjs/opennextjs-cloudflare/blob/d00b3a13e42e65aad76fba41774815726422cc39/packages/cloudflare/src/api/cloudflare-context.ts#L328C36-L328C46

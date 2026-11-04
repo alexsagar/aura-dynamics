@@ -5,15 +5,12 @@ import Link from 'next/link'
 import { useCart } from '@/providers/CartProvider'
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
+import { DEFAULT_SHIPPING, shippingFor, type ShippingSettings } from '@/lib/shipping'
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeItem, cartTotal, isLoading } = useCart()
 
-  const [shippingConfig, setShippingConfig] = React.useState({
-    shippingFee: 150,
-    freeShippingThreshold: 5000,
-    freeShippingEnabled: true,
-  })
+  const [shippingConfig, setShippingConfig] = React.useState<ShippingSettings>(DEFAULT_SHIPPING)
 
   React.useEffect(() => {
     fetch('/api/payment-settings')
@@ -26,10 +23,7 @@ export default function CartPage() {
       .catch(() => {})
   }, [])
 
-  const shipping =
-    shippingConfig.freeShippingEnabled && cartTotal >= shippingConfig.freeShippingThreshold
-      ? 0
-      : shippingConfig.shippingFee
+  const shipping = shippingFor(cartTotal, shippingConfig)
   const estimatedTotal = cartTotal + shipping
 
   if (isLoading) {
