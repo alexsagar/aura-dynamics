@@ -187,6 +187,9 @@ export default buildConfig({
               type: 'text',
               index: true,
               unique: true,
+              // Written only by checkout (overrideAccess). Its presence marks an
+              // order whose stock was reserved, so the API must not set it either.
+              access: { create: () => false, update: () => false },
               admin: {
                 position: 'sidebar',
                 readOnly: true,
