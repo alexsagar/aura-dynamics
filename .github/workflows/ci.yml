@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [dev, main]
+
+# Read-only token; CI never deploys or touches Cloudflare.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Dummy value for local-only Payload init in tests; not a real secret.
+      PAYLOAD_SECRET: ci-local-only-not-a-secret
+      NODE_OPTIONS: --no-deprecation --max-old-space-size=4096
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.34.6
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Typecheck
+        run: pnpm exec tsc --noEmit
+      # Local Miniflare D1 only: no CLOUDFLARE_ENV / WRANGLER_CONFIG_PATH and no
+      # Cloudflare credentials exist here, so remote bindings stay off.
+      - name: Apply migrations to local D1
+        run: pnpm payload migrate
+      - name: Integration tests (access control, checkout, shipping, money units)
+        run: pnpm exec vitest run --config ./vitest.config.mts
