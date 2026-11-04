@@ -21,6 +21,7 @@ import { Footer } from './globals/Footer'
 import { SiteSettings } from './globals/SiteSettings'
 import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
+import { releaseInventoryOnCancel } from './lib/order-cancellation'
 import {
   adminOnlyFieldAccess,
   adminOrPublishedStatus,
@@ -165,6 +166,10 @@ export default buildConfig({
             ...defaultCollection.admin,
             group: 'Store',
             defaultColumns: ['orderNumber', 'paymentMethod', 'paymentStatus', 'amount', 'status', 'createdAt'],
+          },
+          hooks: {
+            ...defaultCollection.hooks,
+            beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), releaseInventoryOnCancel],
           },
           fields: [
             ...defaultCollection.fields,

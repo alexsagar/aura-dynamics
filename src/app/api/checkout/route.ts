@@ -4,6 +4,8 @@ import { sql } from '@payloadcms/db-d1-sqlite'
 import configPromise from '@/payload.config'
 import { canReplayOrder, isPublicProduct, isVariantOfProduct } from '@/access/ecommerce'
 import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
+import { checkoutLimitsError } from '@/lib/checkout-limits'
+import { checkoutRateLimited } from '@/lib/rate-limit'
 
 /**
  * ============================================================================
@@ -17,6 +19,10 @@ import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
 
 export async function POST(req: Request) {
   try {
+    if (await checkoutRateLimited(req)) {
+      return NextResponse.json({ error: 'Too many checkout attempts. Please wait a minute and try again.' }, { status: 429 })
+    }
+
     const body: any = await req.json()
 
     // 1. Basic body validation
@@ -79,6 +85,14 @@ export async function POST(req: Request) {
 
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: 'Your cart is empty.' }, { status: 400 })
+    }
+
+    const limitError = checkoutLimitsError(
+      { idempotencyKey: normalizedIdempotencyKey, fullName, email, address, city, orderNotes, paymentReference },
+      items,
+    )
+    if (limitError) {
+      return NextResponse.json({ error: limitError }, { status: 400 })
     }
 
     // 4. Initialize Payload
