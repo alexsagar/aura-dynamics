@@ -24,7 +24,7 @@
     "staging:sevenseas:deploy": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" NEXT_PUBLIC_SITE_URL=https://aura-dynamics-staging.seasseven123.workers.dev opennextjs-cloudflare build -c wrangler.sevenseas-staging.jsonc && wrangler deploy --config wrangler.sevenseas-staging.jsonc --profile default",
     "staging:aura:dry-run": "wrangler deploy --config wrangler.aura-staging.jsonc --profile aura-official --dry-run",
     "staging:aura:deploy": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" NEXT_PUBLIC_SITE_URL=https://staging.printwithaura.com NEXT_PUBLIC_NOINDEX=true opennextjs-cloudflare build -c wrangler.aura-staging.jsonc && wrangler deploy --config wrangler.aura-staging.jsonc --profile aura-official",
-    "start":"cross-env NODE_OPTIONS=--no-deprecation next start",
+    "start": "cross-env NODE_OPTIONS=--no-deprecation next start",
     "test": "pnpm run test:int && pnpm run test:e2e",
     "test:e2e": "cross-env NODE_OPTIONS=\"--no-deprecation --import=tsx/esm\" playwright test --config=playwright.config.ts",
     "test:int": "cross-env NODE_OPTIONS=--no-deprecation vitest run --config ./vitest.config.mts"
@@ -79,7 +79,10 @@
     ],
     "ignoredBuiltDependencies": [
       "workerd"
-    ]
+    ],
+    "patchedDependencies": {
+      "payload@3.92.1": "patches/payload@3.92.1.patch"
+    }
   },
   "cloudflare": {
     "bindings": {
