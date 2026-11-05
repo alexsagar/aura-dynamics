@@ -6,7 +6,8 @@ import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
-import { getCustomerOrders, type OrderSummary } from '@/lib/account-orders'
+import Link from 'next/link'
+import { getCustomerOrders, parsePage, type OrderPage, type OrderSummary } from '@/lib/account-orders'
 import { SignOutButton } from './SignOutButton'
 
 export const metadata: Metadata = {
@@ -17,18 +18,21 @@ export const metadata: Metadata = {
 // Per-customer data: always rendered per request (headers() also opts in), never prerendered or shared.
 export const dynamic = 'force-dynamic'
 
-export default async function AccountPage() {
+export default async function AccountPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
   const payload = await getPayload({ config: configPromise })
   // Same cookie + CSRF rules as the REST API: only a valid customer session counts.
   const { user } = await payload.auth({ headers: await headers() })
   if (!user || user.collection !== 'customers') redirect('/login')
 
-  let orders: OrderSummary[] | null = null
+  const requested = parsePage((await searchParams).page)
+  let result: OrderPage | null = null
   try {
-    orders = await getCustomerOrders(payload, user)
+    result = await getCustomerOrders(payload, user, requested)
   } catch {
     payload.logger.error({ msg: 'account: orders could not be loaded' })
   }
+  // Past the last page (e.g. an old link): go to the last real page instead of a false empty state.
+  if (result && result.totalDocs > 0 && result.orders.length === 0) redirect(`/account?page=${result.totalPages}`)
 
   const name = (user as { name?: string | null }).name || user.email?.split('@')[0]
 
@@ -48,7 +52,8 @@ export default async function AccountPage() {
             <h2 id="order-history" className="mb-6 text-2xl font-medium tracking-[-0.02em]">
               Order History
             </h2>
-            <OrderHistory orders={orders} />
+            <OrderHistory orders={result?.orders ?? null} />
+            {result && result.totalPages > 1 && <Pagination page={result.page} totalPages={result.totalPages} />}
           </section>
 
           <section aria-labelledby="account-details">
@@ -63,6 +68,31 @@ export default async function AccountPage() {
         </div>
       </Container>
     </div>
+  )
+}
+
+function Pagination({ page, totalPages }: { page: number; totalPages: number }) {
+  const link = 'inline-flex min-h-11 items-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold transition-colors hover:border-black'
+  return (
+    <nav aria-label="Order history pages" className="mt-6 flex items-center justify-between gap-4">
+      {page > 1 ? (
+        <Link href={`/account?page=${page - 1}`} className={link}>
+          Previous
+        </Link>
+      ) : (
+        <span />
+      )}
+      <p className="text-sm text-muted">
+        Page {page} of {totalPages}
+      </p>
+      {page < totalPages ? (
+        <Link href={`/account?page=${page + 1}`} className={link}>
+          Next
+        </Link>
+      ) : (
+        <span />
+      )}
+    </nav>
   )
 }
 

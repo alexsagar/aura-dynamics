@@ -70,22 +70,40 @@ export function summarizeOrder(order: OrderDoc): OrderSummary {
   }
 }
 
+export const ORDERS_PER_PAGE = 10
+
+/** `?page=` from the URL: a positive whole number, anything else is page 1. */
+export function parsePage(raw: string | string[] | undefined): number {
+  const value = Array.isArray(raw) ? raw[0] : raw
+  if (!value || !/^\d{1,6}$/.test(value)) return 1
+  return Math.max(1, Number(value))
+}
+
+export type OrderPage = { orders: OrderSummary[]; page: number; totalPages: number; totalDocs: number }
+
 /**
- * The signed-in customer's own orders, newest first. Runs as that user with
- * overrideAccess: false, so Payload's orders read access (admin or document
- * owner) decides what is returned; the where clause only narrows it further.
- * Guest orders (no customer) never match.
+ * One page of the signed-in customer's own orders, newest first (id breaks
+ * createdAt ties so pages are stable). Runs as that user with overrideAccess:
+ * false, so Payload's orders read access (admin or document owner) decides
+ * what is returned; the where clause only narrows it further. Guest orders
+ * (no customer) never match.
  */
-export async function getCustomerOrders(payload: Payload, user: TypedUser): Promise<OrderSummary[]> {
-  const { docs } = await payload.find({
+export async function getCustomerOrders(payload: Payload, user: TypedUser, page = 1): Promise<OrderPage> {
+  const result = await payload.find({
     collection: 'orders',
     where: { customer: { equals: user.id } },
-    sort: '-createdAt',
-    limit: 50,
+    sort: ['-createdAt', '-id'],
+    limit: ORDERS_PER_PAGE,
+    page,
     depth: 1,
     user,
     overrideAccess: false,
     select: { orderNumber: true, createdAt: true, status: true, amount: true, itemsSnapshot: true, items: true },
   })
-  return docs.map((d) => summarizeOrder(d as unknown as OrderDoc))
+  return {
+    orders: result.docs.map((d) => summarizeOrder(d as unknown as OrderDoc)),
+    page: result.page ?? page,
+    totalPages: result.totalPages,
+    totalDocs: result.totalDocs,
+  }
 }

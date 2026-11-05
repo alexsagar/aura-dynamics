@@ -229,12 +229,31 @@ describe('customer order history', () => {
 
   it('returns only the signed-in customer’s own orders: not other customers’, not guest orders with the same email', async () => {
     const { getCustomerOrders } = await import('@/lib/account-orders')
-    const refsA = (await getCustomerOrders(payload, a)).map((o) => o.reference)
+    const refsA = (await getCustomerOrders(payload, a)).orders.map((o) => o.reference)
     expect(refsA).toHaveLength(2)
     expect(refsA).toContain('AURA-ORD-HIST-A1')
     expect(refsA).not.toContain('AURA-ORD-HIST-B1')
     expect(refsA).not.toContain('AURA-ORD-HIST-GUEST')
-    expect((await getCustomerOrders(payload, b)).map((o) => o.reference)).toEqual(['AURA-ORD-HIST-B1'])
+    expect((await getCustomerOrders(payload, b)).orders.map((o) => o.reference)).toEqual(['AURA-ORD-HIST-B1'])
+  })
+
+  it('paginates 10 per page, newest first, stable, scoped to the customer', async () => {
+    const { getCustomerOrders } = await import('@/lib/account-orders')
+    const c = await customer('pages')
+    // 12 orders sharing one createdAt: the id tie-breaker must keep pages stable and disjoint.
+    const createdAt = new Date().toISOString()
+    for (let i = 1; i <= 12; i++) await order({ customer: c.id, orderNumber: `AURA-ORD-PAGE-${String(i).padStart(2, '0')}`, amount: i, createdAt })
+    const p1 = await getCustomerOrders(payload, c, 1)
+    const p2 = await getCustomerOrders(payload, c, 2)
+    expect(p1).toMatchObject({ page: 1, totalPages: 2, totalDocs: 12 })
+    expect(p1.orders).toHaveLength(10)
+    expect(p2.orders).toHaveLength(2)
+    const all = [...p1.orders, ...p2.orders].map((o) => o.reference)
+    expect(new Set(all).size).toBe(12)
+    expect(all[0]).toBe('AURA-ORD-PAGE-12')
+    expect(all[11]).toBe('AURA-ORD-PAGE-01')
+    expect((await getCustomerOrders(payload, c, 3)).orders).toHaveLength(0)
+    expect((await getCustomerOrders(payload, a, 1)).totalDocs).toBe(2)
   })
 
   it('access control, not the where clause, enforces ownership', async () => {
@@ -244,7 +263,7 @@ describe('customer order history', () => {
 
   it('summaries use amount, fall back to #id, label status, count items and carry no private fields', async () => {
     const { getCustomerOrders } = await import('@/lib/account-orders')
-    const orders = await getCustomerOrders(payload, a)
+    const { orders } = await getCustomerOrders(payload, a)
     const checkout = orders.find((o) => o.reference === 'AURA-ORD-HIST-A1')!
     const admin = orders.find((o) => o.reference.startsWith('#'))!
     expect(checkout).toMatchObject({ amount: 'Rs. 2,650', itemCount: 3, firstItem: 'Numakers PLA — Pure White', status: { label: 'Processing' } })

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { renderToStaticMarkup } from 'react-dom/server'
 
-const state = { user: null as any, orders: [] as any[] | Error, headers: new Headers() }
+const state = { user: null as any, orders: [] as any[] | Error, totalDocs: null as number | null, headers: new Headers() }
 
 vi.mock('next/headers', () => ({ headers: async () => state.headers }))
 vi.mock('next/navigation', () => ({
@@ -19,16 +19,25 @@ const fakePayload = {
     expect(headers).toBe(state.headers) // the request's own headers, nothing else
     return { user: state.user }
   }),
-  find: vi.fn(async (args: any) => {
+  // Mimics Payload pagination over the owner-filtered result.
+  find: vi.fn(async ({ page = 1, limit = 10 }: any) => {
     if (state.orders instanceof Error) throw state.orders
-    return { docs: state.orders, args }
+    const totalDocs = state.totalDocs ?? state.orders.length
+    return {
+      docs: state.orders.slice((page - 1) * limit, page * limit),
+      page,
+      totalDocs,
+      totalPages: Math.max(1, Math.ceil(totalDocs / limit)),
+    }
   }),
   logger,
 }
 vi.mock('payload', async (orig) => ({ ...(await orig<any>()), getPayload: async () => fakePayload }))
 
 const { default: AccountPage, dynamic } = await import('@/app/(frontend)/account/page')
-const render = async () => renderToStaticMarkup(await AccountPage())
+const { parsePage } = await import('@/lib/account-orders')
+const render = async (query: Record<string, string | string[]> = {}) =>
+  renderToStaticMarkup(await AccountPage({ searchParams: Promise.resolve(query) }))
 
 const customer = { id: 5, collection: 'customers', email: 'buyer@example.com', name: 'Asha' }
 const orderDoc = (over: any = {}) => ({
@@ -44,6 +53,7 @@ const orderDoc = (over: any = {}) => ({
 beforeEach(() => {
   state.user = customer
   state.orders = []
+  state.totalDocs = null
   fakePayload.find.mockClear()
   logger.error.mockClear()
 })
@@ -61,10 +71,10 @@ describe('/account page', () => {
     expect(fakePayload.find).not.toHaveBeenCalled()
   })
 
-  it('queries as the signed-in customer with overrideAccess: false', async () => {
-    await render()
+  it('queries one page as the signed-in customer with overrideAccess: false', async () => {
+    await render({ page: '2' })
     expect(fakePayload.find).toHaveBeenCalledWith(
-      expect.objectContaining({ collection: 'orders', user: customer, overrideAccess: false, where: { customer: { equals: 5 } } }),
+      expect.objectContaining({ collection: 'orders', user: customer, overrideAccess: false, where: { customer: { equals: 5 } }, page: 2, limit: 10 }),
     )
   })
 
@@ -118,5 +128,44 @@ describe('/account page', () => {
     state.orders = [orderDoc({ idempotencyKey: 'idem-123', paymentReference: 'esewa-ref-9', shippingAddress: { addressLine1: 'Secret Street' } })]
     const html = await render()
     expect(html).not.toMatch(/idem-123|esewa-ref-9|Secret Street|Edit Details|••••/)
+  })
+
+  it('shows Previous/Next only where they lead somewhere', async () => {
+    state.orders = Array.from({ length: 25 }, (_, i) => orderDoc({ id: i + 1, orderNumber: `AURA-ORD-P${i + 1}` }))
+    let html = await render()
+    expect(html).toContain('Page 1 of 3')
+    expect(html).toContain('href="/account?page=2"')
+    expect(html).not.toContain('Previous')
+    html = await render({ page: '2' })
+    expect(html).toContain('href="/account?page=1"')
+    expect(html).toContain('href="/account?page=3"')
+    html = await render({ page: '3' })
+    expect(html).toContain('Page 3 of 3')
+    expect(html).not.toContain('>Next<')
+    state.orders = [orderDoc()]
+    expect(await render()).not.toContain('Order history pages')
+  })
+
+  it('a page past the end redirects to the last page instead of a false empty state', async () => {
+    state.orders = Array.from({ length: 12 }, (_, i) => orderDoc({ id: i + 1 }))
+    await expect(render({ page: '9' })).rejects.toThrow('REDIRECT:/account?page=2')
+  })
+
+  it('invalid page parameters fall back to page 1', () => {
+    for (const raw of [undefined, '', '0', '-1', 'abc', '1.5', '2e3', '9999999', ['x', '3']]) expect(parsePage(raw as any)).toBe(1)
+    expect(parsePage('3')).toBe(3)
+    expect(parsePage(['4', '1'])).toBe(4)
+  })
+
+  it('switching accounts renders only the current customer’s data', async () => {
+    state.orders = [orderDoc({ orderNumber: 'AURA-ORD-OF-A' })]
+    const first = await render()
+    state.user = { id: 6, collection: 'customers', email: 'other@example.com', name: 'Bikash' }
+    state.orders = [orderDoc({ orderNumber: 'AURA-ORD-OF-B' })]
+    const second = await render()
+    expect(first).toContain('Asha')
+    expect(second).toContain('Bikash')
+    expect(second).not.toMatch(/Asha|buyer@example\.com|AURA-ORD-OF-A/)
+    expect(fakePayload.find).toHaveBeenLastCalledWith(expect.objectContaining({ user: state.user, where: { customer: { equals: 6 } } }))
   })
 })
