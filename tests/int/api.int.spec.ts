@@ -192,6 +192,87 @@ describe('order status notifications', () => {
   })
 })
 
+// Account order history: Payload access control decides what a customer sees.
+describe('customer order history', () => {
+  const ids: { customers: (number | string)[]; orders: (number | string)[] } = { customers: [], orders: [] }
+  let a: any, b: any
+
+  const customer = async (tag: string) => {
+    const doc: any = await payload.create({
+      collection: 'customers',
+      overrideAccess: true,
+      data: { email: `history-${tag}-${Date.now()}@example.invalid`, password: `P-${crypto.randomUUID()}`, name: tag } as any,
+    })
+    ids.customers.push(doc.id)
+    return { ...doc, collection: 'customers' }
+  }
+  const order = async (data: any) => {
+    const doc: any = await payload.create({ collection: 'orders', overrideAccess: true, data: { currency: 'NPR', status: 'processing', ...data } })
+    ids.orders.push(doc.id)
+    return doc
+  }
+
+  beforeAll(async () => {
+    a = await customer('a')
+    b = await customer('b')
+    await order({ customer: a.id, orderNumber: 'AURA-ORD-HIST-A1', amount: 2650, idempotencyKey: `k-${crypto.randomUUID()}`, paymentReference: 'secret-ref',
+      itemsSnapshot: [{ title: 'Numakers PLA', variantTitle: 'Pure White', quantity: 2 }, { title: 'Numakers PLA', variantTitle: 'Black', quantity: 1 }] })
+    await order({ customer: a.id, amount: null, status: 'completed' }) // Admin-created shape: no number, no amount
+    await order({ customer: b.id, orderNumber: 'AURA-ORD-HIST-B1', amount: 999 })
+    await order({ customer: null, customerEmail: a.email, orderNumber: 'AURA-ORD-HIST-GUEST', amount: 111 }) // guest order, same email as A
+  })
+
+  afterAll(async () => {
+    for (const id of ids.orders) await payload.delete({ collection: 'orders', id, overrideAccess: true })
+    for (const id of ids.customers) await payload.delete({ collection: 'customers', id, overrideAccess: true })
+  })
+
+  it('returns only the signed-in customer’s own orders: not other customers’, not guest orders with the same email', async () => {
+    const { getCustomerOrders } = await import('@/lib/account-orders')
+    const refsA = (await getCustomerOrders(payload, a)).orders.map((o) => o.reference)
+    expect(refsA).toHaveLength(2)
+    expect(refsA).toContain('AURA-ORD-HIST-A1')
+    expect(refsA).not.toContain('AURA-ORD-HIST-B1')
+    expect(refsA).not.toContain('AURA-ORD-HIST-GUEST')
+    expect((await getCustomerOrders(payload, b)).orders.map((o) => o.reference)).toEqual(['AURA-ORD-HIST-B1'])
+  })
+
+  it('paginates 10 per page, newest first, stable, scoped to the customer', async () => {
+    const { getCustomerOrders } = await import('@/lib/account-orders')
+    const c = await customer('pages')
+    // 12 orders sharing one createdAt: the id tie-breaker must keep pages stable and disjoint.
+    const createdAt = new Date().toISOString()
+    for (let i = 1; i <= 12; i++) await order({ customer: c.id, orderNumber: `AURA-ORD-PAGE-${String(i).padStart(2, '0')}`, amount: i, createdAt })
+    const p1 = await getCustomerOrders(payload, c, 1)
+    const p2 = await getCustomerOrders(payload, c, 2)
+    expect(p1).toMatchObject({ page: 1, totalPages: 2, totalDocs: 12 })
+    expect(p1.orders).toHaveLength(10)
+    expect(p2.orders).toHaveLength(2)
+    const all = [...p1.orders, ...p2.orders].map((o) => o.reference)
+    expect(new Set(all).size).toBe(12)
+    expect(all[0]).toBe('AURA-ORD-PAGE-12')
+    expect(all[11]).toBe('AURA-ORD-PAGE-01')
+    expect((await getCustomerOrders(payload, c, 3)).orders).toHaveLength(0)
+    expect((await getCustomerOrders(payload, a, 1)).totalDocs).toBe(2)
+  })
+
+  it('access control, not the where clause, enforces ownership', async () => {
+    const forged = await payload.find({ collection: 'orders', where: { customer: { equals: b.id } }, user: a, overrideAccess: false })
+    expect(forged.docs).toHaveLength(0)
+  })
+
+  it('summaries use amount, fall back to #id, label status, count items and carry no private fields', async () => {
+    const { getCustomerOrders } = await import('@/lib/account-orders')
+    const { orders } = await getCustomerOrders(payload, a)
+    const checkout = orders.find((o) => o.reference === 'AURA-ORD-HIST-A1')!
+    const admin = orders.find((o) => o.reference.startsWith('#'))!
+    expect(checkout).toMatchObject({ amount: 'Rs. 2,650', itemCount: 3, firstItem: 'Numakers PLA — Pure White', status: { label: 'Processing' } })
+    expect(admin).toMatchObject({ amount: null, status: { label: 'Completed' } })
+    expect(admin.reference).toBe(`#${admin.id}`)
+    expect(JSON.stringify(orders)).not.toMatch(/secret-ref|idempotency|example\.invalid|k-[0-9a-f]{8}/)
+  })
+})
+
 // Payload 3.92.1's supported reset flow (no email is sent: local mode).
 describe('customer password reset', () => {
   const email = `reset-flow-${Date.now()}@example.invalid`
