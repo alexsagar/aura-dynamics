@@ -6,6 +6,7 @@ import { canReplayOrder, isPublicProduct, isVariantOfProduct } from '@/access/ec
 import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
 import { checkoutLimitsError } from '@/lib/checkout-limits'
 import { checkoutRateLimited } from '@/lib/rate-limit'
+import { scheduleOrderConfirmation } from '@/lib/order-emails'
 
 /**
  * ============================================================================
@@ -391,6 +392,24 @@ export async function POST(req: Request) {
           })),
         },
         overrideAccess: true,
+      })
+
+      // Only this path creates a new order; replays and duplicate-key races
+      // return earlier and never reach here. Never throws, so it cannot trigger
+      // the inventory rollback below.
+      scheduleOrderConfirmation(payload, email, {
+        orderNumber,
+        paymentMethod,
+        subtotal,
+        shipping,
+        total: grandTotal,
+        items: verifiedItems.map((it) => ({
+          title: it.title,
+          variantTitle: it.variantTitle,
+          quantity: it.quantity,
+          lineTotal: it.lineTotal,
+        })),
+        hasAccount: Boolean(customerId),
       })
 
       return NextResponse.json({
