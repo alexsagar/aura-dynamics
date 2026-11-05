@@ -76,6 +76,7 @@ export function textFromHtml(html: string): string {
     .replace(/<(style|head)[\s\S]*?<\/\1>/gi, '')
     .replace(/<a\s[^>]*href="([^"]*)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, label) => `${label.replace(/<[^>]+>/g, '').trim()}: ${href}`)
     .replace(/<br\s*\/?>|<\/(p|div|h[1-6]|tr|li)>/gi, '\n')
+    .replace(/<\/td>/gi, '  ')
     .replace(/<[^>]+>/g, '')
     .replace(/&nbsp;/g, ' ')
     .replace(/&lt;/g, '<')
