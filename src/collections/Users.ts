@@ -1,6 +1,8 @@
 import { Forbidden, type CollectionConfig } from 'payload'
 import { isAdmin } from '../access/ecommerce'
 import { AUTH_LOCKOUT, authRateLimit } from '../lib/rate-limit'
+import { siteUrl } from '../lib/email'
+import { PASSWORD_RESET_SUBJECT, passwordResetEmailHTML } from '../lib/email-templates'
 
 export const Users: CollectionConfig = {
   slug: 'users',
@@ -33,7 +35,18 @@ export const Users: CollectionConfig = {
       authRateLimit,
     ],
   },
-  auth: { ...AUTH_LOCKOUT },
+  auth: {
+    ...AUTH_LOCKOUT,
+    forgotPassword: {
+      // Payload's built-in admin reset screen, on the configured site origin
+      // rather than the request Host.
+      generateEmailHTML: (args) => {
+        const { routes, admin } = args!.req!.payload.config
+        return passwordResetEmailHTML(`${siteUrl()}${routes.admin}${admin.routes.reset}/${args?.token ?? ''}`)
+      },
+      generateEmailSubject: () => PASSWORD_RESET_SUBJECT,
+    },
+  },
   fields: [
     // Email added by default
     // Add more fields as needed

@@ -22,6 +22,7 @@ import { SiteSettings } from './globals/SiteSettings'
 import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
 import { releaseInventoryOnCancel } from './lib/order-cancellation'
+import { auraEmailAdapter } from './lib/email'
 import {
   adminOnlyFieldAccess,
   adminOrPublishedStatus,
@@ -110,6 +111,8 @@ export default buildConfig({
   collections: [Users, Customers, Media, Categories, Materials],
   globals: [Homepage, Header, Footer, SiteSettings, PageContent, AboutPage, MaterialsPage],
   editor: lexicalEditor(),
+  // Resend behind an environment policy; never Payload's console fallback (see src/lib/email.ts).
+  email: auraEmailAdapter,
   secret: process.env.PAYLOAD_SECRET || '',
   // Cookie auth is only honoured for requests from our own site origin (plus
   // local dev); cross-origin requests with a session cookie are treated as
