@@ -87,6 +87,7 @@ describe('/account page', () => {
     expect(html).toContain('Processing')
     expect(html).toContain('Numakers PLA — Pure White')
     expect(html).toContain('5 Nov 2026')
+    expect(html).toContain('href="/account/orders/7"')
   })
 
   it('does not repeat the product name when the variant title already includes it', async () => {

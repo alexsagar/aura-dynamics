@@ -7,7 +7,12 @@ import configPromise from '@/payload.config'
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
 import Link from 'next/link'
-import { getCustomerOrders, parsePage, type OrderPage, type OrderSummary } from '@/lib/account-orders'
+import {
+  getCustomerOrders,
+  parsePage,
+  type OrderPage,
+  type OrderSummary,
+} from '@/lib/account-orders'
 import { SignOutButton } from './SignOutButton'
 
 export const metadata: Metadata = {
@@ -18,7 +23,11 @@ export const metadata: Metadata = {
 // Per-customer data: always rendered per request (headers() also opts in), never prerendered or shared.
 export const dynamic = 'force-dynamic'
 
-export default async function AccountPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+export default async function AccountPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const payload = await getPayload({ config: configPromise })
   // Same cookie + CSRF rules as the REST API: only a valid customer session counts.
   const { user } = await payload.auth({ headers: await headers() })
@@ -32,7 +41,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
     payload.logger.error({ msg: 'account: orders could not be loaded' })
   }
   // Past the last page (e.g. an old link): go to the last real page instead of a false empty state.
-  if (result && result.totalDocs > 0 && result.orders.length === 0) redirect(`/account?page=${result.totalPages}`)
+  if (result && result.totalDocs > 0 && result.orders.length === 0)
+    redirect(`/account?page=${result.totalPages}`)
 
   const name = (user as { name?: string | null }).name || user.email?.split('@')[0]
 
@@ -42,7 +52,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
         <div className="mb-12 flex flex-col items-start justify-between gap-6 border-b border-black/10 pb-10 md:mb-16 md:flex-row md:items-end">
           <div className="min-w-0">
             <p className="text-sm font-semibold tracking-[0.1em] text-muted uppercase">Dashboard</p>
-            <h1 className="mt-2 text-4xl font-medium tracking-[-0.02em] break-words md:text-5xl">Hello, {name}</h1>
+            <h1 className="mt-2 text-4xl font-medium tracking-[-0.02em] break-words md:text-5xl">
+              Hello, {name}
+            </h1>
           </div>
           <SignOutButton />
         </div>
@@ -53,7 +65,9 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
               Order History
             </h2>
             <OrderHistory orders={result?.orders ?? null} />
-            {result && result.totalPages > 1 && <Pagination page={result.page} totalPages={result.totalPages} />}
+            {result && result.totalPages > 1 && (
+              <Pagination page={result.page} totalPages={result.totalPages} />
+            )}
           </section>
 
           <section aria-labelledby="account-details">
@@ -72,7 +86,8 @@ export default async function AccountPage({ searchParams }: { searchParams: Prom
 }
 
 function Pagination({ page, totalPages }: { page: number; totalPages: number }) {
-  const link = 'inline-flex min-h-11 items-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold transition-colors hover:border-black'
+  const link =
+    'inline-flex min-h-11 items-center rounded-full border border-black/10 bg-white px-5 text-sm font-semibold transition-colors hover:border-black'
   return (
     <nav aria-label="Order history pages" className="mt-6 flex items-center justify-between gap-4">
       {page > 1 ? (
@@ -99,7 +114,10 @@ function Pagination({ page, totalPages }: { page: number; totalPages: number }) 
 function OrderHistory({ orders }: { orders: OrderSummary[] | null }) {
   if (orders === null) {
     return (
-      <div role="alert" className="rounded-2xl border border-red-100 bg-red-50 p-6 text-sm text-red-700">
+      <div
+        role="alert"
+        className="rounded-2xl border border-red-100 bg-red-50 p-6 text-sm text-red-700"
+      >
         We couldn&apos;t load your orders right now. Please refresh the page or try again shortly.
       </div>
     )
@@ -118,35 +136,49 @@ function OrderHistory({ orders }: { orders: OrderSummary[] | null }) {
 
   return (
     <ul className="divide-y divide-black/10 overflow-hidden rounded-2xl border border-black/10 bg-white">
-      <li aria-hidden className="hidden grid-cols-[1.4fr_1fr_1fr_auto] gap-6 bg-[#f4f4f4] px-6 py-3 text-sm font-semibold text-muted md:grid">
+      <li
+        aria-hidden
+        className="hidden grid-cols-[1.4fr_1fr_1fr_auto] gap-6 bg-[#f4f4f4] px-6 py-3 text-sm font-semibold text-muted md:grid"
+      >
         <span>Order</span>
         <span>Date</span>
         <span>Status</span>
         <span className="text-right">Total</span>
       </li>
       {orders.map((order) => (
-        <li key={order.id} className="grid gap-3 px-5 py-5 md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-center md:gap-6 md:px-6">
-          <div className="min-w-0">
-            <p className="font-medium break-all">{order.reference}</p>
-            <p className="mt-1 flex min-w-0 gap-1 text-sm text-muted">
-              <span className="truncate">{order.firstItem ?? 'Items unavailable'}</span>
-              {order.itemCount > 0 && (
-                <span className="shrink-0">· {order.itemCount === 1 ? '1 item' : `${order.itemCount} items`}</span>
+        <li key={order.id}>
+          <Link
+            href={`/account/orders/${order.id}`}
+            className="grid gap-3 px-5 py-5 transition-colors hover:bg-black/[0.02] focus-visible:bg-black/[0.03] focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-black md:grid-cols-[1.4fr_1fr_1fr_auto] md:items-center md:gap-6 md:px-6"
+          >
+            <div className="min-w-0">
+              <p className="font-medium break-all">{order.reference}</p>
+              <p className="mt-1 flex min-w-0 gap-1 text-sm text-muted">
+                <span className="truncate">{order.firstItem ?? 'Items unavailable'}</span>
+                {order.itemCount > 0 && (
+                  <span className="shrink-0">
+                    · {order.itemCount === 1 ? '1 item' : `${order.itemCount} items`}
+                  </span>
+                )}
+              </p>
+            </div>
+            <p className="text-sm text-muted md:text-base">
+              <span className="md:sr-only">Placed </span>
+              {order.date}
+            </p>
+            <p>
+              <span
+                className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${order.status.className}`}
+              >
+                {order.status.label}
+              </span>
+            </p>
+            <p className="font-medium md:text-right">
+              {order.amount ?? (
+                <span className="text-sm font-normal text-muted">Amount unavailable</span>
               )}
             </p>
-          </div>
-          <p className="text-sm text-muted md:text-base">
-            <span className="md:sr-only">Placed </span>
-            {order.date}
-          </p>
-          <p>
-            <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ring-1 ring-inset ${order.status.className}`}>
-              {order.status.label}
-            </span>
-          </p>
-          <p className="font-medium md:text-right">
-            {order.amount ?? <span className="text-sm font-normal text-muted">Amount unavailable</span>}
-          </p>
+          </Link>
         </li>
       ))}
     </ul>

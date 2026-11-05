@@ -273,6 +273,95 @@ describe('customer order history', () => {
   })
 })
 
+// Order details: only the owner gets an order; prices come from the checkout snapshot.
+describe('customer order details', () => {
+  const ids: { customers: (number | string)[]; orders: (number | string)[] } = { customers: [], orders: [] }
+  let a: any, b: any, aCheckout: any, aAdmin: any, bOrder: any, guest: any
+
+  const customer = async (tag: string) => {
+    const doc: any = await payload.create({
+      collection: 'customers',
+      overrideAccess: true,
+      data: { email: `details-${tag}-${Date.now()}@example.invalid`, password: `P-${crypto.randomUUID()}`, name: tag } as any,
+    })
+    ids.customers.push(doc.id)
+    return { ...doc, collection: 'customers' }
+  }
+  const order = async (data: any) => {
+    const doc: any = await payload.create({ collection: 'orders', overrideAccess: true, data: { currency: 'NPR', status: 'processing', ...data } })
+    ids.orders.push(doc.id)
+    return doc
+  }
+
+  beforeAll(async () => {
+    a = await customer('a')
+    b = await customer('b')
+    aCheckout = await order({
+      customer: a.id,
+      orderNumber: 'AURA-ORD-DETAIL-A',
+      amount: 2618,
+      subtotal: 2468,
+      shipping: 150,
+      paymentMethod: 'cod',
+      paymentStatus: 'unpaid',
+      paymentReference: 'secret-ref',
+      idempotencyKey: `k-${crypto.randomUUID()}`,
+      shippingAddress: { firstName: 'Asha', addressLine1: 'Ward 4, Lazimpat', city: 'Kathmandu', country: 'Nepal', phone: '9800000001' },
+      // Purchase-time prices that differ from anything in today's catalogue.
+      itemsSnapshot: [
+        { title: 'Numakers PLA', variantTitle: 'Numakers PLA — Pure White', unitPrice: 1234, quantity: 2, lineTotal: 2468 },
+      ],
+    })
+    aAdmin = await order({ customer: a.id, amount: null, paymentMethod: 'esewa_qr', paymentStatus: 'awaiting_verification' })
+    bOrder = await order({ customer: b.id, orderNumber: 'AURA-ORD-DETAIL-B', amount: 999 })
+    guest = await order({ customer: null, customerEmail: a.email, orderNumber: 'AURA-ORD-DETAIL-GUEST', amount: 111 })
+  })
+
+  afterAll(async () => {
+    for (const id of ids.orders) await payload.delete({ collection: 'orders', id, overrideAccess: true })
+    for (const id of ids.customers) await payload.delete({ collection: 'customers', id, overrideAccess: true })
+  })
+
+  it('the owner gets their order with snapshot prices, totals, payment wording and delivery details', async () => {
+    const { getCustomerOrder } = await import('@/lib/account-orders')
+    const detail = await getCustomerOrder(payload, a, aCheckout.id)
+    expect(detail).toMatchObject({
+      reference: 'AURA-ORD-DETAIL-A',
+      hasPrices: true,
+      lines: [{ product: 'Numakers PLA', variant: 'Pure White', quantity: 2, unitPrice: 'Rs. 1,234', lineTotal: 'Rs. 2,468' }],
+      subtotal: 'Rs. 2,468',
+      shipping: 'Rs. 150',
+      total: 'Rs. 2,618',
+      payment: { method: 'Cash on Delivery', status: 'Pay on Delivery' },
+      delivery: { name: 'Asha', address: ['Ward 4, Lazimpat', 'Kathmandu', 'Nepal'], phone: '9800000001' },
+    })
+    expect(JSON.stringify(detail)).not.toMatch(/secret-ref|k-[0-9a-f]{8}|example\.invalid/)
+  })
+
+  it('another customer’s order, a guest order with the same email and a missing id all return null', async () => {
+    const { getCustomerOrder } = await import('@/lib/account-orders')
+    expect(await getCustomerOrder(payload, a, bOrder.id)).toBeNull()
+    expect(await getCustomerOrder(payload, a, guest.id)).toBeNull()
+    expect(await getCustomerOrder(payload, a, 987654321)).toBeNull()
+    expect(await getCustomerOrder(payload, b, aCheckout.id)).toBeNull()
+  })
+
+  it('an Admin-created order without a snapshot shows no invented prices', async () => {
+    const { getCustomerOrder } = await import('@/lib/account-orders')
+    const detail = await getCustomerOrder(payload, a, aAdmin.id)
+    expect(detail).toMatchObject({
+      reference: `#${aAdmin.id}`,
+      hasPrices: false,
+      lines: [],
+      subtotal: null,
+      shipping: null,
+      total: null,
+      payment: { method: 'eSewa QR', status: 'Awaiting verification' },
+      delivery: null,
+    })
+  })
+})
+
 // Payload 3.92.1's supported reset flow (no email is sent: local mode).
 describe('customer password reset', () => {
   const email = `reset-flow-${Date.now()}@example.invalid`
