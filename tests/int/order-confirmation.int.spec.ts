@@ -173,6 +173,41 @@ describe('order confirmation email from checkout', () => {
   })
 })
 
+describe('order status email content', () => {
+  const order = {
+    id: 12,
+    orderNumber: 'AURA-ORD-<i>Y</i>',
+    amount: 2650,
+    itemsSnapshot: [{ title: 'PLA', variantTitle: '<script>x</script>', quantity: 2 }],
+    hasAccount: false,
+  }
+  const log = () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })
+
+  it('staging: [STAGING] prefix and a plain-text part; non-allowlisted recipient dropped', async () => {
+    const { orderStatusEmail } = await import('@/lib/order-emails')
+    const { subject, html } = orderStatusEmail('cancelled', order, 'https://x.test')
+    const send = vi.fn().mockResolvedValue({ id: '1' })
+    const mode = { kind: 'allowlist' as const, apiKey: 'k', allow: new Set(['qa@example.com']) }
+    expect(await sendSafely({ to: 'qa@example.com', subject, html }, mode, send, log())).toBe('sent')
+    const sent = send.mock.calls[0][0]
+    expect(sent.subject).toBe('[STAGING] Aura order AURA-ORD-<i>Y</i>: cancelled')
+    expect(sent.text).toContain('Your order has been cancelled')
+    expect(sent.text).toContain('Order total  Rs. 2,650')
+    expect(await sendSafely({ to: 'real@customer.com', subject, html }, mode, send, log())).toBe('dropped_recipient')
+    expect(send).toHaveBeenCalledTimes(1)
+  })
+
+  it('escapes order reference and item names; guests get no account link', async () => {
+    const { orderStatusEmail } = await import('@/lib/order-emails')
+    const { html } = orderStatusEmail('completed', order, 'https://x.test')
+    expect(html).not.toContain('<script>x')
+    expect(html).not.toContain('<i>Y')
+    expect(html).toContain('&lt;script&gt;x&lt;/script&gt;')
+    expect(html).not.toContain('/account')
+    expect(orderStatusEmail('completed', { ...order, hasAccount: true }, 'https://x.test').html).toContain('https://x.test/account')
+  })
+})
+
 describe('order confirmation content', () => {
   const order = {
     orderNumber: 'AURA-ORD-X',
