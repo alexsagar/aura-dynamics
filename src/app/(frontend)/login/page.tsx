@@ -181,6 +181,9 @@ export default function AuthPage() {
                 className="rounded-full border border-black/10 bg-white px-6 py-3 outline-none transition-colors focus:border-black"
                 required
               />
+              <a href="/forgot-password" className="self-end text-sm font-semibold text-black hover:underline">
+                Forgot password?
+              </a>
             </div>
 
             <Button type="submit" variant="primary" size="lg" className="mt-4" disabled={isLoginLoading}>

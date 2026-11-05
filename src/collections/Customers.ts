@@ -1,9 +1,19 @@
 import type { CollectionConfig } from 'payload'
 import { AUTH_LOCKOUT, authRateLimit } from '../lib/rate-limit'
+import { siteUrl } from '../lib/email'
+import { PASSWORD_RESET_SUBJECT, passwordResetEmailHTML } from '../lib/email-templates'
 
 export const Customers: CollectionConfig = {
   slug: 'customers',
-  auth: { ...AUTH_LOCKOUT },
+  auth: {
+    ...AUTH_LOCKOUT,
+    forgotPassword: {
+      // Storefront reset page, not the admin UI. The token travels in the URL
+      // fragment, which browsers never send to the server or in Referer headers.
+      generateEmailHTML: (args) => passwordResetEmailHTML(`${siteUrl()}/reset-password#token=${args?.token ?? ''}`),
+      generateEmailSubject: () => PASSWORD_RESET_SUBJECT,
+    },
+  },
   hooks: { beforeOperation: [authRateLimit] },
   admin: {
     useAsTitle: 'email',
