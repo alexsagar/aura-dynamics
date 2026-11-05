@@ -51,9 +51,27 @@ describe('order status notifications', () => {
   }
   const inventory = async () => ((await payload.findByID({ collection: 'variants', id: variant.id, overrideAccess: true, depth: 0 })) as any).inventory
 
+  const fixtures: [string, number | string][] = []
+  // Own fixtures: CI starts from an empty, freshly migrated database.
+  const fixture = async (collection: any, data: any) => {
+    const doc: any = await payload.create({ collection, data, overrideAccess: true, draft: false })
+    fixtures.unshift([collection, doc.id])
+    return doc
+  }
   beforeAll(async () => {
-    const v: any = (await payload.find({ collection: 'variants', limit: 1, depth: 0, overrideAccess: true })).docs[0]
-    variant = { id: v.id, inventory: v.inventory, product: typeof v.product === 'object' ? v.product.id : v.product } as any
+    const tag = Date.now()
+    const type = await fixture('variantTypes', { label: 'Status Test Colour', name: `status-test-${tag}` })
+    const option = await fixture('variantOptions', { label: 'White', value: `white-${tag}`, variantType: type.id })
+    const product = await fixture('products', {
+      title: `Status Test ${tag}`,
+      productType: 'filament',
+      priceInNPR: 1250,
+      enableVariants: true,
+      variantTypes: [type.id],
+      _status: 'published',
+    })
+    const v = await fixture('variants', { title: 'White', product: product.id, inventory: 20, options: [option.id], _status: 'published' })
+    variant = { id: v.id, inventory: v.inventory, product: product.id } as any
   })
   beforeEach(() => {
     send = vi.spyOn(payload, 'sendEmail').mockResolvedValue('sent' as any)
@@ -61,7 +79,7 @@ describe('order status notifications', () => {
   afterEach(() => send.mockRestore())
   afterAll(async () => {
     for (const id of created) await payload.delete({ collection: 'orders', id, overrideAccess: true })
-    await payload.update({ collection: 'variants', id: variant.id, data: { inventory: variant.inventory } as any, overrideAccess: true })
+    for (const [collection, id] of fixtures) await payload.delete({ collection: collection as any, id, overrideAccess: true })
   })
 
   it('creating an order sends no status email', async () => {
