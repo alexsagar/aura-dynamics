@@ -23,6 +23,7 @@ import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
 import { releaseInventoryOnCancel } from './lib/order-cancellation'
 import { auraEmailAdapter } from './lib/email'
+import { notifyOrderStatusChange } from './lib/order-emails'
 import {
   adminOnlyFieldAccess,
   adminOrPublishedStatus,
@@ -182,6 +183,7 @@ export default buildConfig({
           hooks: {
             ...defaultCollection.hooks,
             beforeChange: [...(defaultCollection.hooks?.beforeChange ?? []), releaseInventoryOnCancel],
+            afterChange: [...(defaultCollection.hooks?.afterChange ?? []), notifyOrderStatusChange],
           },
           fields: [
             ...defaultCollection.fields,

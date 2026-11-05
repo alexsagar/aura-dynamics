@@ -1,6 +1,6 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare'
-import type { Payload } from 'payload'
-import { formatNPR } from '@/components/storefront/commerce/Price'
+import type { CollectionAfterChangeHook, Payload } from 'payload'
+import { formatNPR } from '../components/storefront/commerce/Price'
 import { siteUrl } from './email'
 import { emailLayout } from './email-templates'
 
@@ -46,16 +46,15 @@ export function orderConfirmationEmail(order: ConfirmationOrder, site = siteUrl(
 }
 
 /**
- * Best-effort: queued with waitUntil so checkout never waits on, or fails
+ * Best-effort: queued with waitUntil so the request never waits on, or fails
  * because of, the email provider. Never throws. The Aura adapter applies the
  * staging allowlist and logs the delivery outcome (without addresses).
  */
-export function scheduleOrderConfirmation(payload: Payload, to: string, order: ConfirmationOrder): void {
+function scheduleEmail(payload: Payload, kind: string, build: () => { to: string; subject: string; html: string }): void {
   try {
-    const { subject, html } = orderConfirmationEmail(order)
     const sending = Promise.resolve()
-      .then(() => payload.sendEmail({ to, subject, html }))
-      .catch(() => payload.logger.error({ msg: 'email: order confirmation could not be sent' }))
+      .then(() => payload.sendEmail(build()))
+      .catch(() => payload.logger.error({ msg: `email: ${kind} could not be sent` }))
     let waitUntil: ((p: Promise<unknown>) => void) | undefined
     try {
       const { ctx } = getCloudflareContext()
@@ -65,6 +64,75 @@ export function scheduleOrderConfirmation(payload: Payload, to: string, order: C
     }
     waitUntil?.(sending)
   } catch {
-    payload.logger.error({ msg: 'email: order confirmation could not be scheduled' })
+    payload.logger.error({ msg: `email: ${kind} could not be scheduled` })
   }
+}
+
+export function scheduleOrderConfirmation(payload: Payload, to: string, order: ConfirmationOrder): void {
+  scheduleEmail(payload, 'order confirmation', () => ({ to, ...orderConfirmationEmail(order) }))
+}
+
+type StatusOrder = {
+  orderNumber?: string | null
+  id: number | string
+  amount?: number | null
+  itemsSnapshot?: { title?: string | null; variantTitle?: string | null; quantity?: number | null }[] | null
+  hasAccount: boolean
+}
+
+const STATUS_TEXT = {
+  cancelled: {
+    heading: 'Your order has been cancelled',
+    body: 'This order has been cancelled and will not be fulfilled.',
+    note: "If you've already made a payment or think this is a mistake, reply to this email and we'll help.",
+  },
+  completed: {
+    heading: 'Your order has been completed',
+    body: 'Your order has been completed. Thank you for ordering from Aura.',
+    note: 'Questions about your order? Reply to this email.',
+  },
+} as const
+
+export type NotifiedStatus = keyof typeof STATUS_TEXT
+
+export function orderStatusEmail(status: NotifiedStatus, order: StatusOrder, site = siteUrl()) {
+  const text = STATUS_TEXT[status]
+  const reference = order.orderNumber || `#${order.id}`
+  const items = order.itemsSnapshot ?? []
+  return {
+    subject: `Aura order ${reference}: ${status}`,
+    html: emailLayout({
+      heading: text.heading,
+      paragraphs: [`Order reference: ${reference}`, text.body],
+      rows: [
+        ...items.map((it) => ({
+          label: `${it.variantTitle && it.variantTitle !== it.title ? `${it.title} — ${it.variantTitle}` : (it.title ?? 'Item')} × ${it.quantity ?? 1}`,
+          value: '',
+        })),
+        ...(typeof order.amount === 'number' ? [{ label: 'Order total', value: formatNPR(order.amount), strong: true }] : []),
+      ],
+      action: order.hasAccount && site ? { label: 'View your account', url: `${site}/account` } : undefined,
+      footnote: text.note,
+    }),
+  }
+}
+
+/**
+ * Orders afterChange: email the customer when an existing order moves into
+ * `cancelled` or `completed`. Runs only after Payload's update succeeded (D1
+ * has no transactions here, so the row is already written); a failed save or a
+ * cancel that lost the race (409 in releaseInventoryOnCancel) never gets here.
+ * Re-saves with an unchanged status and order creation send nothing.
+ */
+export const notifyOrderStatusChange: CollectionAfterChangeHook = ({ doc, previousDoc, operation, req }) => {
+  const status = doc?.status as string
+  if (operation !== 'update' || previousDoc?.status === status) return doc
+  if (status !== 'cancelled' && status !== 'completed') return doc
+  const to = typeof doc.customerEmail === 'string' ? doc.customerEmail.trim() : ''
+  if (!to) return doc // e.g. an Admin-created order without a customer email
+  scheduleEmail(req.payload, `order ${status} notice`, () => ({
+    to,
+    ...orderStatusEmail(status, { ...doc, hasAccount: Boolean(doc.customer) }),
+  }))
+  return doc
 }
