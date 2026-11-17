@@ -67,7 +67,7 @@ export function ResetPasswordForm() {
     <div className="flex min-h-screen w-full flex-col justify-center bg-background px-8 pt-32 pb-20">
       <div className="mx-auto w-full max-w-md">
         <h1 className="mb-2 text-4xl font-medium tracking-[-0.02em]">Choose a new password.</h1>
-        <p className="mb-10 text-lg text-muted">You'll be signed in once it's saved.</p>
+        <p className="mb-10 text-lg text-muted">You&apos;ll be signed in once it&apos;s saved.</p>
 
         {token === '' ? (
           <div role="alert" className="rounded-xl border border-red-100 bg-red-50 p-4 text-sm text-red-600">
