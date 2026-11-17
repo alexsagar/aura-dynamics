@@ -77,6 +77,12 @@ export default async function AccountPage({
             <div className="rounded-2xl border border-black/10 bg-white p-6">
               <p className="text-sm font-semibold tracking-[0.1em] text-muted uppercase">Email</p>
               <p className="mt-1 text-lg font-medium break-all">{user.email}</p>
+              <Link
+                href="/account/settings"
+                className="mt-6 inline-flex min-h-11 items-center rounded-full border border-black/10 px-5 text-sm font-semibold transition-colors hover:border-black"
+              >
+                Edit settings
+              </Link>
             </div>
           </section>
         </div>
