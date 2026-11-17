@@ -1,12 +1,21 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "main": ".open-next/worker.js",
+  // PRODUCTION. Same Cloudflare account as staging (aura-official, owns the
+  // printwithaura.com zone) but every resource is separate. scripts/cf-guard.mjs
+  // refuses to run against this file if any binding points at a staging resource.
   "name": "aura-dynamics",
-  "account_id": "5c6bd0899d4d08646a4f924b7698343e",
+  "account_id": "f388d9461c4f6f9f1efa0145c1f6eb47",
   // Serve production only on its custom domain; *.workers.dev and preview URLs
   // would bypass custom-domain WAF/rate-limit rules.
   "workers_dev": false,
   "preview_urls": false,
+
+  // Phase 1 (pre-cutover): an unlinked check hostname only, so the Coming Soon
+  // Worker keeps printwithaura.com. The cutover is a separate reviewed change
+  // that replaces this with printwithaura.com + www.printwithaura.com
+  // (see docs/releases/production-setup-plan.md).
+  "routes": [{ "pattern": "launch-check.printwithaura.com", "custom_domain": true }],
 
   "compatibility_date": "2025-08-15",
 
@@ -26,59 +35,33 @@
   "d1_databases": [
     {
       "binding": "D1",
+      // PLACEHOLDER: the old, empty aura-personal database id. Kept only because
+      // local dev state is keyed on it. Replace with the id printed by
+      // `wrangler d1 create aura-production` (provisioning step 2); cf-guard
+      // refuses to migrate or deploy while this placeholder is present.
       "database_id": "ca5f1a51-2974-4a83-99a1-6392ac4e2379",
       "database_name": "aura-production",
     },
   ],
 
-  "services": [
-    // Self-reference can be configured later if OpenNext requires it.
-    //
-    // {
-    //   "binding": "WORKER_SELF_REFERENCE",
-    //   "service": "aura-dynamics",
-    // },
+  "services": [],
+
+  // Namespace IDs are account-wide: staging uses 1001/1002, so production must
+  // not, or both environments would share one counter.
+  "ratelimits": [
+    { "name": "CHECKOUT_RATE_LIMITER", "namespace_id": "2001", "simple": { "limit": 5, "period": 60 } },
+    { "name": "LOGIN_RATE_LIMITER", "namespace_id": "2002", "simple": { "limit": 20, "period": 60 } },
   ],
+
+  "vars": {
+    "CLOUDFLARE_ENV": "production",
+    "NEXT_PUBLIC_SITE_URL": "https://printwithaura.com",
+  },
 
   "r2_buckets": [
     {
       "binding": "R2",
-      "bucket_name": "aura-media",
+      "bucket_name": "aura-media-production",
     },
-
-    // Optional OpenNext incremental-cache bucket.
-    //
-    // {
-    //   "binding": "NEXT_INC_CACHE_R2_BUCKET",
-    //   "bucket_name": "<BUCKET_NAME>",
-    // },
   ],
-
-  "env": {
-    "staging": {
-      "name": "aura-dynamics-staging",
-      // Legacy staging: public workers.dev disabled 2026-11-04 (security). Keep off.
-      "workers_dev": false,
-      "preview_urls": false,
-
-      "d1_databases": [
-        {
-          "binding": "D1",
-          "database_id": "7a1a6774-3e87-4021-ab9e-3af436371b72",
-          "database_name": "aura-staging",
-          "remote": true,
-        },
-      ],
-
-      "services": [],
-
-      "r2_buckets": [
-        {
-          "binding": "R2",
-          "bucket_name": "aura-media-staging",
-          "remote": true,
-        },
-      ],
-    },
-  },
 }
