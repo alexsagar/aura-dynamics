@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import type { ReactNode } from 'react'
 
 import type { FooterViewModel } from '@/lib/site/get-site-globals'
+import type { BrandingViewModel } from '@/lib/site/get-branding'
 import { Logo } from '../ui/Logo'
 import { Container } from './Container'
 
@@ -30,7 +31,7 @@ const SOCIAL_ICONS: Record<string, ReactNode> = {
   ),
 }
 
-export function Footer({ data }: { data: FooterViewModel }) {
+export function Footer({ branding, data }: { branding: BrandingViewModel; data: FooterViewModel }) {
   const pathname = usePathname()
   if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/checkout')) {
     return null
@@ -42,7 +43,34 @@ export function Footer({ data }: { data: FooterViewModel }) {
         <div className="relative z-2 mb-16 grid gap-14 *:min-w-0 md:mb-24 lg:grid-cols-[1.2fr_0.8fr] lg:gap-32">
           {/* Left Column: Brand Statement & Newsletter */}
           <div className="flex flex-col items-start">
-            <Logo height={40} loading="lazy" title="Aura" variant="wordmark-offwhite" />
+            {/* Aura + partner (e.g. Numakers) logos, both from Branding; Aura falls back to the official file. */}
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
+              <Logo
+                className="max-w-[60vw]"
+                height={40}
+                image={branding.logoOnDark}
+                loading="lazy"
+                title="Aura"
+                variant="wordmark-offwhite"
+              />
+              {branding.partner ? (
+                <>
+                  <span aria-hidden className="h-8 w-px bg-white/20" />
+                  {branding.partnerUrl ? (
+                    <a
+                      className="rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lime"
+                      href={branding.partnerUrl}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    >
+                      <Logo className="max-w-[40vw]" height={32} image={branding.partner} loading="lazy" />
+                    </a>
+                  ) : (
+                    <Logo className="max-w-[40vw]" height={32} image={branding.partner} loading="lazy" />
+                  )}
+                </>
+              ) : null}
+            </div>
             
             <h2 className="mt-12 text-[clamp(2rem,4vw,3rem)] leading-[1.1] font-medium tracking-[-0.02em] text-white">
               {data.brandHeading}

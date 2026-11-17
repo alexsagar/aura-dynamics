@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { useAuth } from './AuthProvider'
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { CHECKOUT_LIMITS } from '@/lib/checkout-limits'
 
 export type CartItem = {
@@ -83,6 +84,39 @@ function normalizeStoredItem(rawItem: any): CartItem {
   }
 }
 
+/**
+ * Saved carts carry the price and stock from when an item was added. Refresh
+ * them from the current published variants so the cart and checkout summary
+ * show today's price (checkout itself always re-prices on the server).
+ * Network failure keeps the stored values.
+ * ponytail: refreshed once on load, not on every change.
+ */
+async function repriced(items: CartItem[]): Promise<CartItem[]> {
+  const ids = [...new Set(items.map((i) => String(i.variantId)).filter((id) => id && id !== 'default'))]
+  if (!ids.length) return items
+  try {
+    const where = ids.map((id, i) => `where[id][in][${i}]=${encodeURIComponent(id)}`).join('&')
+    const res = await fetch(`/api/variants?${where}&depth=1&limit=${ids.length}`)
+    if (!res.ok) return items
+    const docs: any[] = ((await res.json()) as { docs?: any[] })?.docs ?? []
+    const byId = new Map(docs.map((v) => [String(v.id), v]))
+    return items.map((item) => {
+      const v = byId.get(String(item.variantId))
+      if (!v) return item
+      const product = v.product && typeof v.product === 'object' ? v.product : null
+      const maxStock = Math.min(CHECKOUT_LIMITS.MAX_QTY_PER_LINE, typeof v.inventory === 'number' ? v.inventory : 0)
+      return {
+        ...item,
+        unitPrice: variantPriceNPR(product, v) ?? item.unitPrice,
+        maxStock,
+        quantity: maxStock > 0 ? Math.min(item.quantity, maxStock) : item.quantity,
+      }
+    })
+  } catch {
+    return items
+  }
+}
+
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const { user, isLoading: authLoading } = useAuth()
   const [cartItems, setCartItems] = useState<CartItem[]>([])
@@ -100,13 +134,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
       const items = (user.cart?.items || []).map(normalizeStoredItem)
       setCartItems(items)
       setIsLoading(false)
+      repriced(items).then(setCartItems)
     } else {
       const localCart = localStorage.getItem('aura-guest-cart')
       if (localCart) {
         try {
           const parsed = JSON.parse(localCart)
           if (Array.isArray(parsed)) {
-            setCartItems(parsed.map(normalizeStoredItem))
+            const items = parsed.map(normalizeStoredItem)
+            setCartItems(items)
+            repriced(items).then(setCartItems)
           }
         } catch (e) {
           console.error('Failed to parse guest cart')
@@ -186,12 +223,8 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           : 999,
     )
 
-    const unitPrice =
-      variant?.priceInNPR ??
-      variant?.prices?.[0]?.amount ??
-      product?.priceInNPR ??
-      product?.prices?.[0]?.amount ??
-      0
+    // Display only: checkout re-prices every line on the server with the same resolver.
+    const unitPrice = (variant ? variantPriceNPR(product, variant) : null) ?? product?.priceInNPR ?? 0
 
     let image = ''
     if (variant?.images?.[0]?.url) {

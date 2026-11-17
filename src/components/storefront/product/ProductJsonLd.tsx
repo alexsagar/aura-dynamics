@@ -3,6 +3,7 @@ import React from 'react'
 import type { Product, Variant } from '@/payload-types'
 import { isPopulated } from '@/lib/catalog/shared'
 import { mediaUrl } from '@/lib/payload-media'
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { absoluteUrl } from '@/lib/site/seo'
 
 /**
@@ -14,9 +15,7 @@ import { absoluteUrl } from '@/lib/site/seo'
 export function ProductJsonLd({ product }: { product: Product }) {
   const variants = (product.variants?.docs ?? []).filter(isPopulated<Variant>).filter((v) => v.active !== false)
 
-  const variantPrices = variants
-    .filter((v) => v.priceInNPREnabled && typeof v.priceInNPR === 'number')
-    .map((v) => v.priceInNPR as number)
+  const variantPrices = variants.map((v) => variantPriceNPR(product, v)).filter((p): p is number => p != null)
   const productPrice =
     product.priceInNPREnabled && typeof product.priceInNPR === 'number' ? product.priceInNPR : undefined
   const prices = variantPrices.length ? variantPrices : productPrice != null ? [productPrice] : []

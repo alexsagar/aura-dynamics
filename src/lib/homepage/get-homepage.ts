@@ -5,9 +5,12 @@ import type { Homepage, Product } from '@/payload-types'
 import { mediaAlt, mediaUrl } from '@/lib/payload-media'
 import { isPublicProduct, publicProductWhere } from '@/access/ecommerce'
 import { isRetiredUrl } from '@/lib/site/routes'
-import { toFilamentCard } from './product-cards'
+import { catalogShades, toVariantCards } from './product-cards'
 
 export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
+
+const POPULAR_MAX_CARDS = 24
+const SHADES_MAX = 12
 
 /**
  * Payload Homepage Global -> UI-safe view model. Payload owns every string and
@@ -15,7 +18,7 @@ export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
  * explicit `enabled: false` hides a section. A missing image renders the
  * section's own background as the placeholder.
  */
-function normalizeHomepage(cms: Homepage, popularDocs: Product[] = []) {
+function normalizeHomepage(cms: Homepage, catalogDocs: Product[] = []) {
   const hero = {
     heading: cms.hero?.heading || '',
     imageAlt: mediaAlt(cms.hero?.image, ''),
@@ -36,15 +39,18 @@ function normalizeHomepage(cms: Homepage, popularDocs: Product[] = []) {
     })),
   }
 
-  // Editor order, public products only (popularDocs is already scoped; isPublicProduct is belt-and-braces).
-  const popularProducts = (cms.popular?.products ?? [])
-    .map((ref) => popularDocs.find((d) => d.id === (typeof ref === 'number' ? ref : ref?.id)))
-    .filter((p): p is Product => Boolean(p) && isPublicProduct(p))
+  // Editor order when products are picked; otherwise every published filament
+  // (popularDocs is already scoped; isPublicProduct is belt-and-braces).
+  const publicDocs = catalogDocs.filter(isPublicProduct)
+  const picked = cms.popular?.products ?? []
+  const popularProducts = (
+    picked.length
+      ? picked.map((ref) => publicDocs.find((d) => d.id === (typeof ref === 'number' ? ref : ref?.id)))
+      : publicDocs.filter((d) => d.productType === 'filament')
+  ).filter((p): p is Product => Boolean(p))
   const popular = {
-    cards: popularProducts.flatMap((p) => {
-      const card = toFilamentCard(p)
-      return card ? [{ card, type: 'filament' as const }] : []
-    }),
+    // One card per colour variant, capped so the carousel stays light.
+    cards: popularProducts.flatMap(toVariantCards).slice(0, POPULAR_MAX_CARDS).map((card) => ({ card, type: 'filament' as const })),
     enabled: cms.popular?.enabled ?? true,
     heading: cms.popular?.heading || '',
   }
@@ -94,18 +100,22 @@ function normalizeHomepage(cms: Homepage, popularDocs: Product[] = []) {
     imageUrl: mediaUrl(cms.staffPick?.image) || (staffPickProduct ? mediaUrl(staffPickProduct.images?.[0]) : undefined),
   }
 
+  // Real catalog colours; the CMS "shades" list only supplies photo overrides.
+  const allShades = catalogShades(
+    publicDocs.filter((d) => d.productType === 'filament'),
+    (cms.shadeShowcase?.shades ?? []).map((s) => ({ name: s.name, hex: s.hex, image: mediaUrl(s.image) })),
+  )
+  const inStockCount = allShades.filter((s) => s.inStock).length
   const shadeShowcase = {
-    availabilityNote: cms.shadeShowcase?.availabilityNote || '',
-    shades: (cms.shadeShowcase?.shades ?? []).map((s, i) => ({
-      hex: s.hex || '',
-      id: s.id || String(i),
-      image: mediaUrl(s.image),
-      name: s.name || '',
-    })),
+    // Computed, never typed in: no invented colour counts.
+    availabilityNote: allShades.length
+      ? `${allShades.length} ${allShades.length === 1 ? 'colour' : 'colours'} · ${inStockCount} in stock`
+      : '',
+    shades: allShades.slice(0, SHADES_MAX),
     ctaLabel: cms.shadeShowcase?.ctaLabel || '',
     ctaUrl: cms.shadeShowcase?.ctaUrl || '',
     description: cms.shadeShowcase?.description || '',
-    enabled: cms.shadeShowcase?.enabled ?? true,
+    enabled: (cms.shadeShowcase?.enabled ?? true) && allShades.length > 0,
     heading: cms.shadeShowcase?.heading || '',
   }
 
@@ -153,21 +163,22 @@ export async function getHomepageViewModel(): Promise<HomepageViewModel> {
     // Upload fields inside a join are not populated through a global, at any
     // depth, so card products are loaded directly (variant photos populated),
     // with the public visibility scope applied server-side.
-    const ids = (homepage.popular?.products ?? []).map((r) => (typeof r === 'number' ? r : r?.id)).filter(Boolean)
-    const popularDocs = ids.length
-      ? ((
-          await payload.find({
-            collection: 'products',
-            where: { and: [publicProductWhere, { id: { in: ids } }] },
-            depth: 2,
-            limit: ids.length,
-            pagination: false,
-            joins: { variants: { limit: 100, sort: 'createdAt' } },
-            overrideAccess: false,
-          })
-        ).docs as Product[])
-      : []
-    return normalizeHomepage(homepage, popularDocs)
+    // One read of the published catalog feeds Popular (picked products, or
+    // every filament when none are picked) and Explore by Color.
+    // ponytail: first 50 products; page it if the catalog outgrows that.
+    const catalogDocs = (
+      await payload.find({
+        collection: 'products',
+        where: publicProductWhere,
+        depth: 2,
+        limit: 50,
+        pagination: false,
+        sort: '-createdAt',
+        joins: { variants: { limit: 100, sort: 'createdAt' } },
+        overrideAccess: false,
+      })
+    ).docs as Product[]
+    return normalizeHomepage(homepage, catalogDocs)
   } catch (error) {
     // CMS unreachable: render the empty shell (no copy) instead of crashing
     // the storefront; content returns as soon as Payload is reachable.

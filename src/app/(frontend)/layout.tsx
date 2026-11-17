@@ -9,6 +9,7 @@ import { Header } from '@/components/storefront/navigation/Header'
 import { CartSidebar } from '@/components/storefront/cart/CartSidebar'
 import { SmoothScroll } from '@/components/storefront/ui/SmoothScroll'
 import { getSiteGlobals } from '@/lib/site/get-site-globals'
+import { getBranding } from '@/lib/site/get-branding'
 import { SITE_NAME, SITE_URL } from '@/lib/site/seo'
 
 import './styles.css'
@@ -52,7 +53,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: title, template: `%s` },
     description,
     applicationName: SITE_NAME,
-    icons: { icon: '/brand/aura-symbol.svg' },
+    icons: { icon: (await getBranding()).favicon ?? '/brand/aura-symbol.svg' },
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
@@ -66,17 +67,17 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function RootLayout(props: { children: React.ReactNode }) {
   const { children } = props
-  const { header, footer } = await getSiteGlobals()
+  const [{ header, footer }, branding] = await Promise.all([getSiteGlobals(), getBranding()])
 
   return (
     <html className={GeistSans.variable} lang="en">
       <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         <Providers>
           <SmoothScroll />
-          <Header data={header} />
+          <Header data={header} logo={branding.logo} />
           <CartSidebar />
           <main style={{ flex: 1 }}>{children}</main>
-          <Footer data={footer} />
+          <Footer branding={branding} data={footer} />
         </Providers>
       </body>
     </html>

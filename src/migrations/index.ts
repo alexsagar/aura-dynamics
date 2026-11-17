@@ -11,6 +11,7 @@ import * as migration_20261029_104832_about_materials_globals from './20261029_1
 import * as migration_20261029_105745_homepage_shades from './20261029_105745_homepage_shades';
 import * as migration_20261029_112203_product_content from './20261029_112203_product_content';
 import * as migration_20261104_141915_payload_3_92_security from './20261104_141915_payload_3_92_security';
+import * as migration_20261117_170838_storefront_cms_phase1 from './20261117_170838_storefront_cms_phase1';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20261104_141915_payload_3_92_security.up,
     down: migration_20261104_141915_payload_3_92_security.down,
-    name: '20261104_141915_payload_3_92_security'
+    name: '20261104_141915_payload_3_92_security',
+  },
+  {
+    up: migration_20261117_170838_storefront_cms_phase1.up,
+    down: migration_20261117_170838_storefront_cms_phase1.down,
+    name: '20261117_170838_storefront_cms_phase1'
   },
 ];

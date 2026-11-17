@@ -126,6 +126,7 @@ export interface Config {
     homepage: Homepage;
     header: Header;
     footer: Footer;
+    branding: Branding;
     'site-settings': SiteSetting;
     'page-content': PageContent;
     'about-page': AboutPage;
@@ -135,6 +136,7 @@ export interface Config {
     homepage: HomepageSelect<false> | HomepageSelect<true>;
     header: HeaderSelect<false> | HeaderSelect<true>;
     footer: FooterSelect<false> | FooterSelect<true>;
+    branding: BrandingSelect<false> | BrandingSelect<true>;
     'site-settings': SiteSettingsSelect<false> | SiteSettingsSelect<true>;
     'page-content': PageContentSelect<false> | PageContentSelect<true>;
     'about-page': AboutPageSelect<false> | AboutPageSelect<true>;
@@ -405,6 +407,10 @@ export interface Variant {
    * Variant photography for customer-facing display
    */
   images?: (number | Media)[] | null;
+  /**
+   * Tick to charge this variant’s own price instead of the product’s shared Full spool / Refill price.
+   */
+  customPrice?: boolean | null;
   sku?: string | null;
   /**
    * Threshold below which low-stock warnings trigger
@@ -435,6 +441,11 @@ export interface Product {
   };
   priceInNPREnabled?: boolean | null;
   priceInNPR?: number | null;
+  spoolPriceInNPR?: number | null;
+  /**
+   * Used for variants whose Packaging option is "Refill".
+   */
+  refillPriceInNPR?: number | null;
   title: string;
   /**
    * URL identifier. Auto-generated from title when left empty.
@@ -990,6 +1001,7 @@ export interface VariantsSelect<T extends boolean = true> {
   priceInNPREnabled?: T;
   priceInNPR?: T;
   images?: T;
+  customPrice?: T;
   sku?: T;
   lowStockThreshold?: T;
   active?: T;
@@ -1037,6 +1049,8 @@ export interface ProductsSelect<T extends boolean = true> {
   variants?: T;
   priceInNPREnabled?: T;
   priceInNPR?: T;
+  spoolPriceInNPR?: T;
+  refillPriceInNPR?: T;
   title?: T;
   slug?: T;
   shortDescription?: T;
@@ -1276,7 +1290,7 @@ export interface Homepage {
     enabled?: boolean | null;
     heading?: string | null;
     /**
-     * Product records stay the source of truth for title, image, price.
+     * Each product shows one card per colour (with that colour’s photo, price and stock). Leave empty to show every published filament. Product records stay the source of truth.
      */
     products?: (number | Product)[] | null;
   };
@@ -1331,7 +1345,7 @@ export interface Homepage {
     };
   };
   /**
-   * Copy, swatches and swatch photography. The interaction stays code-driven.
+   * Colours, links and stock come from the published catalog automatically. Use "Shades" only to choose a different photo for a colour (match its exact name or hex).
    */
   shadeShowcase?: {
     enabled?: boolean | null;
@@ -1346,7 +1360,7 @@ export interface Homepage {
         }[]
       | null;
     /**
-     * e.g. "40+ colors available"
+     * No longer shown: the colour count is now calculated from the catalog.
      */
     availabilityNote?: string | null;
     ctaLabel?: string | null;
@@ -1514,6 +1528,46 @@ export interface Footer {
    * Year is prepended by the frontend.
    */
   copyright?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Logos, favicon and sign-in imagery. Leave a field empty to use the built-in default.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "branding".
+ */
+export interface Branding {
+  id: number;
+  /**
+   * Shown in the header. SVG or PNG with a transparent background, trimmed to the artwork.
+   */
+  logo?: (number | null) | Media;
+  /**
+   * Shown in the black footer. Use a white / off-white version.
+   */
+  logoOnDark?: (number | null) | Media;
+  /**
+   * Browser tab icon. Square SVG or PNG, at least 64×64.
+   */
+  favicon?: (number | null) | Media;
+  /**
+   * Shown beside the Aura logo in the black footer, e.g. Numakers. Use a version that reads on black.
+   */
+  partnerLogo?: (number | null) | Media;
+  /**
+   * Used as the logo’s text alternative, e.g. "Numakers".
+   */
+  partnerName?: string | null;
+  partnerUrl?: string | null;
+  /**
+   * Large photo beside the sign-in form (desktop). Portrait works best.
+   */
+  loginImage?: (number | null) | Media;
+  /**
+   * Large photo beside the create-account form (desktop).
+   */
+  registerImage?: (number | null) | Media;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2147,6 +2201,23 @@ export interface FooterSelect<T extends boolean = true> {
         id?: T;
       };
   copyright?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "branding_select".
+ */
+export interface BrandingSelect<T extends boolean = true> {
+  logo?: T;
+  logoOnDark?: T;
+  favicon?: T;
+  partnerLogo?: T;
+  partnerName?: T;
+  partnerUrl?: T;
+  loginImage?: T;
+  registerImage?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

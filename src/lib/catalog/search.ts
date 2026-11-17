@@ -1,6 +1,7 @@
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { isPopulated, productHref } from '@/lib/catalog/shared'
 import { publicProductWhere } from '@/access/ecommerce'
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
 export type SearchResult = {
@@ -26,9 +27,7 @@ function activeVariants(product: Product): Variant[] {
 }
 
 function priceInfo(product: Product, variants: Variant[]): { price?: number; fromPrice: boolean } {
-  const prices = variants
-    .filter((v) => v.priceInNPREnabled && typeof v.priceInNPR === 'number')
-    .map((v) => v.priceInNPR as number)
+  const prices = variants.map((v) => variantPriceNPR(product, v)).filter((p): p is number => p != null)
   if (prices.length) return { price: Math.min(...prices), fromPrice: prices.length > 1 }
   if (product.priceInNPREnabled && typeof product.priceInNPR === 'number') {
     return { price: product.priceInNPR, fromPrice: false }

@@ -1,0 +1,46 @@
+/**
+ * The one place a variant's selling price (NPR) is decided. Pure and
+ * client-safe: checkout uses it for the charged price, every card, page and
+ * cart uses it for display, so they cannot disagree.
+ *
+ * Order:
+ *  1. Product "Full spool price" / "Refill price" (Admin → product → Colour
+ *     pricing), shared by every colour of that packaging, unless the variant
+ *     is marked "Custom price".
+ *  2. The variant's own price (when enabled).
+ *  3. The product's base price.
+ *
+ * With no shared price set, this is exactly the earlier behaviour (2 → 3).
+ * Prices are read at request time and copied into the order snapshot at
+ * checkout, so changing them never alters existing orders.
+ */
+type ProductPricing = {
+  priceInNPR?: number | null
+  spoolPriceInNPR?: number | null
+  refillPriceInNPR?: number | null
+}
+type VariantPricing = {
+  priceInNPREnabled?: boolean | null
+  priceInNPR?: number | null
+  customPrice?: boolean | null
+  options?: unknown[] | null
+}
+
+const positive = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) && v > 0 ? v : null)
+
+/** Packaging comes from the variant's populated options ('refill' option value). Unpopulated → full spool. */
+export function isRefill(variant: Pick<VariantPricing, 'options'> | null | undefined): boolean {
+  return (variant?.options ?? []).some((o) => Boolean(o) && typeof o === 'object' && (o as { value?: unknown }).value === 'refill')
+}
+
+export function variantPriceNPR(
+  product: ProductPricing | null | undefined,
+  variant: VariantPricing | null | undefined,
+): number | null {
+  if (variant && !variant.customPrice) {
+    const shared = positive(isRefill(variant) ? product?.refillPriceInNPR : product?.spoolPriceInNPR)
+    if (shared) return shared
+  }
+  const own = variant?.priceInNPREnabled ? positive(variant.priceInNPR) : null
+  return own ?? positive(product?.priceInNPR)
+}

@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/storefront/ui/Button'
 import { useCart } from '@/providers/CartProvider'
 import { StockStatus } from '@/components/storefront/commerce/StockStatus'
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { deriveStock } from '@/lib/catalog/shared'
 
 export function ProductForm({
@@ -69,12 +70,7 @@ export function ProductForm({
   }
 
   // Determine price based on selected variant or fallback to product base price
-  const price =
-    selectedVariant?.priceInNPR ??
-    selectedVariant?.prices?.[0]?.amount ??
-    product.priceInNPR ??
-    product.prices?.[0]?.amount ??
-    0
+  const price = (selectedVariant ? variantPriceNPR(product, selectedVariant) : null) ?? product.priceInNPR ?? 0
 
   const handleAddToCart = async () => {
     if (isOutOfStock || isAdding) return

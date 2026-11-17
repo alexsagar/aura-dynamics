@@ -1,4 +1,5 @@
 import type { Payload, TypedUser } from 'payload'
+import { itemName } from './item-name'
 import { formatNPR } from '../components/storefront/commerce/Price'
 
 /** Stored order statuses (plugin-ecommerce). No shipped/delivered states exist. */
@@ -77,14 +78,7 @@ export function summarizeOrder(order: OrderDoc): OrderSummary {
     reference: orderReference(order),
     date: dateFormat.format(new Date(order.createdAt)),
     status: statusOf(order.status),
-    // Variant titles are often already "Product — Colour"; don't repeat the product name.
-    firstItem: first
-      ? !first.variant || first.variant === first.title
-        ? first.title
-        : first.variant.startsWith(first.title)
-          ? first.variant
-          : `${first.title} — ${first.variant}`
-      : null,
+    firstItem: first ? itemName(first.title, first.variant) : null,
     itemCount: lines.reduce((n, l) => n + l.quantity, 0),
     amount: formatOrderAmount(order.amount),
   }

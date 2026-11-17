@@ -2,6 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare'
 import type { CollectionAfterChangeHook, Payload } from 'payload'
 import { formatNPR } from '../components/storefront/commerce/Price'
 import { siteUrl } from './email'
+import { itemName } from './item-name'
 import { emailLayout } from './email-templates'
 
 export type ConfirmationOrder = {
@@ -27,7 +28,7 @@ const PAYMENT_TEXT: Record<ConfirmationOrder['paymentMethod'], { label: string; 
 export function orderConfirmationEmail(order: ConfirmationOrder, site = siteUrl()) {
   const payment = PAYMENT_TEXT[order.paymentMethod]
   const itemLabel = (it: ConfirmationOrder['items'][number]) =>
-    `${it.variantTitle && it.variantTitle !== it.title ? `${it.title} — ${it.variantTitle}` : it.title} × ${it.quantity}`
+    `${itemName(it.title, it.variantTitle)} × ${it.quantity}`
   return {
     subject: `Your Aura order ${order.orderNumber}`,
     html: emailLayout({
@@ -106,7 +107,7 @@ export function orderStatusEmail(status: NotifiedStatus, order: StatusOrder, sit
       paragraphs: [`Order reference: ${reference}`, text.body],
       rows: [
         ...items.map((it) => ({
-          label: `${it.variantTitle && it.variantTitle !== it.title ? `${it.title} — ${it.variantTitle}` : (it.title ?? 'Item')} × ${it.quantity ?? 1}`,
+          label: `${itemName(it.title, it.variantTitle)} × ${it.quantity ?? 1}`,
           value: '',
         })),
         ...(typeof order.amount === 'number' ? [{ label: 'Order total', value: formatNPR(order.amount), strong: true }] : []),
