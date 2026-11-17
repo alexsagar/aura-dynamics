@@ -43,5 +43,8 @@ export const authRateLimit: CollectionBeforeOperationHook = async ({ args, opera
   return args
 }
 
+/** Same per-IP login budget for the logged-in change-password form (it verifies a password too). */
+export const passwordCheckRateLimited = (headers: Headers) => rateLimited('LOGIN_RATE_LIMITER', headers)
+
 /** Explicit account lockout (Payload's defaults, pinned so an upgrade cannot silently change them). */
 export const AUTH_LOCKOUT = { maxLoginAttempts: 5, lockTime: 10 * 60 * 1000 } as const

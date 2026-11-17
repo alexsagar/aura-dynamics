@@ -400,6 +400,12 @@ describe('customer password reset', () => {
     const token = (await payload.forgotPassword({ collection: 'customers', data: { email } })) as string
     const newPassword = `New-${crypto.randomUUID()}`
 
+    // Password rules (8–128) apply to reset too; a rejected attempt leaves the token usable.
+    for (const bad of ['short', 'x'.repeat(129)])
+      await expect(
+        payload.resetPassword({ collection: 'customers', data: { token, password: bad }, overrideAccess: true }),
+      ).rejects.toMatchObject({ status: 400 })
+
     await payload.resetPassword({ collection: 'customers', data: { token, password: newPassword }, overrideAccess: true })
     await expect(
       payload.resetPassword({ collection: 'customers', data: { token, password: `Again-${crypto.randomUUID()}` }, overrideAccess: true }),
