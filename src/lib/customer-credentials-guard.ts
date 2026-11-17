@@ -1,4 +1,4 @@
-import { APIError, type CollectionBeforeChangeHook } from 'payload'
+import { APIError, type CollectionBeforeChangeHook, type CollectionBeforeOperationHook } from 'payload'
 import { passwordProblem } from './account-settings'
 
 /**
@@ -28,4 +28,16 @@ export const guardCustomerCredentials: CollectionBeforeChangeHook = ({
       throw new APIError('Email address changes are not supported.', 403, undefined, true)
   }
   return data
+}
+
+/**
+ * Payload's resetPassword operation writes the hash directly (no beforeChange),
+ * so the same password rules are applied here. Runs before the token lookup:
+ * the answer does not depend on the token or account, so nothing is enumerable.
+ */
+export const guardResetPassword: CollectionBeforeOperationHook = ({ args, operation }) => {
+  if (operation !== 'resetPassword') return args
+  const problem = passwordProblem(args.data?.password)
+  if (problem) throw new APIError(problem, 400, undefined, true)
+  return args
 }

@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 import { AUTH_LOCKOUT, authRateLimit } from '../lib/rate-limit'
-import { guardCustomerCredentials } from '../lib/customer-credentials-guard'
+import { guardCustomerCredentials, guardResetPassword } from '../lib/customer-credentials-guard'
 import { siteUrl } from '../lib/email'
 import { PASSWORD_RESET_SUBJECT, passwordResetEmailHTML } from '../lib/email-templates'
 
@@ -15,7 +15,7 @@ export const Customers: CollectionConfig = {
       generateEmailSubject: () => PASSWORD_RESET_SUBJECT,
     },
   },
-  hooks: { beforeOperation: [authRateLimit], beforeChange: [guardCustomerCredentials] },
+  hooks: { beforeOperation: [authRateLimit, guardResetPassword], beforeChange: [guardCustomerCredentials] },
   admin: {
     useAsTitle: 'email',
     group: 'Store',

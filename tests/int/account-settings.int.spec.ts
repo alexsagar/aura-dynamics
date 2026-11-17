@@ -14,11 +14,11 @@ const fakePayload = {
 vi.mock('next/headers', () => ({ headers: async () => new Headers() }))
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }))
 vi.mock('@/payload.config', () => ({ default: {} }))
-vi.mock('@/lib/rate-limit', () => ({ passwordCheckRateLimited: async () => state.limited }))
+vi.mock('@/lib/rate-limit', async (orig) => ({ ...(await orig<any>()), passwordCheckRateLimited: async () => state.limited }))
 vi.mock('payload', async (orig) => ({ ...(await orig<any>()), getPayload: async () => fakePayload }))
 
 const { changePassword, updateProfile } = await import('@/app/(frontend)/account/settings/actions')
-const { guardCustomerCredentials } = await import('@/lib/customer-credentials-guard')
+const { guardCustomerCredentials, guardResetPassword } = await import('@/lib/customer-credentials-guard')
 const { parseProfile, passwordProblem } = await import('@/lib/account-settings')
 
 const customer = { id: 5, collection: 'customers', email: 'buyer@example.com', _sid: 'sid-1' }
@@ -120,6 +120,32 @@ describe('guardCustomerCredentials (REST/GraphQL)', () => {
   it('enforces the password rules on registration', () => {
     expect(() => run({ email: 'n@example.com', password: 'short' }, null, 'create')).toThrow(/at least 8/)
     expect(() => run({ email: 'n@example.com', password: 'long-enough' }, null, 'create')).not.toThrow()
+  })
+})
+
+describe('guardResetPassword (forgot-password reset)', () => {
+  const run = (password: unknown, operation = 'resetPassword') =>
+    guardResetPassword({ args: { data: { token: 't', password } }, operation } as any)
+
+  it.each([
+    ['short', /at least 8/],
+    ['x'.repeat(129), /at most 128/],
+    [undefined, /Enter a password/],
+  ])('rejects %s before any token lookup', (password, message) => {
+    expect(() => run(password)).toThrow(message)
+  })
+
+  it('passes valid passwords and other operations through unchanged', () => {
+    expect(run('long-enough-1')).toEqual({ data: { token: 't', password: 'long-enough-1' } })
+    expect(run('x'.repeat(128))).toBeTruthy()
+    expect(run('short', 'login')).toEqual({ data: { token: 't', password: 'short' } })
+  })
+
+  it('is registered on customers, after the rate limit', async () => {
+    const { Customers } = await import('@/collections/Customers')
+    const { authRateLimit } = await import('@/lib/rate-limit')
+    expect(Customers.hooks?.beforeOperation).toEqual([authRateLimit, guardResetPassword])
+    expect(Customers.hooks?.beforeChange).toContain(guardCustomerCredentials)
   })
 })
 
