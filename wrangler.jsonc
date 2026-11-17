@@ -11,9 +11,11 @@
   "workers_dev": false,
   "preview_urls": false,
 
-  // Phase 1 (pre-cutover): an unlinked check hostname only, so the Coming Soon
-  // Worker keeps printwithaura.com. The cutover is a separate reviewed change
-  // that replaces this with printwithaura.com + www.printwithaura.com
+  // PRE-LAUNCH phase: only the unlinked check hostname. The Coming Soon Worker
+  // (shrill-tree-d4d5) keeps printwithaura.com. Pre-launch builds are noindex,
+  // email goes to EMAIL_ALLOWLIST only, and links use launch-check. The cutover
+  // to printwithaura.com + www is a separate reviewed PR; cf-guard checks that
+  // routes, vars and the package.json build env agree on the phase
   // (see docs/releases/production-setup-plan.md).
   "routes": [{ "pattern": "launch-check.printwithaura.com", "custom_domain": true }],
 
@@ -55,7 +57,7 @@
 
   "vars": {
     "CLOUDFLARE_ENV": "production",
-    "NEXT_PUBLIC_SITE_URL": "https://printwithaura.com",
+    "NEXT_PUBLIC_SITE_URL": "https://launch-check.printwithaura.com",
   },
 
   "r2_buckets": [

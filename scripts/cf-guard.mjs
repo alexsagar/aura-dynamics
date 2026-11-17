@@ -63,8 +63,21 @@ if (name === 'production') {
   const ns = (cfg.ratelimits ?? []).map((r) => r.namespace_id)
   if (ns.length !== 2 || ns.some((id) => ['1001', '1002'].includes(id)))
     fail(`${t.config} needs its own CHECKOUT/LOGIN rate-limit namespaces (not staging's 1001/1002)`)
-  if (cfg.vars?.CLOUDFLARE_ENV !== 'production' || cfg.vars?.NEXT_PUBLIC_SITE_URL !== 'https://printwithaura.com')
-    fail(`${t.config} vars must be CLOUDFLARE_ENV=production, NEXT_PUBLIC_SITE_URL=https://printwithaura.com`)
+  // Phase: pre-launch (launch-check only, noindex, allowlisted email) until a
+  // reviewed cutover PR routes the apex, which also needs its own approval.
+  const hosts = (cfg.routes ?? []).map((r) => r.pattern)
+  const live = hosts.some((h) => h === 'printwithaura.com' || h === 'www.printwithaura.com')
+  if (live && process.env.AURA_CONFIRM_CUTOVER !== 'printwithaura.com')
+    fail('routes include printwithaura.com: the cutover needs AURA_CONFIRM_CUTOVER=printwithaura.com')
+  if (!live && hosts.join() !== 'launch-check.printwithaura.com')
+    fail(`pre-launch routes must be exactly launch-check.printwithaura.com (got ${hosts.join() || 'none'})`)
+  const url = live ? 'https://printwithaura.com' : 'https://launch-check.printwithaura.com'
+  if (cfg.vars?.CLOUDFLARE_ENV !== 'production' || cfg.vars?.NEXT_PUBLIC_SITE_URL !== url)
+    fail(`${t.config} vars must be CLOUDFLARE_ENV=production, NEXT_PUBLIC_SITE_URL=${url}`)
+  // The build bakes these in; they must match the phase too.
+  const build = JSON.parse(readFileSync('package.json', 'utf8')).scripts['production:deploy:app'] ?? ''
+  if (!build.includes(`NEXT_PUBLIC_SITE_URL=${url} `) || !build.includes(`NEXT_PUBLIC_NOINDEX=${!live} `))
+    fail(`production:deploy:app must build with NEXT_PUBLIC_SITE_URL=${url} NEXT_PUBLIC_NOINDEX=${!live}`)
 }
 const d1 = (cfg.d1_databases ?? []).find((d) => d.binding === 'D1')
 if (d1?.database_id !== t.d1) fail(`${t.config} D1 ${d1?.database_id} != ${t.d1}`)
@@ -81,6 +94,20 @@ try {
   if (info.uuid !== t.d1) fail(`profile ${t.profile} resolved D1 ${info.uuid}, expected ${t.d1}`)
 } catch (err) {
   fail(`profile ${t.profile} cannot read D1 ${t.d1} in account ${t.accountId} (${String(err.message).split('\n')[0]})`)
+}
+
+// `payload migrate` reaches D1 through Wrangler's default login (it has no
+// --profile), so for production that login must reach the same database too.
+if (name === 'production') {
+  try {
+    const out = execFileSync('pnpm', ['exec', 'wrangler', 'd1', 'info', 'D1', '--config', t.config, '--json'], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'pipe'],
+    })
+    if (JSON.parse(out.slice(out.indexOf('{'))).uuid !== t.d1) fail('default Wrangler login resolved a different D1')
+  } catch (err) {
+    fail(`default Wrangler login cannot read D1 ${t.d1} in account ${t.accountId}: run \`wrangler login\` as the aura-official account (${String(err.message).split('\n')[0]})`)
+  }
 }
 
 console.log(`cf-guard: OK ${name} → account ${t.accountId}, Worker ${t.worker}, D1 ${t.d1}, profile ${t.profile}`)
