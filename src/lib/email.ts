@@ -15,15 +15,18 @@ export const siteUrl = (env: Env = process.env) => env.NEXT_PUBLIC_SITE_URL?.rep
  * Where email may go, decided only from deploy-time configuration (Wrangler vars,
  * secrets, build env), never from the request.
  *  - production: CLOUDFLARE_ENV=production AND the site URL is the production
- *    origin. Both must match, so a staging Worker with a mistyped var stays filtered.
- *  - allowlist: every other deployed environment. Only EMAIL_ALLOWLIST recipients;
- *    an empty or missing allowlist sends nothing.
+ *    origin AND no EMAIL_ALLOWLIST is set. All three must hold, so a staging
+ *    Worker with a mistyped var, or production before launch, stays filtered.
+ *  - allowlist: every other deployed environment, including pre-launch
+ *    production (launch-check hostname, or any EMAIL_ALLOWLIST present). Only
+ *    EMAIL_ALLOWLIST recipients; an empty or missing allowlist sends nothing.
+ *    Subjects are tagged [PRE-LAUNCH] for production, [STAGING] otherwise.
  *  - local: plain local dev/tests (no CLOUDFLARE_ENV, not a production build). Nothing is sent.
  *  - unconfigured: a deployed environment missing RESEND_API_KEY or the site URL.
  */
 export type EmailMode =
   | { kind: 'production'; apiKey: string }
-  | { kind: 'allowlist'; apiKey: string; allow: Set<string> }
+  | { kind: 'allowlist'; apiKey: string; allow: Set<string>; tag: '[STAGING]' | '[PRE-LAUNCH]' }
   | { kind: 'local' }
   | { kind: 'unconfigured' }
 
@@ -32,7 +35,10 @@ export function emailMode(env: Env = process.env): EmailMode {
   if (!deployed) return { kind: 'local' }
   const apiKey = env.RESEND_API_KEY?.trim()
   if (!apiKey || !siteUrl(env)) return { kind: 'unconfigured' }
-  if (env.CLOUDFLARE_ENV === 'production' && siteUrl(env) === PRODUCTION_SITE_URL) {
+  // Any EMAIL_ALLOWLIST value (even blank) keeps filtering on: going unrestricted
+  // means deleting the secret at cutover, a deliberate step.
+  const allowlistSet = env.EMAIL_ALLOWLIST !== undefined
+  if (env.CLOUDFLARE_ENV === 'production' && siteUrl(env) === PRODUCTION_SITE_URL && !allowlistSet) {
     return { kind: 'production', apiKey }
   }
   const allow = new Set(
@@ -41,7 +47,7 @@ export function emailMode(env: Env = process.env): EmailMode {
       .map((a) => a.trim().toLowerCase())
       .filter(Boolean),
   )
-  return { kind: 'allowlist', apiKey, allow }
+  return { kind: 'allowlist', apiKey, allow, tag: env.CLOUDFLARE_ENV === 'production' ? '[PRE-LAUNCH]' : '[STAGING]' }
 }
 
 type Recipients = { to?: unknown; cc?: unknown; bcc?: unknown }
@@ -126,11 +132,11 @@ export async function sendSafely(
   }
   if (mode.kind === 'allowlist') {
     if (!recipients.every((r) => mode.allow.has(r))) {
-      log.warn({ msg: 'email: recipient outside staging allowlist, not sent' })
+      log.warn({ msg: 'email: recipient outside allowlist, not sent' })
       return 'dropped_recipient'
     }
     const subject = outgoing.subject ?? ''
-    outgoing = { ...outgoing, subject: subject.startsWith('[STAGING]') ? subject : `[STAGING] ${subject}` }
+    outgoing = { ...outgoing, subject: subject.startsWith(mode.tag) ? subject : `${mode.tag} ${subject}` }
   }
   try {
     await send(outgoing)

@@ -6,9 +6,10 @@
   "type": "module",
   "scripts": {
     "build": "cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" next build --webpack",
+    "production:guard": "node scripts/cf-guard.mjs production",
     "production:deploy": "node scripts/cf-guard.mjs production && pnpm run production:deploy:database && pnpm run production:deploy:app",
-    "production:deploy:app": "node scripts/cf-guard.mjs production && opennextjs-cloudflare build && wrangler deploy --config wrangler.jsonc --profile aura-personal",
-    "production:deploy:database": "node scripts/cf-guard.mjs production && cross-env NODE_ENV=production PAYLOAD_SECRET=ignore WRANGLER_CONFIG_PATH=wrangler.jsonc payload migrate && wrangler d1 execute D1 --config wrangler.jsonc --profile aura-personal --command 'PRAGMA optimize' --remote",
+    "production:deploy:app": "node scripts/cf-guard.mjs production && cross-env NODE_OPTIONS=\"--no-deprecation --max-old-space-size=8000\" NEXT_PUBLIC_SITE_URL=https://launch-check.printwithaura.com NEXT_PUBLIC_NOINDEX=true opennextjs-cloudflare build && wrangler deploy --config wrangler.jsonc --profile aura-official",
+    "production:deploy:database": "node scripts/cf-guard.mjs production && cross-env NODE_ENV=production PAYLOAD_SECRET=ignore WRANGLER_CONFIG_PATH=wrangler.jsonc payload migrate && wrangler d1 execute D1 --config wrangler.jsonc --profile aura-official --command 'PRAGMA optimize' --remote",
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev",
     "devsafe": "powershell -Command \"Remove-Item -Recurse -Force .next,.open-next -ErrorAction SilentlyContinue\" && cross-env NODE_OPTIONS=--no-deprecation next dev",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",

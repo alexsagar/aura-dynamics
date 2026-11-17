@@ -187,7 +187,7 @@ describe('order status email content', () => {
     const { orderStatusEmail } = await import('@/lib/order-emails')
     const { subject, html } = orderStatusEmail('cancelled', order, 'https://x.test')
     const send = vi.fn().mockResolvedValue({ id: '1' })
-    const mode = { kind: 'allowlist' as const, apiKey: 'k', allow: new Set(['qa@example.com']) }
+    const mode = { kind: 'allowlist' as const, apiKey: 'k', allow: new Set(['qa@example.com']), tag: '[STAGING]' as const }
     expect(await sendSafely({ to: 'qa@example.com', subject, html }, mode, send, log())).toBe('sent')
     const sent = send.mock.calls[0][0]
     expect(sent.subject).toBe('[STAGING] Aura order AURA-ORD-<i>Y</i>: cancelled')
@@ -243,7 +243,7 @@ describe('order confirmation content', () => {
   it('staging allowlist still applies to confirmations', async () => {
     const send = vi.fn()
     const { subject, html } = orderConfirmationEmail(order, 'https://x.test')
-    const out = await sendSafely({ to: 'real@customer.com', subject, html }, { kind: 'allowlist', apiKey: 'k', allow: new Set(['qa@example.com']) }, send, {
+    const out = await sendSafely({ to: 'real@customer.com', subject, html }, { kind: 'allowlist', apiKey: 'k', allow: new Set(['qa@example.com']), tag: '[STAGING]' as const }, send, {
       info: vi.fn(),
       warn: vi.fn(),
       error: vi.fn(),

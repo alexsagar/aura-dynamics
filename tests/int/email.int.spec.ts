@@ -7,7 +7,7 @@ import { Users } from '@/collections/Users'
 
 const STAGING = { CLOUDFLARE_ENV: 'staging', NODE_ENV: 'production', NEXT_PUBLIC_SITE_URL: 'https://staging.printwithaura.com', RESEND_API_KEY: 're_test' }
 const PROD = { CLOUDFLARE_ENV: 'production', NODE_ENV: 'production', NEXT_PUBLIC_SITE_URL: 'https://printwithaura.com', RESEND_API_KEY: 're_test' }
-const allow = (...a: string[]): EmailMode => ({ kind: 'allowlist', apiKey: 're_test', allow: new Set(a) })
+const allow = (...a: string[]): EmailMode => ({ kind: 'allowlist', apiKey: 're_test', allow: new Set(a), tag: '[STAGING]' })
 const logger = () => ({ info: vi.fn(), warn: vi.fn(), error: vi.fn() })
 const msg = (m: Partial<SendEmailOptions>): SendEmailOptions => ({ subject: 'Hello', html: '<p>Hi</p>', ...m })
 
@@ -17,6 +17,25 @@ describe('email environment policy', () => {
     expect(emailMode({ ...PROD, NEXT_PUBLIC_SITE_URL: 'https://staging.printwithaura.com' }).kind).toBe('allowlist')
     expect(emailMode({ ...STAGING, CLOUDFLARE_ENV: 'production' }).kind).toBe('allowlist')
     expect(emailMode({ ...PROD, CLOUDFLARE_ENV: undefined }).kind).toBe('allowlist')
+  })
+
+  it('pre-launch production (launch-check URL or any EMAIL_ALLOWLIST) is filtered and tagged [PRE-LAUNCH]', () => {
+    const launch = emailMode({ ...PROD, NEXT_PUBLIC_SITE_URL: 'https://launch-check.printwithaura.com', EMAIL_ALLOWLIST: 'qa@example.com' })
+    expect(launch).toMatchObject({ kind: 'allowlist', tag: '[PRE-LAUNCH]' })
+    expect(emailMode({ ...PROD, NEXT_PUBLIC_SITE_URL: 'https://launch-check.printwithaura.com' })).toMatchObject({ kind: 'allowlist', allow: new Set() })
+    // Even with the real production URL, a present allowlist (blank included) keeps filtering on.
+    expect(emailMode({ ...PROD, EMAIL_ALLOWLIST: 'qa@example.com' })).toMatchObject({ kind: 'allowlist', tag: '[PRE-LAUNCH]' })
+    expect(emailMode({ ...PROD, EMAIL_ALLOWLIST: '' })).toMatchObject({ kind: 'allowlist', allow: new Set() })
+    expect(emailMode(STAGING)).toMatchObject({ tag: '[STAGING]' })
+  })
+
+  it('pre-launch: allowlisted recipient gets a [PRE-LAUNCH] subject; others dropped', async () => {
+    const send = vi.fn().mockResolvedValue({})
+    const mode: EmailMode = { kind: 'allowlist', apiKey: 'k', allow: new Set(['qa@example.com']), tag: '[PRE-LAUNCH]' }
+    expect(await sendSafely(msg({ to: 'qa@example.com' }), mode, send, logger())).toBe('sent')
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ subject: '[PRE-LAUNCH] Hello' }))
+    expect(await sendSafely(msg({ to: 'customer@gmail.com' }), mode, send, logger())).toBe('dropped_recipient')
+    expect(send).toHaveBeenCalledTimes(1)
   })
 
   it('fails closed: empty allowlist allows nobody; missing key or site URL is unconfigured', () => {
