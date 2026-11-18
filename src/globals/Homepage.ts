@@ -263,8 +263,11 @@ export const Homepage: GlobalConfig = {
               name: 'columns',
               type: 'array',
               dbName: 'hp_cmp_cols',
-              maxRows: 4,
-              admin: { description: 'One column per material, in display order.' },
+              maxRows: 5,
+              admin: {
+                description:
+                  'One column per material, in display order. If you reorder or add columns, update every row’s scores to match — a row whose score count differs is hidden on the site.',
+              },
               fields: [
                 { name: 'label', type: 'text' },
                 { name: 'bestFor', type: 'text' },
@@ -280,7 +283,7 @@ export const Homepage: GlobalConfig = {
                   name: 'scores',
                   type: 'array',
                   dbName: 'hp_cmp_scores',
-                  maxRows: 4,
+                  maxRows: 5,
                   admin: { description: 'Score 1-5, one per column above, same order.' },
                   fields: [{ name: 'score', type: 'number', min: 1, max: 5 }],
                 },

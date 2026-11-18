@@ -1385,7 +1385,7 @@ export interface Homepage {
     enabled?: boolean | null;
     heading?: string | null;
     /**
-     * One column per material, in display order.
+     * One column per material, in display order. If you reorder or add columns, update every row’s scores to match — a row whose score count differs is hidden on the site.
      */
     columns?:
       | {

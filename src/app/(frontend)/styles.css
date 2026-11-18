@@ -76,6 +76,9 @@
   html {
     -webkit-text-size-adjust: 100%;
     -webkit-font-smoothing: antialiased;
+    /* The floating header is fixed (top 24px, ~58px tall): keep anything
+       scrolled into view (anchors, find-in-page, focus) clear of it. */
+    scroll-padding-top: 6rem;
     /* Clip horizontal overflow at the root so off-canvas fixed elements (the
        cart drawer sits translate-x-full off-screen when closed) can't create a
        horizontal scrollbar. `clip` avoids making <html> a scroll container, so

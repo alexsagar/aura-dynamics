@@ -315,7 +315,21 @@ export default async function HomePage() {
           <Container>
             <h2 className={cn(SECTION_TITLE, 'mb-20')}>{vm.compare.heading}</h2>
 
-            <div className="grid w-full grid-cols-4 md:grid-cols-[1.5fr_1fr_1fr_1fr_1fr]">
+            {/* Below md the materials scroll sideways inside this box (never the page). */}
+            <p aria-hidden className="mb-4 text-sm text-muted md:hidden">
+              Swipe to compare &rarr;
+            </p>
+            <div
+              aria-label="Material comparison"
+              className="-mx-4 overflow-x-auto overscroll-x-contain px-4 sm:-mx-6 sm:px-6 md:mx-0 md:overflow-visible md:px-0"
+              role="region"
+              tabIndex={0}
+            >
+            <div
+              className="grid w-full min-w-[calc(var(--n)*7.5rem)] grid-cols-[repeat(var(--n),minmax(0,1fr))] md:min-w-0 md:grid-cols-[1.5fr_repeat(var(--n),minmax(0,1fr))]"
+              data-testid="compare-grid"
+              style={{ '--n': vm.compare.columns.length } as React.CSSProperties}
+            >
               <CompareHead className="hidden md:flex" />
               {vm.compare.columns.map((col) => (
                 <CompareHead key={col.label}>{col.label}</CompareHead>
@@ -335,9 +349,10 @@ export default async function HomePage() {
               <CompareLabel last>Best For</CompareLabel>
               {vm.compare.columns.map((col) => (
                 <CompareCell key={col.label} last>
-                  <span className="min-w-0 text-xs wrap-break-word hyphens-auto min-[360px]:text-sm md:text-lg">{col.bestFor}</span>
+                  <span className="min-w-0 text-sm wrap-break-word hyphens-auto md:text-lg">{col.bestFor}</span>
                 </CompareCell>
               ))}
+            </div>
             </div>
           </Container>
         </section>
