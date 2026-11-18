@@ -122,7 +122,7 @@ export function DeliveryInfo({ settings }: { settings: SiteSetting | null }) {
             }.`
           : 'Orders ship across Nepal.',
     },
-    { title: 'Pay your way', body: 'eSewa QR or Cash on Delivery.' },
+    { title: 'Pay your way', body: 'Fonepay QR or Cash on Delivery.' },
     { title: 'Guest checkout', body: 'No account needed to order.' },
   ]
   return (

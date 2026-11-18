@@ -356,7 +356,7 @@ describe('customer order details', () => {
       subtotal: null,
       shipping: null,
       total: null,
-      payment: { method: 'eSewa QR', status: 'Awaiting verification' },
+      payment: { method: 'Fonepay QR', status: 'Awaiting verification' },
       delivery: null,
     })
   })

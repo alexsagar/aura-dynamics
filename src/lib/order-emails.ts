@@ -20,8 +20,8 @@ export type ConfirmationOrder = {
 const PAYMENT_TEXT: Record<ConfirmationOrder['paymentMethod'], { label: string; note: string }> = {
   cod: { label: 'Pay on Delivery', note: 'Please have the total ready when your order arrives.' },
   esewa_qr: {
-    label: 'eSewa QR (awaiting verification)',
-    note: "We'll verify your eSewa payment and confirm once it's checked. Your order isn't marked as paid until then.",
+    label: 'Fonepay QR (awaiting verification)',
+    note: "We'll check your QR payment using the transaction or reference ID you entered and confirm once it's verified. Your order isn't marked as paid until then.",
   },
 }
 

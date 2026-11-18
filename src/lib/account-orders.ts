@@ -92,7 +92,7 @@ const variantOnly = (product: string, variant: string) => {
     : variant
 }
 
-const PAYMENT_METHOD: Record<string, string> = { cod: 'Cash on Delivery', esewa_qr: 'eSewa QR' }
+const PAYMENT_METHOD: Record<string, string> = { cod: 'Cash on Delivery', esewa_qr: 'Fonepay QR' }
 
 /** Wording follows the stored payment status only; nothing is called paid unless it is `paid`. */
 export function paymentStatusLabel(method: unknown, status: unknown): string {

@@ -198,7 +198,7 @@ test.describe('Aura Ecommerce Guest Shopping Flow', () => {
     await page.waitForURL('**/checkout/success**', { timeout: 15000 })
     await page.waitForLoadState('networkidle')
 
-    await expect(page.locator('[data-testid="success-payment-method"]')).toContainText('eSewa QR')
+    await expect(page.locator('[data-testid="success-payment-method"]')).toContainText('Fonepay QR')
     await expect(page.locator('[data-testid="success-payment-status"]')).toContainText('Awaiting Verification')
   })
 
@@ -280,7 +280,7 @@ test.describe('Aura Ecommerce Guest Shopping Flow', () => {
 
     expect(res.status()).toBe(400)
     const json = await res.json()
-    expect(json.error).toContain('eSewa QR payment is currently unavailable')
+    expect(json.error).toContain('Fonepay QR payment is currently unavailable')
   })
 
   for (const vp of VIEWPORTS) {
