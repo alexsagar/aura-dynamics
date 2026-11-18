@@ -71,7 +71,8 @@ const CompareLabel = ({ children, last }: { children: React.ReactNode; last?: bo
       last ? 'md:border-b-0' : 'md:border-b md:border-black/10',
     )}
   >
-    {children}
+    {/* Mobile: stays at the left edge while the materials scroll sideways. */}
+    <span className="sticky left-0 md:static">{children}</span>
   </div>
 )
 
@@ -349,7 +350,7 @@ export default async function HomePage() {
               <CompareLabel last>Best For</CompareLabel>
               {vm.compare.columns.map((col) => (
                 <CompareCell key={col.label} last>
-                  <span className="min-w-0 text-sm wrap-break-word hyphens-auto md:text-lg">{col.bestFor}</span>
+                  <span className="min-w-0 text-sm wrap-break-word hyphens-auto md:text-base lg:text-lg">{col.bestFor}</span>
                 </CompareCell>
               ))}
             </div>
