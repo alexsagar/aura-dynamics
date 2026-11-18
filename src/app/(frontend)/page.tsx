@@ -115,7 +115,7 @@ export default async function HomePage() {
                   src={vm.hero.imageUrl}
                 />
               ) : null}
-              <div className="absolute inset-0 flex flex-col items-stretch justify-end gap-3 bg-linear-to-t from-black/70 to-transparent to-60% p-5 sm:items-center md:flex-row md:justify-center md:gap-4 md:p-12">
+              <div className="absolute inset-0 flex flex-col items-stretch justify-end gap-3 bg-linear-to-t from-black/70 to-transparent to-60% p-5 sm:items-center md:flex-row md:items-end md:justify-center md:gap-4 md:p-12">
                 {vm.hero.primaryCta.label ? (
                   <Button as="a" block className="sm:w-auto" href={vm.hero.primaryCta.url} size="lg">
                     {vm.hero.primaryCta.label}
