@@ -1,5 +1,5 @@
 import React, { cache } from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 
@@ -41,11 +41,14 @@ const getProductBySlug = cache(async (slug: string): Promise<Product | null> => 
   }
 })
 
-export async function generateMetadata({
-  params,
-}: {
-  params: Promise<{ slug: string }>
-}): Promise<Metadata> {
+export async function generateMetadata(
+  {
+    params,
+  }: {
+    params: Promise<{ slug: string }>
+  },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
   const { slug } = await params
   const product = await getProductBySlug(slug)
   if (!product) return { title: 'Product not found · Aura' }
@@ -55,6 +58,9 @@ export async function generateMetadata({
     `${product.title} — available now from Aura, shipped across Nepal.`
   const image = resolveProductImage(product, (product.variants?.docs ?? []).filter((v) => typeof v === 'object'))
   const url = absoluteUrl(`/product/${product.slug}`)
+  // A page-level openGraph replaces the layout's, so keep the site default
+  // share image when the product has no photo; Twitter gets the same image.
+  const images = image ? [{ url: absoluteUrl(image) }] : (await parent).openGraph?.images
 
   return {
     title: `${product.title} · Aura`,
@@ -65,8 +71,9 @@ export async function generateMetadata({
       description,
       type: 'website',
       url,
-      images: image ? [{ url: image }] : undefined,
+      images,
     },
+    twitter: { card: 'summary_large_image', title: `${product.title} · Aura`, description, images },
   }
 }
 

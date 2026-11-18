@@ -47,7 +47,7 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
             {/* Aura + partner (e.g. Numakers) logos, both from Branding; Aura falls back to the official file. */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
               {/* ponytail: descriptor hardcoded; a Branding field needs a migration. */}
-              <span className="flex flex-col items-start gap-2">
+              <span className="flex flex-col items-center gap-2">
                 <Logo
                   className="max-w-[60vw]"
                   height={40}
@@ -56,7 +56,8 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
                   title="Aura"
                   variant="wordmark-offwhite"
                 />
-                <span className="pl-0.5 text-[11px] leading-none font-medium tracking-[0.42em] text-white/75 uppercase">
+                {/* -mr cancels the trailing letter-spacing so the word centres optically. */}
+                <span className="-mr-[0.42em] text-[11px] leading-none font-medium tracking-[0.42em] text-white/75 uppercase">
                   Filaments
                 </span>
               </span>
@@ -185,7 +186,7 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
         aria-hidden="true"
         className="pointer-events-none absolute bottom-[-5px] left-1/2 z-1 w-full -translate-x-1/2 whitespace-nowrap bg-linear-to-b from-white/6 to-transparent bg-clip-text text-center text-[min(11.5vw,15rem)] leading-[0.8] font-extrabold tracking-[-0.04em] text-transparent select-none"
       >
-        AURA DYNAMICS
+        AURA FILAMENTS
       </div>
     </footer>
   )
