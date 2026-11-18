@@ -12,6 +12,7 @@ import * as migration_20261029_105745_homepage_shades from './20261029_105745_ho
 import * as migration_20261029_112203_product_content from './20261029_112203_product_content';
 import * as migration_20261104_141915_payload_3_92_security from './20261104_141915_payload_3_92_security';
 import * as migration_20261117_170838_storefront_cms_phase1 from './20261117_170838_storefront_cms_phase1';
+import * as migration_20261118_132322_original_price from './20261118_132322_original_price';
 
 export const migrations = [
   {
@@ -82,6 +83,11 @@ export const migrations = [
   {
     up: migration_20261117_170838_storefront_cms_phase1.up,
     down: migration_20261117_170838_storefront_cms_phase1.down,
-    name: '20261117_170838_storefront_cms_phase1'
+    name: '20261117_170838_storefront_cms_phase1',
+  },
+  {
+    up: migration_20261118_132322_original_price.up,
+    down: migration_20261118_132322_original_price.down,
+    name: '20261118_132322_original_price'
   },
 ];

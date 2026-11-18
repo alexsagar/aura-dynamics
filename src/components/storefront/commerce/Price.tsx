@@ -1,3 +1,4 @@
+import { discountNPR } from '@/lib/catalog/pricing'
 import { cn } from '../ui/cn'
 
 const npr = new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 })
@@ -16,17 +17,22 @@ export function Price({
   amount: number
   /** Renders "From Rs. …" for variant-priced products. */
   from?: boolean
-  /** Original price, struck through. Sale logic is not implemented yet. */
+  /** Display-only original price, struck through. Ignored unless above `amount`. */
   compareAt?: number
   className?: string
 }) {
+  const discount = discountNPR(amount, compareAt)
   return (
-    <span className={cn('inline-flex items-baseline gap-2 font-semibold tabular-nums', className)}>
+    <span className={cn('inline-flex flex-wrap items-baseline gap-x-2 font-semibold tabular-nums', className)}>
       {from ? <span className="text-sm font-normal text-muted">From</span> : null}
-      <span>{formatNPR(amount)}</span>
-      {compareAt != null && compareAt > amount ? (
-        <span className="text-sm font-normal text-muted line-through">{formatNPR(compareAt)}</span>
+      {discount ? (
+        <s className="text-sm font-normal text-muted">
+          <span className="sr-only">Original price </span>
+          {formatNPR(discount.original)}
+        </s>
       ) : null}
+      <span>{formatNPR(amount)}</span>
+      {discount ? <span className="text-xs font-semibold tracking-[0.04em] uppercase">{discount.percent}% off</span> : null}
     </span>
   )
 }

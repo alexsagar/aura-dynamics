@@ -411,6 +411,10 @@ export interface Variant {
    * Tick to charge this variant’s own price instead of the product’s shared Full spool / Refill price.
    */
   customPrice?: boolean | null;
+  /**
+   * Optional, display only (struck through). Applies when this variant’s own price is charged. Customers always pay the selling price.
+   */
+  originalPriceInNPR?: number | null;
   sku?: string | null;
   /**
    * Threshold below which low-stock warnings trigger
@@ -446,6 +450,14 @@ export interface Product {
    * Used for variants whose Packaging option is "Refill".
    */
   refillPriceInNPR?: number | null;
+  /**
+   * Optional, display only (struck through). Shown only when higher than the Full spool price.
+   */
+  spoolOriginalPriceInNPR?: number | null;
+  /**
+   * Optional, display only. Shown only when higher than the Refill price.
+   */
+  refillOriginalPriceInNPR?: number | null;
   title: string;
   /**
    * URL identifier. Auto-generated from title when left empty.
@@ -1002,6 +1014,7 @@ export interface VariantsSelect<T extends boolean = true> {
   priceInNPR?: T;
   images?: T;
   customPrice?: T;
+  originalPriceInNPR?: T;
   sku?: T;
   lowStockThreshold?: T;
   active?: T;
@@ -1051,6 +1064,8 @@ export interface ProductsSelect<T extends boolean = true> {
   priceInNPR?: T;
   spoolPriceInNPR?: T;
   refillPriceInNPR?: T;
+  spoolOriginalPriceInNPR?: T;
+  refillOriginalPriceInNPR?: T;
   title?: T;
   slug?: T;
   shortDescription?: T;

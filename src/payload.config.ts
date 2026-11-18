@@ -399,6 +399,16 @@ export default buildConfig({
                 },
               },
               {
+                name: 'originalPriceInNPR',
+                type: 'number',
+                min: 0,
+                label: 'Original price (NPR)',
+                admin: {
+                  description:
+                    'Optional, display only (struck through). Applies when this variant’s own price is charged. Customers always pay the selling price.',
+                },
+              },
+              {
                 name: 'sku',
                 type: 'text',
                 index: true,
@@ -453,6 +463,25 @@ export default buildConfig({
                       min: 0,
                       label: 'Refill price (NPR)',
                       admin: { description: 'Used for variants whose Packaging option is "Refill".' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'spoolOriginalPriceInNPR',
+                      type: 'number',
+                      min: 0,
+                      label: 'Full spool original price (NPR)',
+                      admin: { description: 'Optional, display only (struck through). Shown only when higher than the Full spool price.' },
+                    },
+                    {
+                      name: 'refillOriginalPriceInNPR',
+                      type: 'number',
+                      min: 0,
+                      label: 'Refill original price (NPR)',
+                      admin: { description: 'Optional, display only. Shown only when higher than the Refill price.' },
                     },
                   ],
                 },

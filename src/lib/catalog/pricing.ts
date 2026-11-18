@@ -18,10 +18,13 @@ type ProductPricing = {
   priceInNPR?: number | null
   spoolPriceInNPR?: number | null
   refillPriceInNPR?: number | null
+  spoolOriginalPriceInNPR?: number | null
+  refillOriginalPriceInNPR?: number | null
 }
 type VariantPricing = {
   priceInNPREnabled?: boolean | null
   priceInNPR?: number | null
+  originalPriceInNPR?: number | null
   customPrice?: boolean | null
   options?: unknown[] | null
 }
@@ -43,4 +46,37 @@ export function variantPriceNPR(
   }
   const own = variant?.priceInNPREnabled ? positive(variant.priceInNPR) : null
   return own ?? positive(product?.priceInNPR)
+}
+
+/**
+ * Display-only "original" price (struck through), paired with whichever
+ * source `variantPriceNPR` charged: shared spool/refill original, or the
+ * variant's own. Never used for cart, checkout or order totals.
+ */
+export function variantOriginalPriceNPR(
+  product: ProductPricing | null | undefined,
+  variant: VariantPricing | null | undefined,
+): number | null {
+  if (variant && !variant.customPrice) {
+    const refill = isRefill(variant)
+    if (positive(refill ? product?.refillPriceInNPR : product?.spoolPriceInNPR)) {
+      return positive(refill ? product?.refillOriginalPriceInNPR : product?.spoolOriginalPriceInNPR)
+    }
+  }
+  return variant?.priceInNPREnabled && positive(variant.priceInNPR) ? positive(variant.originalPriceInNPR) : null
+}
+
+/** Real discount only: original must exceed the selling price. Percent rounded (2,299 → 2,000 = 13%). */
+export function discountNPR(price: number | null | undefined, original: number | null | undefined) {
+  const p = positive(price)
+  const o = positive(original)
+  if (!p || !o || o <= p) return null
+  return { original: o, saved: o - p, percent: Math.round(((o - p) / o) * 100) }
+}
+
+/** Cheapest {price, original} pair; the struck price belongs to the cheapest option, so "From" never overstates. */
+export function cheapest(items: { price: number | null; original?: number | null }[]) {
+  let best: { price: number; original?: number | null } | null = null
+  for (const it of items) if (it.price != null && (!best || it.price < best.price)) best = { price: it.price, original: it.original }
+  return best && { price: best.price, compareAt: discountNPR(best.price, best.original)?.original }
 }

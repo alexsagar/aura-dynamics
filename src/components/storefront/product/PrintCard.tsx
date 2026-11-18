@@ -16,7 +16,7 @@ export function PrintCard({
   product: PrintCardProduct
   ratio?: 'landscape' | 'portrait' | 'square' | 'tall'
 }) {
-  const { category, fromPrice, href, imageUrl, isNew, materials, price, stock, stockLeft, title } =
+  const { category, compareAt, fromPrice, href, imageUrl, isNew, materials, price, stock, stockLeft, title } =
     product
 
   return (
@@ -47,7 +47,7 @@ export function PrintCard({
         {materials.length ? <MaterialChipGroup materials={materials} /> : null}
 
         <div className="mt-0.5 flex flex-col items-start gap-1">
-          <Price amount={price} from={fromPrice} />
+          <Price amount={price} compareAt={compareAt} from={fromPrice} />
           <StockStatus quantity={stockLeft} state={stock} />
         </div>
       </div>

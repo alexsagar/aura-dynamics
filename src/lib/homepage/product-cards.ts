@@ -1,7 +1,7 @@
 import type { FilamentColor, FilamentCardProduct, PackagingKind, PrintCardProduct, StockState } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { productHref } from '@/lib/catalog/shared'
-import { isRefill, variantPriceNPR } from '@/lib/catalog/pricing'
+import { cheapest, isRefill, variantOriginalPriceNPR, variantPriceNPR } from '@/lib/catalog/pricing'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
 /** Real product records only — populated relationships (depth >= 2), not IDs. */
@@ -16,11 +16,12 @@ function populatedVariants(product: Product): PopulatedVariant[] {
 }
 
 /** Lowest active price across variants, or the product's own price. NPR only. */
-function derivePrice(product: Product, variants: PopulatedVariant[]) {
+function derivePrice(product: Product, variants: PopulatedVariant[]): { compareAt?: number; fromPrice: boolean; price: number } | null {
   if (product.enableVariants && variants.length) {
     const prices = variants.map((v) => variantPriceNPR(product, v)).filter((p): p is number => p != null)
     if (prices.length) {
-      return { fromPrice: variants.length > 1 || prices.length > 1, price: Math.min(...prices) }
+      const best = cheapest(variants.map((v) => ({ price: variantPriceNPR(product, v), original: variantOriginalPriceNPR(product, v) })))
+      return { compareAt: best?.compareAt, fromPrice: variants.length > 1 || prices.length > 1, price: Math.min(...prices) }
     }
   }
   if (product.priceInNPREnabled && typeof product.priceInNPR === 'number') {
@@ -108,6 +109,7 @@ export function toFilamentCard(product: Product): FilamentCardProduct | null {
 
   return {
     colors: deriveColors(variants),
+    compareAt: priceInfo.compareAt,
     fromPrice: priceInfo.fromPrice,
     href: productHref(product.slug),
     imageUrl,
@@ -175,6 +177,7 @@ export function toVariantCards(product: Product): FilamentCardProduct[] {
   const cards: FilamentCardProduct[] = []
   for (const group of groups.values()) {
     const prices = group.map((v) => variantPriceNPR(product, v) as number)
+    const best = cheapest(group.map((v) => ({ price: variantPriceNPR(product, v), original: variantOriginalPriceNPR(product, v) })))
     const stock = deriveStockFromVariants(group)
     const target = group.find((v) => (v.inventory ?? 0) > 0) ?? group[0]
     const colors = deriveColors(group)
@@ -182,6 +185,7 @@ export function toVariantCards(product: Product): FilamentCardProduct[] {
     cards.push({
       ...base,
       colors,
+      compareAt: best?.compareAt,
       fromPrice: new Set(prices).size > 1,
       href: `${productHref(product.slug)}?variant=${target.id}`,
       imageUrl: resolveProductImage(null, [], target) ?? group.map((v) => resolveProductImage(null, [], v)).find(Boolean) ?? base.imageUrl,
