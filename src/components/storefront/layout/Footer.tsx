@@ -7,6 +7,7 @@ import type { ReactNode } from 'react'
 import type { FooterViewModel } from '@/lib/site/get-site-globals'
 import type { BrandingViewModel } from '@/lib/site/get-branding'
 import { Logo } from '../ui/Logo'
+import { PartnerLogo } from './PartnerLogo'
 import { Container } from './Container'
 
 const SOCIAL_LINK =
@@ -55,7 +56,7 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
               />
               {branding.partner ? (
                 <>
-                  <span aria-hidden className="h-8 w-px bg-white/20" />
+                  <span aria-hidden className="hidden h-12 w-px bg-white/20 sm:block" />
                   {branding.partnerUrl ? (
                     <a
                       className="rounded-sm transition-opacity hover:opacity-80 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-lime"
@@ -63,10 +64,10 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
                       rel="noopener noreferrer"
                       target="_blank"
                     >
-                      <Logo className="max-w-[40vw]" height={32} image={branding.partner} loading="lazy" />
+                      <PartnerLogo image={branding.partner} />
                     </a>
                   ) : (
-                    <Logo className="max-w-[40vw]" height={32} image={branding.partner} loading="lazy" />
+                    <PartnerLogo image={branding.partner} />
                   )}
                 </>
               ) : null}
