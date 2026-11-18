@@ -72,7 +72,7 @@ export function Button<T extends ElementType = 'button'>({
           ? cn(
             'overflow-hidden rounded-full border-[1.5px] px-6',
               'transition-[color,border-color] duration-600 ease-editorial',
-              'hover:border-transparent hover:text-[var(--btn-sweep-text)]',
+              'hover:border-transparent hover:text-(color:--btn-sweep-text)',
               'active:scale-95 motion-reduce:transition-none',
               FLOW[variant],
             )
