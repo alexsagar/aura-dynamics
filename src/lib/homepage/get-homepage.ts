@@ -9,8 +9,6 @@ import { catalogShades, toVariantCards } from './product-cards'
 
 export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
 
-const POPULAR_MAX_CARDS = 24
-const SHADES_MAX = 12
 
 /**
  * Payload Homepage Global -> UI-safe view model. Payload owns every string and
@@ -49,8 +47,8 @@ function normalizeHomepage(cms: Homepage, catalogDocs: Product[] = []) {
       : publicDocs.filter((d) => d.productType === 'filament')
   ).filter((p): p is Product => Boolean(p))
   const popular = {
-    // One card per colour variant, capped so the carousel stays light.
-    cards: popularProducts.flatMap(toVariantCards).slice(0, POPULAR_MAX_CARDS).map((card) => ({ card, type: 'filament' as const })),
+    // One card per colour (spool + refill share a card); never capped, so no colour is hidden.
+    cards: popularProducts.flatMap(toVariantCards).map((card) => ({ card, type: 'filament' as const })),
     enabled: cms.popular?.enabled ?? true,
     heading: cms.popular?.heading || '',
   }
@@ -111,7 +109,7 @@ function normalizeHomepage(cms: Homepage, catalogDocs: Product[] = []) {
     availabilityNote: allShades.length
       ? `${allShades.length} ${allShades.length === 1 ? 'colour' : 'colours'} · ${inStockCount} in stock`
       : '',
-    shades: allShades.slice(0, SHADES_MAX),
+    shades: allShades, // every colour: a cap would hide sold colours
     ctaLabel: cms.shadeShowcase?.ctaLabel || '',
     ctaUrl: cms.shadeShowcase?.ctaUrl || '',
     description: cms.shadeShowcase?.description || '',

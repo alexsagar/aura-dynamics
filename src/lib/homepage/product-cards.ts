@@ -1,7 +1,7 @@
 import type { FilamentColor, FilamentCardProduct, PackagingKind, PrintCardProduct, StockState } from '@/components/storefront/types'
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { productHref } from '@/lib/catalog/shared'
-import { variantPriceNPR } from '@/lib/catalog/pricing'
+import { isRefill, variantPriceNPR } from '@/lib/catalog/pricing'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
 /** Real product records only — populated relationships (depth >= 2), not IDs. */
@@ -148,10 +148,10 @@ export function populatedProducts(products: (number | Product)[] | null | undefi
 }
 
 /**
- * One card per sellable colour variant of a filament product (no extra
- * database records): the variant's own colour, photo (falling back to the
- * product's), price, packaging and stock, linking to the product page with
- * that variant preselected. Products without variants give their single card.
+ * One card per sellable colour of a filament product (no extra database
+ * records). Full spool and refill variants of a colour share one card: lowest
+ * price ("from" when they differ), both packagings, combined stock, linking to
+ * the product page with an in-stock variant of that colour preselected. Products without variants give their single card.
  * In-stock colours come first; out-of-stock ones stay visible but last.
  */
 export function toVariantCards(product: Product): FilamentCardProduct[] {
@@ -162,24 +162,37 @@ export function toVariantCards(product: Product): FilamentCardProduct[] {
   }
   const base = toFilamentCard(product)
   if (!base) return []
-  const cards: FilamentCardProduct[] = []
+  // Group packaging variants (full spool, refill) of the same colour.
+  const groups = new Map<string, PopulatedVariant[]>()
   for (const variant of variants) {
-    const price = variantPriceNPR(product, variant)
-    if (price == null) continue
-    const stock = deriveStock(variant.inventory ?? 0, variant.lowStockThreshold ?? 3)
-    const colors = deriveColors([variant])
+    if (variantPriceNPR(product, variant) == null) continue
+    const color = variant.options.find(
+      (o): o is VariantOption => isPopulated<VariantOption>(o) && Boolean(o.hexColor || o.colorFamily),
+    )
+    const key = color ? `c:${color.value}` : `v:${variant.id}`
+    groups.set(key, [...(groups.get(key) ?? []), variant])
+  }
+  const cards: FilamentCardProduct[] = []
+  for (const group of groups.values()) {
+    const prices = group.map((v) => variantPriceNPR(product, v) as number)
+    const stock = deriveStockFromVariants(group)
+    const target = group.find((v) => (v.inventory ?? 0) > 0) ?? group[0]
+    const colors = deriveColors(group)
     const colorName = colors[0]?.name
     cards.push({
       ...base,
       colors,
-      fromPrice: false,
-      href: `${productHref(product.slug)}?variant=${variant.id}`,
-      imageUrl: resolveProductImage(null, [], variant) ?? base.imageUrl,
-      packaging: derivePackaging([variant]),
-      price,
+      fromPrice: new Set(prices).size > 1,
+      href: `${productHref(product.slug)}?variant=${target.id}`,
+      imageUrl: resolveProductImage(null, [], target) ?? group.map((v) => resolveProductImage(null, [], v)).find(Boolean) ?? base.imageUrl,
+      // Same rule as pricing: a variant without a Refill option is a full spool.
+      packaging: group.some(isRefill)
+        ? [...new Set(group.map((v): PackagingKind => (isRefill(v) ? 'refill' : 'full-spool')))]
+        : derivePackaging(group),
+      price: Math.min(...prices),
       stock: stock.state,
       stockLeft: stock.left,
-      title: colorName ? `${product.title} — ${colorName}` : variant.title || product.title,
+      title: colorName ? `${product.title} — ${colorName}` : target.title || product.title,
     })
   }
   const rank = (c: FilamentCardProduct) => (c.stock === 'out' ? 1 : 0)

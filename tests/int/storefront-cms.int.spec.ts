@@ -52,16 +52,26 @@ const product: any = {
   title: 'Numakers PLA',
   enableVariants: true,
   spoolPriceInNPR: 2700,
+  refillPriceInNPR: 2200,
   filamentDetails: { material: { name: 'PLA' }, netWeightKg: 1 },
-  variants: { docs: [variant(1, white, 0, [media('/w.jpg')]), variant(2, black, 5, [media('/b.jpg')]), { ...variant(3, black, 9), active: false }] },
+  variants: {
+    docs: [
+      variant(1, white, 0, [media('/w.jpg')]),
+      // Pitch Black sold as refill (sold out) and full spool: one card.
+      { ...variant(4, black, 0), options: [black, refill] },
+      variant(2, black, 5, [media('/b.jpg')]),
+      { ...variant(3, black, 9), active: false },
+    ],
+  },
 }
 
 describe('toVariantCards (Popular: one card per colour, no new records)', () => {
-  it('builds a card per active colour variant with its own image, price, stock and deep link; in stock first', () => {
+  it('one card per colour across packaging: lowest shared price, both packagings, in-stock variant linked; in stock first', () => {
     const cards = toVariantCards(product)
     expect(cards.map((c) => c.title)).toEqual(['Numakers PLA — Pitch Black', 'Numakers PLA — Pure White'])
-    expect(cards[0]).toMatchObject({ href: '/product/numakers-pla?variant=2', imageUrl: '/b.jpg', price: 2700, stock: 'in', fromPrice: false })
-    expect(cards[1]).toMatchObject({ stock: 'out', imageUrl: '/w.jpg' })
+    expect(cards[0]).toMatchObject({ href: '/product/numakers-pla?variant=2', imageUrl: '/b.jpg', price: 2200, fromPrice: true, stock: 'in' })
+    expect(cards[0].packaging.sort()).toEqual(['full-spool', 'refill'])
+    expect(cards[1]).toMatchObject({ stock: 'out', imageUrl: '/w.jpg', price: 2700, fromPrice: false })
     expect(cards[0].colors).toEqual([{ hex: '#000000', name: 'Pitch Black' }])
   })
 })
