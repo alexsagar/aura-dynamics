@@ -5,6 +5,7 @@ import type { Homepage, Product } from '@/payload-types'
 import { mediaAlt, mediaUrl } from '@/lib/payload-media'
 import { isPublicProduct, publicProductWhere } from '@/access/ecommerce'
 import { isRetiredUrl } from '@/lib/site/routes'
+import { normalizeCompare } from './compare'
 import { catalogShades, toVariantCards } from './product-cards'
 
 export type HomepageViewModel = ReturnType<typeof normalizeHomepage>
@@ -117,15 +118,7 @@ function normalizeHomepage(cms: Homepage, catalogDocs: Product[] = []) {
     heading: cms.shadeShowcase?.heading || '',
   }
 
-  const compare = {
-    columns: (cms.compare?.columns ?? []).map((c) => ({ bestFor: c.bestFor || '', label: c.label || '' })),
-    enabled: cms.compare?.enabled ?? true,
-    heading: cms.compare?.heading || '',
-    rows: (cms.compare?.rows ?? []).map((r) => ({
-      label: r.label || '',
-      scores: (r.scores ?? []).map((s) => s.score ?? 0),
-    })),
-  }
+  const compare = normalizeCompare(cms.compare)
 
   const testimonials = { enabled: cms.testimonials?.enabled ?? false }
 
