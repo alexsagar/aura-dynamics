@@ -11,13 +11,15 @@
   "workers_dev": false,
   "preview_urls": false,
 
-  // PRE-LAUNCH phase: only the unlinked check hostname. The Coming Soon Worker
-  // (shrill-tree-d4d5) keeps printwithaura.com. Pre-launch builds are noindex,
-  // email goes to EMAIL_ALLOWLIST only, and links use launch-check. The cutover
-  // to printwithaura.com + www is a separate reviewed PR; cf-guard checks that
+  // LIVE phase: the apex and www. Deploying moves the printwithaura.com custom
+  // domain off the Coming Soon Worker (shrill-tree-d4d5, kept for rollback).
+  // cf-guard requires AURA_CONFIRM_CUTOVER=printwithaura.com and checks that
   // routes, vars and the package.json build env agree on the phase
   // (see docs/releases/production-setup-plan.md).
-  "routes": [{ "pattern": "launch-check.printwithaura.com", "custom_domain": true }],
+  "routes": [
+    { "pattern": "printwithaura.com", "custom_domain": true },
+    { "pattern": "www.printwithaura.com", "custom_domain": true },
+  ],
 
   "compatibility_date": "2025-08-15",
 
@@ -37,11 +39,9 @@
   "d1_databases": [
     {
       "binding": "D1",
-      // PLACEHOLDER: the old, empty aura-personal database id. Kept only because
-      // local dev state is keyed on it. Replace with the id printed by
-      // `wrangler d1 create aura-production` (provisioning step 2); cf-guard
-      // refuses to migrate or deploy while this placeholder is present.
-      "database_id": "ca5f1a51-2974-4a83-99a1-6392ac4e2379",
+      // aura-production in aura-official (created 2026-11-18). cf-guard also
+      // requires AURA_PRODUCTION_D1_ID to equal this id.
+      "database_id": "a3321af0-04c6-41a7-9a28-2647dde9a45d",
       "database_name": "aura-production",
     },
   ],
@@ -57,7 +57,7 @@
 
   "vars": {
     "CLOUDFLARE_ENV": "production",
-    "NEXT_PUBLIC_SITE_URL": "https://launch-check.printwithaura.com",
+    "NEXT_PUBLIC_SITE_URL": "https://printwithaura.com",
   },
 
   "r2_buckets": [

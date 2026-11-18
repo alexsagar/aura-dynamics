@@ -1,6 +1,9 @@
 # Production setup plan (aura-official account)
 
-Status: **proposed. Nothing is provisioned.** Every live step needs explicit approval and is run only after that approval.
+Status: **launch approved 2026-11-18.**
+- D1 `aura-production` (`a3321af0-04c6-41a7-9a28-2647dde9a45d`) and R2 `aura-media-production` are provisioned.
+- The config is in the live phase (apex + www).
+- Content is migrated from approved staging instead of entered by hand (steps 4–6 skipped: no launch-check hostname, no allowlist phase).
 
 ## Decision
 
