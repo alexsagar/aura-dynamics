@@ -3,6 +3,7 @@ import type { Category, Material, Product, Variant, VariantOption } from '@/payl
 import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import type { SortKey } from '@/lib/filaments/sort-options'
 
 export { SORT_OPTIONS } from '@/lib/filaments/sort-options'
@@ -72,11 +73,11 @@ export type NPrintProduct = {
   variants: NPrintVariant[]
 }
 
-function normalizeVariant(variant: Variant): NPrintVariant {
+function normalizeVariant(variant: Variant, product: Product): NPrintVariant {
   const nv: NPrintVariant = {
     inventory: variant.inventory ?? 0,
     lowStock: variant.lowStockThreshold ?? 3,
-    price: variant.priceInNPREnabled && typeof variant.priceInNPR === 'number' ? variant.priceInNPR : null,
+    price: variantPriceNPR(product, variant),
   }
   for (const option of variant.options ?? []) {
     if (!isPopulated<VariantOption>(option)) continue
@@ -92,7 +93,7 @@ function normalizeVariant(variant: Variant): NPrintVariant {
 function normalizeProduct(product: Product, variantDocs: Variant[]): NPrintProduct {
   const activeVariants = variantDocs.filter((v) => v.active !== false)
   const variants: NPrintVariant[] = product.enableVariants && activeVariants.length
-    ? activeVariants.map(normalizeVariant)
+    ? activeVariants.map((v) => normalizeVariant(v, product))
     : [
         {
           inventory: product.inventory ?? 0,

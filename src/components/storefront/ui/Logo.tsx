@@ -21,6 +21,8 @@ const ASSETS: Record<LogoVariant, { h: number; left: number; src: string; top: n
 
 export function Logo({
   className = '',
+  /** CMS-uploaded logo (Branding global). Rendered as-is at `height`; replaces the built-in asset. */
+  image,
   /** Rendered artwork height in px; width follows the asset's own aspect ratio. */
   height = 28,
   /** Use 'lazy' for a variant that is hidden at the current breakpoint. */
@@ -33,7 +35,20 @@ export function Logo({
   loading?: 'eager' | 'lazy'
   title?: string
   variant?: LogoVariant
+  image?: { url: string; alt: string } | null
 }) {
+  if (image) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element -- CMS logo, intrinsic aspect ratio unknown
+      <img
+        alt={image.alt || title}
+        className={cn('block w-auto flex-none object-contain', className)}
+        loading={loading}
+        src={image.url}
+        style={{ height }}
+      />
+    )
+  }
   const asset = ASSETS[variant]
   const canvas = height / asset.h
 

@@ -70,8 +70,16 @@ export async function generateMetadata({
   }
 }
 
-export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
+export default async function ProductPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ slug: string }>
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
   const { slug } = await params
+  // Colour cards link here as ?variant=<id>; ProductView preselects it.
+  const requestedVariant = (await searchParams).variant
   const product = await getProductBySlug(slug)
 
   // No mock fallback: an unknown or unpublished slug is a real 404, never a
@@ -91,6 +99,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     <div className="min-h-screen bg-background pt-32">
       <ProductJsonLd product={product} />
       <ProductView
+        initialVariantId={typeof requestedVariant === 'string' ? requestedVariant : undefined}
         product={product}
         beforeColours={
           <>

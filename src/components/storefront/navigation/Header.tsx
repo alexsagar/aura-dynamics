@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useCart } from '../../../providers/CartProvider'
 import type { HeaderViewModel } from '@/lib/site/get-site-globals'
+import type { BrandImage } from '@/lib/site/get-branding'
 import { Container } from '../layout/Container'
 import { CartIcon, MenuIcon, SearchIcon, UserIcon } from '../ui/icons'
 import { Logo } from '../ui/Logo'
@@ -15,11 +16,20 @@ type NavLink = { href: string; label: string }
 const ICON_BTN =
   'relative inline-flex min-h-10 min-w-10 cursor-pointer items-center justify-center gap-2 rounded-full border border-transparent bg-black/3 px-2 text-sm font-medium text-foreground transition duration-300 ease-editorial hover:scale-105 hover:bg-black/8'
 
-/** Official logo, always at the start of the bar: full lockup, symbol only on the narrowest phones. */
-export const Wordmark = () => (
-  <Link aria-label="Aura — home" className="inline-flex min-h-10 flex-none items-center pl-1" href="/">
-    <Logo className="max-[379px]:hidden" height={24} variant="full" />
-    <Logo className="min-[380px]:hidden" height={26} loading="lazy" variant="symbol" />
+/**
+ * Logo at the start of the bar. A CMS logo (Branding) is shown as uploaded;
+ * otherwise the official lockup, symbol only on the narrowest phones.
+ */
+export const Wordmark = ({ logo }: { logo?: BrandImage }) => (
+  <Link aria-label="Aura — home" className="inline-flex min-h-10 min-w-0 flex-none items-center pl-1" href="/">
+    {logo ? (
+      <Logo className="max-w-[40vw] object-left" height={28} image={logo} />
+    ) : (
+      <>
+        <Logo className="max-[379px]:hidden" height={24} variant="full" />
+        <Logo className="min-[380px]:hidden" height={26} loading="lazy" variant="symbol" />
+      </>
+    )}
   </Link>
 )
 
@@ -84,7 +94,7 @@ const MobileNav = ({ navLinks }: { navLinks: NavLink[] }) => (
   </details>
 )
 
-export function Header({ data }: { data: HeaderViewModel }) {
+export function Header({ data, logo }: { data: HeaderViewModel; logo?: BrandImage }) {
   const pathname = usePathname()
   const { cartItems, openCart } = useCart()
   const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0)
@@ -98,7 +108,7 @@ export function Header({ data }: { data: HeaderViewModel }) {
     <header className="fixed top-6 left-1/2 z-40 w-[calc(100%-48px)] max-w-[1000px] -translate-x-1/2 rounded-full border border-white/40 bg-white/70 px-2 shadow-[0_12px_32px_-12px_rgba(0,0,0,0.1),inset_0_0_0_1px_rgba(255,255,255,0.5)] backdrop-blur-[24px] backdrop-saturate-180 transition duration-400 ease-editorial">
       <Container>
         <div className="flex min-h-14 items-center justify-between gap-3 min-[900px]:gap-6">
-          <Wordmark />
+          <Wordmark logo={logo} />
 
           <nav
             aria-label="Primary"

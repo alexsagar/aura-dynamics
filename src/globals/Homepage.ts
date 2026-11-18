@@ -89,7 +89,8 @@ export const Homepage: GlobalConfig = {
               relationTo: 'products',
               hasMany: true,
               admin: {
-                description: 'Product records stay the source of truth for title, image, price.',
+                description:
+                  'Each product shows one card per colour (with that colour’s photo, price and stock). Leave empty to show every published filament. Product records stay the source of truth.',
               },
             },
           ],
@@ -213,7 +214,8 @@ export const Homepage: GlobalConfig = {
           name: 'shadeShowcase',
           admin: {
             hideGutter: true,
-            description: 'Copy, swatches and swatch photography. The interaction stays code-driven.',
+            description:
+              'Colours, links and stock come from the published catalog automatically. Use "Shades" only to choose a different photo for a colour (match its exact name or hex).',
           },
           // ponytail: the homepage main table is at ~47 scalar columns; D1 caps a
           // query at 100 bound params and a global save binds each column twice.
@@ -226,12 +228,17 @@ export const Homepage: GlobalConfig = {
               name: 'shades',
               type: 'array',
               dbName: 'hp_shades',
+              label: 'Photo overrides',
               fields: [
                 { type: 'row', fields: [{ name: 'name', type: 'text' }, { name: 'hex', type: 'text' }] },
                 { name: 'image', type: 'upload', relationTo: 'media' },
               ],
             },
-            { name: 'availabilityNote', type: 'text', admin: { description: 'e.g. "40+ colors available"' } },
+            {
+              name: 'availabilityNote',
+              type: 'text',
+              admin: { description: 'No longer shown: the colour count is now calculated from the catalog.' },
+            },
             { name: 'ctaLabel', type: 'text' },
             { name: 'ctaUrl', type: 'text' },
           ],

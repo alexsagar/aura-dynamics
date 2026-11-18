@@ -32,10 +32,13 @@ const colourOf = (variant: any) =>
  */
 export function ProductView({
   product,
+  initialVariantId,
   beforeColours,
   afterColours,
 }: {
   product: any
+  /** From ?variant=<id> (colour cards); ignored unless it is an active variant of this product. */
+  initialVariantId?: string
   beforeColours?: React.ReactNode
   afterColours?: React.ReactNode
 }) {
@@ -43,7 +46,12 @@ export function ProductView({
     ? product.variants
     : product.variants?.docs || []
 
-  const [selectedVariant, setSelectedVariant] = useState<any>(variants[0] || null)
+  const [selectedVariant, setSelectedVariant] = useState<any>(
+    () =>
+      (initialVariantId && variants.find((v) => String(v?.id) === initialVariantId && v?.active !== false)) ||
+      variants[0] ||
+      null,
+  )
 
   // Map parent product images to GalleryImage array (Parent Gallery Fallback)
   const rawProductImages = (product.images as any[]) || []
@@ -51,16 +59,17 @@ export function ProductView({
     .map((img: any, idx: number) => toGalleryImage(img, product.title, `prod-img-${idx}`))
     .filter((img): img is GalleryImage => Boolean(img))
 
-  // Map selected variant image (Selected Variant Image priority)
-  const variantImages = (selectedVariant?.images as any[]) || []
-  const activeVariantImage: GalleryImage | null =
-    variantImages.length > 0
-      ? toGalleryImage(
-          variantImages[0],
-          `${product.title} ${selectedVariant?.title || ''}`,
-          `var-img-${selectedVariant?.id || 0}`
-        )
-      : null
+  // Every photo of the selected colour first, then the product's own gallery.
+  const variantGalleryImages: GalleryImage[] = ((selectedVariant?.images as any[]) || [])
+    .map((img: any, idx: number) =>
+      toGalleryImage(img, `${product.title} ${selectedVariant?.title || ''}`.trim(), `var-img-${selectedVariant?.id || 0}-${idx}`),
+    )
+    .filter((img): img is GalleryImage => Boolean(img))
+  const activeVariantImage: GalleryImage | null = variantGalleryImages[0] ?? null
+  const galleryImages = [
+    ...variantGalleryImages,
+    ...productGalleryImages.filter((p) => !variantGalleryImages.some((v) => v.url === p.url)),
+  ]
 
   const colourVariants = variants.filter((v) => v?.active !== false && colourOf(v))
 
@@ -76,7 +85,7 @@ export function ProductView({
           {/* Left Column: Interactive Image Gallery */}
           <div className="lg:sticky lg:top-32 lg:self-start">
             <ProductGallery
-              images={productGalleryImages}
+              images={galleryImages}
               selectedImage={activeVariantImage}
             />
           </div>

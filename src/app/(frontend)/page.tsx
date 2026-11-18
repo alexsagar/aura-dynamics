@@ -80,55 +80,62 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* 1. VELARIS HERO (FULL VIEWPORT STRADDLE) */}
-      <section className="relative mb-[clamp(100px,15vw,250px)] h-screen">
-        <div className="absolute inset-0 z-0">
+      {/* 1. VELARIS HERO — text, then an image straddling the dark band. A grid
+          (not absolute positioning) keeps the image below the copy at every size:
+          the image spans rows 2-3 (equal halves), the background rows 1-2, so the
+          band ends exactly at the image's midpoint. */}
+      <section className="relative isolate mb-[clamp(64px,8vw,120px)] grid grid-rows-[auto_1fr_1fr]">
+        <div className="col-start-1 row-start-1 row-end-3 -z-10 overflow-hidden bg-black">
           <Velaris
             bg="#000000"
             className="pointer-events-none"
             colors={['#C5F955', '#4ade80', '#059669', '#000000']}
-            height="100vh"
+            height="100%"
           />
         </div>
 
-        <div className="absolute inset-0 z-1">
-          <div className="flex h-full flex-col items-center justify-start px-6 pt-[20vh]">
-            <h1 className="mb-6 text-center text-hero leading-[0.9] font-extrabold tracking-[-0.04em] text-white">
-              {vm.hero.heading}
-            </h1>
-            <p className="max-w-[800px] text-center text-[clamp(1.125rem,2vw,1.5rem)] leading-[1.4] text-white/80">
-              {vm.hero.subheading}
-            </p>
-          </div>
+        <div className="col-start-1 row-start-1 flex flex-col items-center px-6 pt-[clamp(128px,20vh,220px)] pb-[clamp(48px,7vw,96px)]">
+          <h1 className="mb-6 text-center text-hero leading-[0.9] font-extrabold tracking-[-0.04em] text-white">
+            {vm.hero.heading}
+          </h1>
+          <p className="max-w-[800px] text-center text-[clamp(1.125rem,2vw,1.5rem)] leading-[1.4] text-white/80">
+            {vm.hero.subheading}
+          </p>
+        </div>
 
-          {/* the image straddles the section edge, half of it in the next section */}
-          <div className="absolute inset-x-0 bottom-0 translate-y-1/2">
-            <Container>
-              <div className="group relative aspect-4/5 w-full overflow-hidden rounded-3xl shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] md:aspect-[16/7] md:rounded-[32px]">
-                {/* eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions */}
+        <div className="col-start-1 row-start-2 row-end-4">
+          <Container>
+            <div className="group relative aspect-4/5 w-full overflow-hidden rounded-3xl bg-[#1a1a1a] shadow-[0_40px_80px_-20px_rgba(0,0,0,0.3)] sm:aspect-[4/3] md:aspect-[16/7] md:rounded-[32px]">
+              {vm.hero.imageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element -- CMS-managed photography, no fixed dimensions
                 <img
                   alt={vm.hero.imageAlt}
                   className="size-full object-cover transition-transform duration-2000 ease-editorial group-hover:scale-105"
+                  fetchPriority="high"
                   src={vm.hero.imageUrl}
                 />
-                <div className="absolute inset-0 flex flex-col items-end justify-end gap-4 bg-linear-to-t from-black/70 to-transparent to-60% p-6 md:flex-row md:justify-center md:p-12">
-                  <Button as="a" block className="md:w-auto" href={vm.hero.primaryCta.url} size="lg">
+              ) : null}
+              <div className="absolute inset-0 flex flex-col items-stretch justify-end gap-3 bg-linear-to-t from-black/70 to-transparent to-60% p-5 sm:items-center md:flex-row md:justify-center md:gap-4 md:p-12">
+                {vm.hero.primaryCta.label ? (
+                  <Button as="a" block className="sm:w-auto" href={vm.hero.primaryCta.url} size="lg">
                     {vm.hero.primaryCta.label}
                   </Button>
+                ) : null}
+                {vm.hero.secondaryCta.label ? (
                   <Button
                     as="a"
                     block
-                    className="md:w-auto"
+                    className="sm:w-auto"
                     href={vm.hero.secondaryCta.url}
                     size="lg"
                     variant="on-dark"
                   >
                     {vm.hero.secondaryCta.label}
                   </Button>
-                </div>
+                ) : null}
               </div>
-            </Container>
-          </div>
+            </div>
+          </Container>
         </div>
       </section>
 

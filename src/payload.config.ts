@@ -19,6 +19,7 @@ import { Homepage } from './globals/Homepage'
 import { Header } from './globals/Header'
 import { Footer } from './globals/Footer'
 import { SiteSettings } from './globals/SiteSettings'
+import { Branding } from './globals/Branding'
 import { AboutPage, MaterialsPage, PageContent } from './globals/PageContent'
 import { migrations } from './migrations'
 import { releaseInventoryOnCancel } from './lib/order-cancellation'
@@ -110,7 +111,7 @@ export default buildConfig({
     },
   },
   collections: [Users, Customers, Media, Categories, Materials],
-  globals: [Homepage, Header, Footer, SiteSettings, PageContent, AboutPage, MaterialsPage],
+  globals: [Homepage, Header, Footer, Branding, SiteSettings, PageContent, AboutPage, MaterialsPage],
   editor: lexicalEditor(),
   // Resend behind an environment policy; never Payload's console fallback (see src/lib/email.ts).
   email: auraEmailAdapter,
@@ -388,6 +389,16 @@ export default buildConfig({
                 },
               },
               {
+                name: 'customPrice',
+                type: 'checkbox',
+                defaultValue: false,
+                label: 'Custom price for this variant',
+                admin: {
+                  description:
+                    'Tick to charge this variant’s own price instead of the product’s shared Full spool / Refill price.',
+                },
+              },
+              {
                 name: 'sku',
                 type: 'text',
                 index: true,
@@ -423,6 +434,30 @@ export default buildConfig({
           },
           fields: [
             ...defaultCollection.fields,
+            {
+              type: 'collapsible',
+              label: 'Colour pricing (shared by all colours)',
+              admin: {
+                condition: (data: Record<string, any>) => Boolean(data?.enableVariants),
+                description:
+                  'Set once here instead of editing every colour. Applies to every variant of this product unless that variant has "Custom price" ticked. Leave empty to use each variant’s own price. Existing orders keep the price they were placed at.',
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    { name: 'spoolPriceInNPR', type: 'number', min: 0, label: 'Full spool price (NPR)' },
+                    {
+                      name: 'refillPriceInNPR',
+                      type: 'number',
+                      min: 0,
+                      label: 'Refill price (NPR)',
+                      admin: { description: 'Used for variants whose Packaging option is "Refill".' },
+                    },
+                  ],
+                },
+              ],
+            },
             {
               name: 'title',
               type: 'text',

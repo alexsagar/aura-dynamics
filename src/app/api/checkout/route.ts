@@ -6,6 +6,7 @@ import { canReplayOrder, isPublicProduct, isVariantOfProduct } from '@/access/ec
 import { resolveShippingSettings, shippingFor } from '@/lib/shipping'
 import { checkoutLimitsError } from '@/lib/checkout-limits'
 import { checkoutRateLimited } from '@/lib/rate-limit'
+import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { scheduleOrderConfirmation } from '@/lib/order-emails'
 
 /**
@@ -250,12 +251,7 @@ export async function POST(req: Request) {
       }
 
       // Verified unit price from CMS
-      const verifiedPrice =
-        variantDoc.priceInNPREnabled && typeof variantDoc.priceInNPR === 'number'
-          ? variantDoc.priceInNPR
-          : typeof productDoc.priceInNPR === 'number'
-            ? productDoc.priceInNPR
-            : 0
+      const verifiedPrice = variantPriceNPR(productDoc, variantDoc) ?? 0
 
       if (verifiedPrice <= 0) {
         return NextResponse.json(
