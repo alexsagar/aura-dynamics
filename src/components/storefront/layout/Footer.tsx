@@ -46,14 +46,20 @@ export function Footer({ branding, data }: { branding: BrandingViewModel; data: 
           <div className="flex flex-col items-start">
             {/* Aura + partner (e.g. Numakers) logos, both from Branding; Aura falls back to the official file. */}
             <div className="flex flex-wrap items-center gap-x-6 gap-y-4">
-              <Logo
-                className="max-w-[60vw]"
-                height={40}
-                image={branding.logoOnDark}
-                loading="lazy"
-                title="Aura"
-                variant="wordmark-offwhite"
-              />
+              {/* ponytail: descriptor hardcoded; a Branding field needs a migration. */}
+              <span className="flex flex-col items-start gap-2">
+                <Logo
+                  className="max-w-[60vw]"
+                  height={40}
+                  image={branding.logoOnDark}
+                  loading="lazy"
+                  title="Aura"
+                  variant="wordmark-offwhite"
+                />
+                <span className="pl-0.5 text-[11px] leading-none font-medium tracking-[0.42em] text-white/75 uppercase">
+                  Filaments
+                </span>
+              </span>
               {branding.partner ? (
                 <>
                   <span aria-hidden className="hidden h-12 w-px bg-white/20 sm:block" />

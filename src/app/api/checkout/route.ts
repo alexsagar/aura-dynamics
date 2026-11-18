@@ -137,7 +137,7 @@ export async function POST(req: Request) {
         return NextResponse.json(
           {
             error:
-              'eSewa QR payment is currently unavailable because the merchant QR code has not been configured by the store administrator.',
+              'Fonepay QR payment is currently unavailable because the merchant QR code has not been configured by the store administrator.',
           },
           { status: 400 }
         )
@@ -146,7 +146,7 @@ export async function POST(req: Request) {
       const ref = paymentReference?.trim()
       if (!ref || ref.length < 3) {
         return NextResponse.json(
-          { error: 'Please enter your eSewa transaction or reference ID.' },
+          { error: 'Please enter your payment transaction or reference ID.' },
           { status: 400 }
         )
       }

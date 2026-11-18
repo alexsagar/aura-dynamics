@@ -71,7 +71,7 @@ function OrderSuccessContent() {
             Payment Method
           </span>
           <span className="font-medium text-foreground" data-testid="success-payment-method">
-            {isEsewa ? 'eSewa QR' : 'Cash on Delivery'}
+            {isEsewa ? 'Fonepay QR' : 'Cash on Delivery'}
           </span>
         </div>
 
@@ -110,7 +110,7 @@ function OrderSuccessContent() {
       <div className="mb-10 text-xs text-muted leading-relaxed max-w-md mx-auto">
         {isEsewa ? (
           <p>
-            Our administrator will verify the transaction code with eSewa shortly. You will receive an update once verified.
+            We will check your payment using the transaction or reference ID you entered. You will receive an update once it is verified.
           </p>
         ) : (
           <p>

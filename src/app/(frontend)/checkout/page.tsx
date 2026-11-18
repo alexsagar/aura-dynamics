@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useCart } from '@/providers/CartProvider'
 import { Button } from '@/components/storefront/ui/Button'
 import { DEFAULT_SHIPPING, shippingFor, type ShippingSettings } from '@/lib/shipping'
+import { QrPreview } from './QrPreview'
 
 export default function CheckoutPage() {
   const router = useRouter()
@@ -109,11 +110,11 @@ export default function CheckoutPage() {
 
     if (paymentMethod === 'esewa_qr') {
       if (!isEsewaConfigured || !esewaQrUrl) {
-        setErrorMessage('eSewa QR payment is currently unavailable. Please select Cash on Delivery.')
+        setErrorMessage('Fonepay QR payment is currently unavailable. Please select Cash on Delivery.')
         return
       }
       if (!paymentReference.trim()) {
-        setErrorMessage('Please enter your eSewa transaction or reference ID.')
+        setErrorMessage('Please enter your payment transaction or reference ID.')
         return
       }
     }
@@ -348,7 +349,7 @@ export default function CheckoutPage() {
                 {/* eSewa QR Option */}
                 {isEsewaConfigured && esewaQrUrl ? (
                   <>
-                    <label className={`flex cursor-pointer items-center justify-between border-b border-black/10 p-5 transition-colors ${paymentMethod === 'esewa_qr' ? 'bg-[#f8f9fa]' : 'hover:bg-black/5'}`}>
+                    <label className={`flex cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-1 border-b border-black/10 p-5 transition-colors ${paymentMethod === 'esewa_qr' ? 'bg-[#f8f9fa]' : 'hover:bg-black/5'}`}>
                       <div className="flex items-center gap-3">
                         <input
                           type="radio"
@@ -359,29 +360,17 @@ export default function CheckoutPage() {
                           className="size-4 accent-black"
                           data-testid="payment-method-esewa"
                         />
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold text-base">eSewa QR Payment</span>
-                          <span className="rounded bg-[#60BB46]/10 px-2 py-0.5 text-xs font-bold text-[#43962b]">
-                            Instant QR
-                          </span>
-                        </div>
+                        <span className="font-semibold text-base">Fonepay QR Payment</span>
                       </div>
-                      <span className="text-xs text-muted">Manual verification</span>
+                      <span className="pl-7 text-xs text-muted sm:pl-0">Manual verification</span>
                     </label>
 
-                    {/* eSewa Details Body */}
+                    {/* QR Details Body (internal id stays esewa_qr) */}
                     {paymentMethod === 'esewa_qr' && (
                       <div className="flex flex-col gap-6 bg-[#fbfbfb] p-6 border-b border-black/10" data-testid="esewa-qr-section">
-                        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-start">
-                          <div className="shrink-0 overflow-hidden rounded-2xl border border-black/10 bg-white p-3 shadow-sm">
-                            <img
-                              src={esewaQrUrl}
-                              alt="eSewa QR Code"
-                              className="h-48 w-48 object-contain"
-                              data-testid="esewa-qr-image"
-                            />
-                          </div>
-                          <div className="flex flex-1 flex-col gap-2 text-sm">
+                        <div className="flex flex-col items-center gap-5">
+                          <QrPreview src={esewaQrUrl} />
+                          <div className="flex w-full flex-col gap-2 text-sm">
                             <p className="font-medium text-foreground">
                               Payable Amount:{' '}
                               <span className="text-lg font-bold text-black" data-testid="esewa-payable-amount">
@@ -389,7 +378,7 @@ export default function CheckoutPage() {
                               </span>
                             </p>
                             <p className="text-muted leading-relaxed">
-                              Scan the QR using eSewa and pay the exact order amount. After payment, enter your eSewa transaction/reference ID below.
+                              Scan this QR with any payment app shown on it and pay the exact amount above. After paying, enter the transaction or reference ID from your app below. We confirm each payment manually.
                             </p>
                             {esewaMerchantName && (
                               <div className="rounded-xl bg-black/5 p-3 text-xs text-muted" data-testid="esewa-merchant-badge">
@@ -399,7 +388,7 @@ export default function CheckoutPage() {
                             )}
                             {esewaId && (
                               <div className="rounded-xl bg-black/5 p-3 text-xs text-muted">
-                                <span className="font-semibold text-foreground">eSewa ID: </span>
+                                <span className="font-semibold text-foreground">Merchant ID: </span>
                                 {esewaId}
                               </div>
                             )}
@@ -408,12 +397,12 @@ export default function CheckoutPage() {
 
                         <div>
                           <label htmlFor="paymentReference" className="block text-xs font-semibold text-muted uppercase tracking-wider mb-1.5">
-                            eSewa Transaction / Reference ID <span className="text-red-500">*</span>
+                            Payment Transaction / Reference ID <span className="text-red-500">*</span>
                           </label>
                           <input
                             id="paymentReference"
                             type="text"
-                            placeholder="e.g. 0ABC1234 or transaction code"
+                            placeholder="Transaction or reference ID from your payment app"
                             value={paymentReference}
                             onChange={(e) => setPaymentReference(e.target.value)}
                             className="w-full rounded-xl border border-black/20 bg-white px-4 py-3 outline-none transition-colors focus:border-black font-mono text-sm"
@@ -435,7 +424,7 @@ export default function CheckoutPage() {
                           className="size-4 opacity-40 cursor-not-allowed"
                           data-testid="payment-method-esewa-disabled"
                         />
-                        <span className="font-medium text-muted">eSewa QR Payment (Currently Unavailable)</span>
+                        <span className="font-medium text-muted">Fonepay QR Payment (Currently Unavailable)</span>
                       </div>
                       <span className="text-xs text-muted">Unconfigured</span>
                     </div>
@@ -446,7 +435,7 @@ export default function CheckoutPage() {
                 )}
 
                 {/* Cash on Delivery Option */}
-                <label className={`flex cursor-pointer items-center justify-between p-5 transition-colors ${paymentMethod === 'cod' ? 'bg-[#f8f9fa]' : 'hover:bg-black/5'}`}>
+                <label className={`flex cursor-pointer flex-wrap items-center justify-between gap-x-4 gap-y-1 p-5 transition-colors ${paymentMethod === 'cod' ? 'bg-[#f8f9fa]' : 'hover:bg-black/5'}`}>
                   <div className="flex items-center gap-3">
                     <input
                       type="radio"
@@ -459,7 +448,7 @@ export default function CheckoutPage() {
                     />
                     <span className="font-semibold text-base">Cash on Delivery (COD)</span>
                   </div>
-                  <span className="text-xs text-muted">Pay at doorstep</span>
+                  <span className="pl-7 text-xs text-muted sm:pl-0">Pay at doorstep</span>
                 </label>
 
                 {paymentMethod === 'cod' && (
@@ -542,7 +531,7 @@ export default function CheckoutPage() {
             disabled={isProcessing}
             data-testid="place-order-button"
           >
-            {isProcessing ? 'Processing Order...' : paymentMethod === 'esewa_qr' ? 'Submit eSewa Order' : 'Place COD Order'}
+            {isProcessing ? 'Processing Order...' : paymentMethod === 'esewa_qr' ? 'Submit Order' : 'Place COD Order'}
           </Button>
 
           <p className="mt-4 text-center text-xs text-muted">
