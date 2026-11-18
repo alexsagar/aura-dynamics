@@ -43,6 +43,9 @@
       // requires AURA_PRODUCTION_D1_ID to equal this id.
       "database_id": "a3321af0-04c6-41a7-9a28-2647dde9a45d",
       "database_name": "aura-production",
+      // CLI migrate/seed (WRANGLER_CONFIG_PATH set) must reach the real D1, as on
+      // staging. Plain local dev and CI set no config path, so they stay local.
+      "remote": true,
     },
   ],
 
@@ -64,6 +67,7 @@
     {
       "binding": "R2",
       "bucket_name": "aura-media-production",
+      "remote": true,
     },
   ],
 }
