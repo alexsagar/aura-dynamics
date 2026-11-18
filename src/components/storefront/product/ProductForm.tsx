@@ -4,7 +4,8 @@ import React, { useState, useEffect } from 'react'
 import { Button } from '@/components/storefront/ui/Button'
 import { useCart } from '@/providers/CartProvider'
 import { StockStatus } from '@/components/storefront/commerce/StockStatus'
-import { variantPriceNPR } from '@/lib/catalog/pricing'
+import { formatNPR } from '@/components/storefront/commerce/Price'
+import { discountNPR, variantOriginalPriceNPR, variantPriceNPR } from '@/lib/catalog/pricing'
 import { deriveStock } from '@/lib/catalog/shared'
 
 export function ProductForm({
@@ -71,6 +72,8 @@ export function ProductForm({
 
   // Determine price based on selected variant or fallback to product base price
   const price = (selectedVariant ? variantPriceNPR(product, selectedVariant) : null) ?? product.priceInNPR ?? 0
+  // Display only — the cart/checkout charge `price` above.
+  const discount = selectedVariant ? discountNPR(price, variantOriginalPriceNPR(product, selectedVariant)) : null
 
   const handleAddToCart = async () => {
     if (isOutOfStock || isAdding) return
@@ -114,12 +117,24 @@ export function ProductForm({
         <h1 className="text-[clamp(2.5rem,4vw,3.5rem)] font-medium leading-[1.1] tracking-[-0.02em]">
           {product.title}
         </h1>
-        <div className="flex items-center gap-4">
-          <p className="text-3xl font-medium tracking-[-0.02em] text-foreground">
-            Rs. {price.toFixed(2)}
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
+          {discount ? (
+            <s className="text-xl text-muted tabular-nums" data-testid="product-original-price">
+              <span className="sr-only">Original price </span>
+              {formatNPR(discount.original)}
+            </s>
+          ) : null}
+          <p className="text-3xl font-medium tracking-[-0.02em] text-foreground tabular-nums" data-testid="product-price">
+            {formatNPR(price)}
           </p>
+          {discount ? <span className="text-sm font-semibold tracking-[0.04em] uppercase">{discount.percent}% off</span> : null}
           <StockStatus state={stockInfo.state} quantity={stockInfo.left} />
         </div>
+        {discount ? (
+          <p className="text-sm text-muted" data-testid="product-saving">
+            You save {formatNPR(discount.saved)}
+          </p>
+        ) : null}
       </div>
 
       {/* Short Summary near Product Title */}

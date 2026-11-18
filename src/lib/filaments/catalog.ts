@@ -3,7 +3,7 @@ import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { compareCatalog, csv, deriveStock, isPopulated, num, paginate, productHref, SORT_KEYS } from '@/lib/catalog/shared'
 import { firstMediaUrl, resolveProductImage } from '@/lib/catalog/product-image'
 
-import { variantPriceNPR } from '@/lib/catalog/pricing'
+import { cheapest, variantOriginalPriceNPR, variantPriceNPR } from '@/lib/catalog/pricing'
 import type { SortKey } from './sort-options'
 
 export { SORT_OPTIONS } from './sort-options'
@@ -79,6 +79,8 @@ export type NVariant = {
   lowStock: number
   packaging?: string
   price: number | null
+  /** Display-only original price; never used for filtering, sorting or checkout. */
+  original?: number | null
 }
 
 export type NProduct = {
@@ -102,6 +104,7 @@ function normalizeVariant(variant: Variant, product: Product): NVariant {
     inventory: variant.inventory ?? 0,
     lowStock: variant.lowStockThreshold ?? 3,
     price: variantPriceNPR(product, variant),
+    original: variantOriginalPriceNPR(product, variant),
   }
   for (const option of variant.options ?? []) {
     if (!isPopulated<VariantOption>(option)) continue
@@ -203,6 +206,7 @@ export function buildCard(
 
   return {
     colors: np.allColors,
+    compareAt: cheapest(matching)?.compareAt,
     fromPrice: matching.length > 1,
     href: productHref(np.slug),
     imageUrl: cardImage,

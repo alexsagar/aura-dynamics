@@ -1,7 +1,7 @@
 import type { Material, Product, Variant, VariantOption } from '@/payload-types'
 import { isPopulated, productHref } from '@/lib/catalog/shared'
 import { publicProductWhere } from '@/access/ecommerce'
-import { variantPriceNPR } from '@/lib/catalog/pricing'
+import { cheapest, variantOriginalPriceNPR, variantPriceNPR } from '@/lib/catalog/pricing'
 import { resolveProductImage } from '@/lib/catalog/product-image'
 
 export type SearchResult = {
@@ -12,6 +12,7 @@ export type SearchResult = {
   typeLabel: string
   imageUrl?: string
   price?: number
+  compareAt?: number
   fromPrice: boolean
   meta: string
 }
@@ -26,9 +27,12 @@ function activeVariants(product: Product): Variant[] {
   return (product.variants?.docs ?? []).filter(isPopulated<Variant>).filter((v) => v.active !== false)
 }
 
-function priceInfo(product: Product, variants: Variant[]): { price?: number; fromPrice: boolean } {
+function priceInfo(product: Product, variants: Variant[]): { price?: number; compareAt?: number; fromPrice: boolean } {
   const prices = variants.map((v) => variantPriceNPR(product, v)).filter((p): p is number => p != null)
-  if (prices.length) return { price: Math.min(...prices), fromPrice: prices.length > 1 }
+  if (prices.length) {
+    const best = cheapest(variants.map((v) => ({ price: variantPriceNPR(product, v), original: variantOriginalPriceNPR(product, v) })))
+    return { price: Math.min(...prices), compareAt: best?.compareAt, fromPrice: prices.length > 1 }
+  }
   if (product.priceInNPREnabled && typeof product.priceInNPR === 'number') {
     return { price: product.priceInNPR, fromPrice: false }
   }
@@ -117,7 +121,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
       const text = haystack(product, variants)
       if (!tokens.every((t) => text.includes(t.toLowerCase()))) continue
 
-      const { price, fromPrice } = priceInfo(product, variants)
+      const { price, compareAt, fromPrice } = priceInfo(product, variants)
       const type = product.productType === '3d-print' ? '3d-print' : 'filament'
       results.push({
         slug: product.slug,
@@ -127,6 +131,7 @@ export async function searchProducts(query: string): Promise<SearchResult[]> {
         typeLabel: type === 'filament' ? 'Filament' : '3D Print',
         imageUrl: resolveProductImage(product, variants),
         price,
+        compareAt,
         fromPrice,
         meta: metaLabel(product),
       })

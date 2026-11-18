@@ -97,7 +97,7 @@ export default async function SearchPage({
                         </span>
                         <h2 className="text-base font-semibold leading-tight">{r.title}</h2>
                         <p className="text-sm text-muted">{r.meta}</p>
-                        {r.price != null ? <Price amount={r.price} from={r.fromPrice} /> : null}
+                        {r.price != null ? <Price amount={r.price} compareAt={r.compareAt} from={r.fromPrice} /> : null}
                       </div>
                     </Link>
                   </li>

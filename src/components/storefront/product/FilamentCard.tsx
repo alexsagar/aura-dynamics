@@ -19,7 +19,7 @@ export function FilamentCard({
   ratio?: 'feature' | 'landscape' | 'portrait' | 'square'
   showPackaging?: boolean
 }) {
-  const { colors, fromPrice, href, imageUrl, isNew, material, packaging, price, stock, stockLeft, title, weight } =
+  const { colors, compareAt, fromPrice, href, imageUrl, isNew, material, packaging, price, stock, stockLeft, title, weight } =
     product
 
   return (
@@ -50,7 +50,7 @@ export function FilamentCard({
 
         {/* price sits directly under the title; stock reads as a quiet second line */}
         <div className="mt-0.5 flex flex-col items-start gap-1">
-          <Price amount={price} from={fromPrice} />
+          <Price amount={price} compareAt={compareAt} from={fromPrice} />
           <StockStatus quantity={stockLeft} state={stock} />
         </div>
 

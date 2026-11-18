@@ -22,6 +22,8 @@ export type FilamentCardProduct = {
   colors: FilamentColor[]
   /** Lowest price across variants, in NPR rupees. */
   price: number
+  /** Display-only original (struck through); set only when it exceeds `price`. */
+  compareAt?: number
   fromPrice?: boolean
   stock: StockState
   stockLeft?: number
@@ -38,6 +40,7 @@ export type PrintCardProduct = {
   materials: string[]
   /** Lowest price across variants, in NPR rupees. */
   price: number
+  compareAt?: number
   fromPrice?: boolean
   stock: StockState
   stockLeft?: number
