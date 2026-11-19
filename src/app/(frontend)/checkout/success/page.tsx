@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
+import { formatNPR } from '@/components/storefront/commerce/Price'
 
 function OrderSuccessContent() {
   const searchParams = useSearchParams()
@@ -61,7 +62,7 @@ function OrderSuccessContent() {
               Amount
             </span>
             <span className="font-bold text-foreground text-base" data-testid="success-order-amount">
-              Rs. {amount.toFixed(2)}
+              {formatNPR(amount)}
             </span>
           </div>
         )}

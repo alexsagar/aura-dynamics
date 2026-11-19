@@ -5,7 +5,9 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useCart } from '@/providers/CartProvider'
 import { Button } from '@/components/storefront/ui/Button'
-import { DEFAULT_SHIPPING, shippingFor, type ShippingSettings } from '@/lib/shipping'
+import { shippingFor } from '@/lib/shipping'
+import { useStoreSettings } from '@/providers/useStoreSettings'
+import { formatNPR, PendingAmount } from '@/components/storefront/commerce/Price'
 import { QrPreview } from './QrPreview'
 
 export default function CheckoutPage() {
@@ -32,54 +34,33 @@ export default function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState<'esewa_qr' | 'cod'>('cod')
   const [paymentReference, setPaymentReference] = useState('')
 
-  // Real QR Settings from CMS (no fake fallbacks)
-  const [isEsewaConfigured, setIsEsewaConfigured] = useState<boolean>(false)
-  const [esewaQrUrl, setEsewaQrUrl] = useState<string | null>(null)
-  const [esewaMerchantName, setEsewaMerchantName] = useState<string | null>(null)
-  const [esewaId, setEsewaId] = useState<string | null>(null)
-
-  // Dynamic Shipping Configuration from CMS
-  const [shippingConfig, setShippingConfig] = useState<ShippingSettings>(DEFAULT_SHIPPING)
-
   const [isProcessing, setIsProcessing] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
-  // Fetch real payment and shipping settings from backend (SiteSettings)
+  // Real payment and shipping settings from CMS (no fake fallbacks, no default fee)
+  const settings = useStoreSettings()
+  const store = settings.status === 'ready' ? settings.settings : null
+  const isEsewaConfigured = Boolean(store?.isEsewaConfigured && store.esewaQrImageUrl)
+  const esewaQrUrl = isEsewaConfigured ? store!.esewaQrImageUrl : null
+  const esewaMerchantName = isEsewaConfigured ? store!.esewaMerchantName || null : null
+  const esewaId = isEsewaConfigured ? store!.esewaId || null : null
+
   useEffect(() => {
-    fetch('/api/payment-settings')
-      .then((res) => (res.ok ? (res.json() as Promise<any>) : null))
-      .then((data: any) => {
-        if (data?.shippingSettings) {
-          setShippingConfig(data.shippingSettings)
-        }
+    if (settings.status !== 'loading') setPaymentMethod(isEsewaConfigured ? 'esewa_qr' : 'cod')
+  }, [settings.status, isEsewaConfigured])
 
-        if (data?.isEsewaConfigured && data?.esewaQrImageUrl) {
-          setIsEsewaConfigured(true)
-          setEsewaQrUrl(data.esewaQrImageUrl)
-          setEsewaMerchantName(data.esewaMerchantName || null)
-          setEsewaId(data.esewaId || null)
-          setPaymentMethod('esewa_qr')
-        } else {
-          setIsEsewaConfigured(false)
-          setEsewaQrUrl(null)
-          setEsewaMerchantName(null)
-          setEsewaId(null)
-          setPaymentMethod('cod')
-        }
-      })
-      .catch(() => {
-        setIsEsewaConfigured(false)
-        setPaymentMethod('cod')
-      })
-  }, [])
-
-  // Calculate totals using dynamic CMS shipping rules
-  const shipping = shippingFor(cartTotal, shippingConfig)
-  const finalTotal = cartTotal + shipping
+  // Unknown until settings load: never show or submit an unverified total.
+  const shipping = store ? shippingFor(cartTotal, store.shippingSettings) : null
+  const finalTotal = shipping === null ? null : cartTotal + shipping
 
   const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage(null)
+
+    if (finalTotal === null) {
+      setErrorMessage('Delivery charges are still loading. Please wait or retry before placing your order.')
+      return
+    }
 
     // Client-side validation
     if (!fullName.trim()) {
@@ -374,7 +355,7 @@ export default function CheckoutPage() {
                             <p className="font-medium text-foreground">
                               Payable Amount:{' '}
                               <span className="text-lg font-bold text-black" data-testid="esewa-payable-amount">
-                                Rs. {finalTotal.toFixed(2)}
+                                {formatNPR(finalTotal ?? 0)}
                               </span>
                             </p>
                             <p className="text-muted leading-relaxed">
@@ -492,10 +473,10 @@ export default function CheckoutPage() {
                   {item.color && (
                     <span className="text-xs text-muted">{item.color}</span>
                   )}
-                  <span className="text-xs text-muted">Rs. {item.unitPrice.toFixed(2)} each</span>
+                  <span className="text-xs text-muted">{formatNPR(item.unitPrice)} each</span>
                 </div>
                 <span className="font-semibold text-sm">
-                  Rs. {(item.unitPrice * item.quantity).toFixed(2)}
+                  {formatNPR(item.unitPrice * item.quantity)}
                 </span>
               </div>
             ))}
@@ -505,12 +486,12 @@ export default function CheckoutPage() {
           <div className="flex flex-col gap-3 border-y border-black/10 py-5 text-sm">
             <div className="flex justify-between text-muted">
               <span>Subtotal</span>
-              <span className="font-medium text-black">Rs. {cartTotal.toFixed(2)}</span>
+              <span className="font-medium text-black">{formatNPR(cartTotal)}</span>
             </div>
             <div className="flex justify-between text-muted">
               <span>Delivery Charge</span>
-              <span className="font-medium text-black">
-                {shipping === 0 ? 'Free' : `Rs. ${shipping.toFixed(2)}`}
+              <span className="font-medium text-black" data-testid="checkout-shipping">
+                <PendingAmount status={settings.status}>{shipping === 0 ? 'Free' : formatNPR(shipping ?? 0)}</PendingAmount>
               </span>
             </div>
           </div>
@@ -518,9 +499,18 @@ export default function CheckoutPage() {
           <div className="mt-5 flex items-end justify-between">
             <span className="text-lg font-medium">Total</span>
             <span className="text-3xl font-bold tracking-[-0.02em]" data-testid="checkout-final-total">
-              Rs. {finalTotal.toFixed(2)}
+              <PendingAmount status={settings.status}>{formatNPR(finalTotal ?? 0)}</PendingAmount>
             </span>
           </div>
+
+          {settings.status === 'error' && (
+            <p className="mt-4 text-sm text-muted" role="alert" data-testid="shipping-settings-error">
+              We couldn&apos;t load delivery charges, so the total can&apos;t be confirmed.{' '}
+              <button type="button" onClick={settings.retry} className="font-medium text-black underline underline-offset-2">
+                Retry
+              </button>
+            </p>
+          )}
 
           <Button
             type="submit"
@@ -528,10 +518,10 @@ export default function CheckoutPage() {
             variant="primary"
             size="lg"
             className="mt-8 w-full h-14 text-base"
-            disabled={isProcessing}
+            disabled={isProcessing || finalTotal === null}
             data-testid="place-order-button"
           >
-            {isProcessing ? 'Processing Order...' : paymentMethod === 'esewa_qr' ? 'Submit Order' : 'Place COD Order'}
+            {isProcessing ? 'Processing Order...' : finalTotal === null ? (settings.status === 'error' ? 'Delivery charges unavailable' : 'Calculating total…') : paymentMethod === 'esewa_qr' ? 'Submit Order' : 'Place COD Order'}
           </Button>
 
           <p className="mt-4 text-center text-xs text-muted">
