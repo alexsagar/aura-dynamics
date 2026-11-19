@@ -11,6 +11,12 @@ import { carouselItem, ScrollableCarousel } from '@/components/storefront/ui/Scr
 import { TestimonialCarousel } from '@/components/storefront/ui/TestimonialCarousel'
 import { Velaris } from '@/components/storefront/ui/Velaris'
 import { formatNPR } from '@/components/storefront/commerce/Price'
+import { withCanonical } from '@/lib/site/get-page-content'
+import type { Metadata, ResolvingMetadata } from 'next'
+
+export async function generateMetadata(_: unknown, parent: ResolvingMetadata): Promise<Metadata> {
+  return withCanonical('/', parent)
+}
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
 const RULE_HEADER =

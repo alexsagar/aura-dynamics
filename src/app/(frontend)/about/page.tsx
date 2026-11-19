@@ -1,13 +1,13 @@
 import React from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
 import { mediaAlt, mediaUrl } from '@/lib/payload-media'
 import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
-export async function generateMetadata(): Promise<Metadata> {
-  return pageMetadata('about')
+export async function generateMetadata(_: unknown, parent: ResolvingMetadata): Promise<Metadata> {
+  return pageMetadata('about', '/about', parent)
 }
 
 const SECTION_TITLE = 'text-mega leading-none font-semibold tracking-[-0.04em]'
