@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { Suspense } from 'react'
+import type { Metadata, ResolvingMetadata } from 'next'
 
 import { CatalogPagination } from '@/components/storefront/catalog/catalog-pagination'
 import { CatalogToolbar } from '@/components/storefront/catalog/catalog-toolbar'
@@ -10,11 +11,23 @@ import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
 import { CatalogFilters } from './catalog-filters'
 
-export async function generateMetadata() {
-  return pageMetadata('filaments')
-}
-
 type SearchParams = Record<string, string | string[] | undefined>
+
+/**
+ * Indexing policy: plain pagination is its own canonical page; any filter,
+ * sort or query view is a facet of the catalogue, so it canonicalises to
+ * /filaments and is noindex (links still followed).
+ */
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<SearchParams> },
+  parent: ResolvingMetadata,
+): Promise<Metadata> {
+  const sp = await searchParams
+  const { page } = parseFilters(sp)
+  const faceted = Object.entries(sp).some(([k, v]) => k !== 'page' && v != null && v !== '')
+  if (faceted) return pageMetadata('filaments', '/filaments', parent, { robots: { index: false, follow: true } })
+  return pageMetadata('filaments', page > 1 ? `/filaments?page=${page}` : '/filaments', parent)
+}
 
 export default async function FilamentsPage({ searchParams }: { searchParams: Promise<SearchParams> }) {
   const sp = await searchParams

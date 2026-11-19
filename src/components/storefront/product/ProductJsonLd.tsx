@@ -2,7 +2,7 @@ import React from 'react'
 
 import type { Product, Variant } from '@/payload-types'
 import { isPopulated } from '@/lib/catalog/shared'
-import { mediaUrl } from '@/lib/payload-media'
+import { resolveProductImage } from '@/lib/catalog/product-image'
 import { variantPriceNPR } from '@/lib/catalog/pricing'
 import { absoluteUrl } from '@/lib/site/seo'
 
@@ -27,9 +27,9 @@ export function ProductJsonLd({ product }: { product: Product }) {
   const availability =
     totalInventory > 0 ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock'
 
-  const images = (product.images ?? [])
-    .map((img) => mediaUrl(img))
-    .filter((u): u is string => Boolean(u))
+  // Same image the product page and og:image use (gallery, else a variant photo), absolute.
+  const image = resolveProductImage(product, variants)
+  const images = image ? [absoluteUrl(image)] : []
 
   const brand =
     product.productType === 'filament' && product.filamentDetails?.brand

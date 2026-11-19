@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 import { RichText } from '@payloadcms/richtext-lexical/react'
 
 import { LegalArticle } from '@/components/storefront/layout/LegalArticle'
@@ -8,8 +8,8 @@ import { getPageContent, pageMetadata } from '@/lib/site/get-page-content'
 
 // Terms body is CMS-owned (Page Content → Terms of Service Page). Review with
 // counsel before launch.
-export async function generateMetadata(): Promise<Metadata> {
-  return pageMetadata('terms', { alternates: { canonical: absoluteUrl('/terms') } })
+export async function generateMetadata(_: unknown, parent: ResolvingMetadata): Promise<Metadata> {
+  return pageMetadata('terms', '/terms', parent)
 }
 
 export default async function TermsPage() {

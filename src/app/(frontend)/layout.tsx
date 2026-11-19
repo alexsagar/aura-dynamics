@@ -70,7 +70,6 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: SITE_NAME,
       title,
       description,
-      url: SITE_URL,
       images,
     },
     twitter: { card: 'summary_large_image', title, description, images },

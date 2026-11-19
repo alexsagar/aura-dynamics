@@ -1,7 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata, ResolvingMetadata } from 'next'
 import { getPayload } from 'payload'
 
 import configPromise from '@/payload.config'
+import { absoluteUrl, SITE_NAME } from '@/lib/site/seo'
 import type { AboutPage, MaterialsPage, PageContent } from '@/payload-types'
 
 type Pages = {
@@ -39,12 +40,30 @@ export async function getPageContent<K extends PageKey>(key: K): Promise<Pages[K
   }
 }
 
-/** Page SEO from CMS; empty values defer to the layout's Site Settings default. */
-export async function pageMetadata(key: PageKey, extra: Metadata = {}): Promise<Metadata> {
-  const c: { seoTitle?: string | null; seoDescription?: string | null } = await getPageContent(key)
+/**
+ * Canonical + og:url for a site path. A page-level openGraph/twitter replaces
+ * the layout's rather than merging, so the layout's title, description and
+ * share image are carried over unless the page sets its own.
+ */
+export async function withCanonical(path: string, parent: ResolvingMetadata, meta: Metadata = {}): Promise<Metadata> {
+  const p = await parent
+  const url = absoluteUrl(path)
+  const title = typeof meta.title === 'string' ? meta.title : (p.openGraph?.title?.absolute ?? p.title?.absolute)
+  const description = meta.description ?? p.openGraph?.description ?? p.description ?? undefined
   return {
+    ...meta,
+    alternates: { ...meta.alternates, canonical: url },
+    openGraph: { type: 'website', siteName: SITE_NAME, title, description, url, images: p.openGraph?.images },
+    twitter: { card: 'summary_large_image', title, description, images: p.twitter?.images },
+  }
+}
+
+/** Page SEO from CMS (empty values defer to the Site Settings default) plus canonical/og:url for . */
+export async function pageMetadata(key: PageKey, path: string, parent: ResolvingMetadata, extra: Metadata = {}): Promise<Metadata> {
+  const c: { seoTitle?: string | null; seoDescription?: string | null } = await getPageContent(key)
+  return withCanonical(path, parent, {
     ...(c.seoTitle?.trim() ? { title: c.seoTitle } : {}),
     ...(c.seoDescription?.trim() ? { description: c.seoDescription } : {}),
     ...extra,
-  }
+  })
 }
