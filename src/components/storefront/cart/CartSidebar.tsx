@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import { useCart } from '@/providers/CartProvider'
 import { Button } from '@/components/storefront/ui/Button'
 import { cn } from '@/components/storefront/ui/cn'
+import { formatNPR } from '@/components/storefront/commerce/Price'
 
 export function CartSidebar() {
   const { isCartOpen, closeCart, cartItems, updateQuantity, removeItem, cartTotal } = useCart()
@@ -132,7 +133,7 @@ export function CartSidebar() {
                             {item.title}
                           </Link>
                           <span className="font-semibold text-sm whitespace-nowrap">
-                            Rs. {lineTotal.toFixed(2)}
+                            {formatNPR(lineTotal)}
                           </span>
                         </div>
                         {item.color && (
@@ -147,7 +148,7 @@ export function CartSidebar() {
                           </div>
                         )}
                         <span className="text-xs text-muted">
-                          Rs. {item.unitPrice.toFixed(2)} each
+                          {formatNPR(item.unitPrice)} each
                         </span>
                       </div>
 
@@ -196,7 +197,7 @@ export function CartSidebar() {
           <div className="border-t border-black/10 bg-[#f4f4f4] p-6">
             <div className="mb-4 flex justify-between text-xl font-medium tracking-[-0.02em]">
               <span>Subtotal</span>
-              <span className="font-semibold">Rs. {cartTotal.toFixed(2)}</span>
+              <span className="font-semibold">{formatNPR(cartTotal)}</span>
             </div>
             <p className="mb-4 text-xs text-muted">Shipping and delivery calculated at checkout.</p>
             <Button

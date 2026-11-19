@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getPayload } from 'payload'
 import configPromise from '@/payload.config'
-import { DEFAULT_SHIPPING, resolveShippingSettings } from '@/lib/shipping'
+import { resolveShippingSettings } from '@/lib/shipping'
 
 export async function GET() {
   try {
@@ -25,12 +25,7 @@ export async function GET() {
     })
   } catch (error) {
     console.error('Error fetching store/payment settings:', error)
-    return NextResponse.json({
-      isEsewaConfigured: false,
-      esewaQrImageUrl: null,
-      esewaMerchantName: null,
-      esewaId: null,
-      shippingSettings: DEFAULT_SHIPPING,
-    })
+    // No silent fallback fee: the storefront shows a retry state instead.
+    return NextResponse.json({ error: 'Store settings unavailable' }, { status: 503 })
   }
 }

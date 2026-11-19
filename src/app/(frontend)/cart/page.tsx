@@ -5,26 +5,16 @@ import Link from 'next/link'
 import { useCart } from '@/providers/CartProvider'
 import { Container } from '@/components/storefront/layout/Container'
 import { Button } from '@/components/storefront/ui/Button'
-import { DEFAULT_SHIPPING, shippingFor, type ShippingSettings } from '@/lib/shipping'
+import { shippingFor } from '@/lib/shipping'
+import { useStoreSettings } from '@/providers/useStoreSettings'
+import { formatNPR, PendingAmount } from '@/components/storefront/commerce/Price'
 
 export default function CartPage() {
   const { cartItems, updateQuantity, removeItem, cartTotal, isLoading } = useCart()
 
-  const [shippingConfig, setShippingConfig] = React.useState<ShippingSettings>(DEFAULT_SHIPPING)
-
-  React.useEffect(() => {
-    fetch('/api/payment-settings')
-      .then((res) => (res.ok ? (res.json() as Promise<any>) : null))
-      .then((data: any) => {
-        if (data?.shippingSettings) {
-          setShippingConfig(data.shippingSettings)
-        }
-      })
-      .catch(() => {})
-  }, [])
-
-  const shipping = shippingFor(cartTotal, shippingConfig)
-  const estimatedTotal = cartTotal + shipping
+  const settings = useStoreSettings()
+  const shipping = settings.status === 'ready' ? shippingFor(cartTotal, settings.settings.shippingSettings) : null
+  const estimatedTotal = shipping === null ? null : cartTotal + shipping
 
   if (isLoading) {
     return (
@@ -112,7 +102,7 @@ export default function CartPage() {
                         </div>
                       )}
                       <span className="text-sm font-semibold tracking-[0.05em] text-muted">
-                        Rs. {item.unitPrice.toFixed(2)} each
+                        {formatNPR(item.unitPrice)} each
                       </span>
                     </div>
 
@@ -146,7 +136,7 @@ export default function CartPage() {
 
                       <div className="min-w-[100px] text-right">
                         <span className="text-lg font-semibold block">
-                          Rs. {lineTotal.toFixed(2)}
+                          {formatNPR(lineTotal)}
                         </span>
                         <button
                           type="button"
@@ -173,13 +163,13 @@ export default function CartPage() {
                 <div className="flex justify-between text-muted">
                   <span>Subtotal</span>
                   <span className="font-semibold text-black" data-testid="cart-subtotal">
-                    Rs. {cartTotal.toFixed(2)}
+                    {formatNPR(cartTotal)}
                   </span>
                 </div>
                 <div className="flex justify-between text-muted">
                   <span>Estimated Delivery</span>
-                  <span className="font-medium text-black">
-                    {shipping === 0 ? 'Free' : `Rs. ${shipping.toFixed(2)}`}
+                  <span className="font-medium text-black" data-testid="cart-shipping">
+                    <PendingAmount status={settings.status}>{shipping === 0 ? 'Free' : formatNPR(shipping ?? 0)}</PendingAmount>
                   </span>
                 </div>
               </div>
@@ -187,9 +177,18 @@ export default function CartPage() {
               <div className="flex justify-between text-2xl font-medium tracking-[-0.02em]">
                 <span>Total</span>
                 <span className="font-bold text-foreground" data-testid="cart-grand-total">
-                  Rs. {estimatedTotal.toFixed(2)}
+                  <PendingAmount status={settings.status}>{formatNPR(estimatedTotal ?? 0)}</PendingAmount>
                 </span>
               </div>
+
+              {settings.status === 'error' && (
+                <p className="text-sm text-muted" role="alert" data-testid="shipping-settings-error">
+                  We couldn&apos;t load delivery charges.{' '}
+                  <button type="button" onClick={settings.retry} className="font-medium text-black underline underline-offset-2">
+                    Retry
+                  </button>
+                </p>
+              )}
 
               <Button
                 as="a"
